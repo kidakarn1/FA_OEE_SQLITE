@@ -209,7 +209,7 @@ Public Class Close_lot_cfm
                 'List_Emp.ListBox2.Items.Clear()
                 Try
                     If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                        Backoffice_model.updated_data_to_dbsvr()
+                        Backoffice_model.updated_data_to_dbsvr(Me, "2")
                     End If
                 Catch ex As Exception
 

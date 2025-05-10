@@ -574,9 +574,15 @@ Outloop:
                             Next
                         Next
                         Working_Pro.lvQrProductDefect.Items.Clear()
-                        Dim defectForm As Form = getFormByName("defectRegister")
                         Dim fromRegis = defectRegister.GdfRegister
-                        fromRegis.calFG()
+                        Dim defectForm As Form = getFormByName("defectRegister")
+                        If defectRegister.tbQtydefectnc.Text = 0 Then ' plus
+                            defectRegister.tbQtydefectnc.Text = fromRegis.GdfRegister.tbQtydefectnc.text
+                            defectRegister.dfQty = defectRegister.tbQtydefectnc.Text
+                            fromRegis.calFG()
+                        Else ' numpad ไม่ต้อง Set ตัวแปร ใหม่ 
+                            defectRegister.CalFG()
+                        End If
                         If defectForm IsNot Nothing Then
                             defectForm.Close()
                             defectForm.Dispose()
@@ -611,7 +617,6 @@ Outloop:
                 End If
             End If
         Catch ex As Exception
-
         End Try
         ' Next
 Outloop:

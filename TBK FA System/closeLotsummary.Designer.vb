@@ -72,6 +72,7 @@ Partial Class closeLotsummary
         Me.NG = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.PictureBox3 = New System.Windows.Forms.PictureBox()
         Me.btnOk = New System.Windows.Forms.PictureBox()
+        Me.loadNet = New System.Windows.Forms.PictureBox()
         CType(Me.Button1, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.btnUp, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.btnDown, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -82,6 +83,7 @@ Partial Class closeLotsummary
         CType(Me.pbSpecialSummary, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.PictureBox3, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.btnOk, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.loadNet, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'lbWi
@@ -542,12 +544,24 @@ Partial Class closeLotsummary
         Me.btnOk.TabIndex = 65
         Me.btnOk.TabStop = False
         '
+        'loadNet
+        '
+        Me.loadNet.BackgroundImage = CType(resources.GetObject("loadNet.BackgroundImage"), System.Drawing.Image)
+        Me.loadNet.Image = CType(resources.GetObject("loadNet.Image"), System.Drawing.Image)
+        Me.loadNet.Location = New System.Drawing.Point(1, 0)
+        Me.loadNet.Name = "loadNet"
+        Me.loadNet.Size = New System.Drawing.Size(107, 65)
+        Me.loadNet.TabIndex = 66
+        Me.loadNet.TabStop = False
+        Me.loadNet.Visible = False
+        '
         'closeLotsummary
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackgroundImage = Global.TBK_FA_System.My.Resources.Resources.closeLotsummaryNew23
         Me.ClientSize = New System.Drawing.Size(801, 600)
+        Me.Controls.Add(Me.loadNet)
         Me.Controls.Add(Me.btnOk)
         Me.Controls.Add(Me.PictureBox3)
         Me.Controls.Add(Me.lbLine)
@@ -592,6 +606,7 @@ Partial Class closeLotsummary
         CType(Me.pbSpecialSummary, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.PictureBox3, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.btnOk, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.loadNet, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -645,4 +660,5 @@ Partial Class closeLotsummary
     Friend WithEvents NC As ColumnHeader
     Friend WithEvents NG As ColumnHeader
     Friend WithEvents btnOk As PictureBox
+    Friend WithEvents loadNet As PictureBox
 End Class

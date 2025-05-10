@@ -251,7 +251,7 @@ Public Class Loss_reg
         End Try
     End Sub
     Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
-        Dim BreakTime = Backoffice_model.GetTimeAutoBreakTime(MainFrm.Label4.Text) ' for set data 
+        Dim BreakTime = Backoffice_model.GetTimeAutoBreakTime(MainFrm.Label4.Text, Working_Pro.Label14.Text) ' for set data 
         If MainFrm.chk_spec_line = "2" Then
             Dim GenSEQ As Integer = CDbl(Val(Working_Pro.Label22.Text)) - 5
             Dim Iseq = GenSEQ
@@ -359,7 +359,7 @@ Public Class Loss_reg
         If command = "click button" Then
             ' ทำงานเมื่อได้รับคำสั่ง "click button"
             ' เช่น คลิกปุ่ม
-            Dim BreakTime = Backoffice_model.GetTimeAutoBreakTime(MainFrm.Label4.Text) ' for set data 
+            Dim BreakTime = Backoffice_model.GetTimeAutoBreakTime(MainFrm.Label4.Text, Working_Pro.Label14.Text) ' for set data 
             If MainFrm.chk_spec_line = "2" Then
                 Dim GenSEQ As Integer = CDbl(Val(Working_Pro.Label22.Text)) - 5
                 Dim Iseq = GenSEQ

@@ -152,7 +152,7 @@ Public Class OEE_SQLITE
                         WHERE
                             la.line_cd = '" & line_cd & "'
                             AND la.start_loss BETWEEN '" & dateTimestart & "' AND'" & dateTimeend & "'
-                            AND slm.loss_cd IN ('A', 'B', 'T', 'D', 'P1', 'X');"
+                            AND slm.loss_cd IN ('A', 'B', 'T', 'D', 'P1', 'X' , 'E1');"
             Else
                 SqlString = "SELECT 
                             COALESCE(SUM(la.loss_time), 0) / 5 AS totalLoss
@@ -164,7 +164,7 @@ Public Class OEE_SQLITE
                         WHERE
                             la.line_cd = '" & line_cd & "'
                             AND la.start_loss BETWEEN '" & dateTimestart & "' AND'" & dateTimeend & "'
-                            AND slm.loss_cd IN ('A', 'B', 'T', 'D', 'P1', 'X');"
+                            AND slm.loss_cd IN ('A', 'B', 'T', 'D', 'P1', 'X' , 'E1');"
             End If
             Console.WriteLine(SqlString)
             Dim jsonData As String = api.Load_dataSQLite(SqlString)
@@ -186,7 +186,9 @@ Public Class OEE_SQLITE
                         WHERE 
                             la.line_cd = '" & line_cd & "'
                             AND la.start_loss BETWEEN '" & dateTimestart & "' AND'" & dateTimeend & "'
-                            AND slm.loss_cd NOT IN ('A', 'B', 'T', 'D', 'P1', 'X');"
+                            AND slm.loss_cd NOT IN ('A', 'B', 'T', 'D', 'P1', 'X' , 'E1')
+                            AND la.flg_control = '1';"
+
             Else
                 SqlString2 = "SELECT 
                             COALESCE(SUM(la.loss_time), 0) / 5  AS totalLoss
@@ -198,7 +200,8 @@ Public Class OEE_SQLITE
                         WHERE 
                             la.line_cd = '" & line_cd & "'
                             AND la.start_loss BETWEEN '" & dateTimestart & "' AND'" & dateTimeend & "'
-                            AND slm.loss_cd NOT IN ('A', 'B', 'T', 'D', 'P1', 'X');"
+                            AND slm.loss_cd NOT IN ('A', 'B', 'T', 'D', 'P1', 'X', 'E1')
+                            AND la.flg_control = '1';"
             End If
             Console.WriteLine(SqlString2)
             Dim jsonData2 As String = api.Load_dataSQLite(SqlString2)
@@ -282,6 +285,7 @@ Public Class OEE_SQLITE
                         AND la2.line_cd = '" & line_cd & "'
                         AND la2.start_loss BETWEEN '" & start_dateTime & "' AND '" & end_dateTime & "'
                         AND la2.loss_cd_id != '36'
+                        AND la2.flg_control = '1'
                         AND la2.loss_cd_id != '35') AS AllLossTime
                     FROM loss_actual AS la
                          INNER JOIN production_working_info AS pwi ON pwi.pwi_id = la.pwi_id
@@ -290,6 +294,7 @@ Public Class OEE_SQLITE
                               AND la.line_cd ='" & line_cd & "'
                               AND la.start_loss BETWEEN  '" & start_dateTime & "' AND '" & end_dateTime & "'
                       AND la.loss_cd_id != '36'
+                      AND la.flg_control = '1'
                       AND la.loss_cd_id != '35'
                     GROUP BY slm.loss_cd
                     ORDER BY lossTime DESC
@@ -307,6 +312,7 @@ Public Class OEE_SQLITE
                                 AND la2.line_cd = '" & line_cd & "'
                                 AND la2.start_loss BETWEEN '" & start_dateTime & "' AND '" & end_dateTime & "'
                                 AND la2.loss_cd_id != '36'
+                                AND la2.flg_control = '1'
                                 AND la2.loss_cd_id != '35') AS AllLossTime
         FROM loss_actual AS la
              INNER JOIN production_working_info AS pwi ON pwi.pwi_id = la.pwi_id
@@ -315,6 +321,7 @@ Public Class OEE_SQLITE
                   AND la.line_cd ='" & line_cd & "'
                   AND la.start_loss BETWEEN  '" & start_dateTime & "' AND '" & end_dateTime & "'
           AND la.loss_cd_id != '36'
+          AND la.flg_control = '1'
           AND la.loss_cd_id != '35'
         GROUP BY slm.loss_cd
         ORDER BY lossTime DESC

@@ -27,7 +27,7 @@ Public Class defectRegister
     Public Shared swi As String = "NO DATA"
     Public Shared source_cd_supplier As String = ""
     Private Shared _instance As defectRegister
-    Private Sub defectRegister_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+    Public Sub defectRegister_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         setVariable()
     End Sub
     Public Sub setVariable()

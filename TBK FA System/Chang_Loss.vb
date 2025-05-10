@@ -18,6 +18,7 @@ Public Class Chang_Loss
         Dim status_loss As Integer = 0
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
+                check_loss_sys()
                 Try
                     If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
                         Backoffice_model.line_status_upd(line_id)
@@ -180,6 +181,10 @@ Public Class Chang_Loss
         Catch ex As Exception
             load_show.Show()
         End Try
+    End Sub
+    Public Shared Sub check_loss_sys()
+        Working_Pro.insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
+        Working_Pro.insLossClickStart_Loss_X(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
     End Sub
     Private Sub Button1_Click_1(sender As Object, e As EventArgs) Handles Button1.Click
         btnNextLossCrr()

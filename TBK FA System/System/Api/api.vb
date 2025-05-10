@@ -37,36 +37,51 @@ Public Class api
         End Try
         Return re_data
     End Function
-    Public Function Load_dataSQLite(ByVal Sql As String) As String
+    Private Shared ReadOnly sqliteLock As New Object()
+    Public Sub InitSQLiteWAL()
         Try
-            Using connection As New SQLiteConnection(Backoffice_model.sqliteConnect)
+            Dim connStr As String = Backoffice_model.sqliteConnect & ";Default Timeout=5;"
+            Using connection As New SQLiteConnection(connStr)
                 connection.Open()
-                Dim cmd As New SQLiteCommand
-                ' Using the cmd variable to execute the SQL command
-                cmd.Connection = connection
-                cmd.CommandText = Sql
-                jsonData = "0"
-                Using reader As SQLiteDataReader = cmd.ExecuteReader()
-                    Dim dataTable As New DataTable()
-                    dataTable.Load(reader)
-                    ' Check if the DataTable is empty
-                    If dataTable.Rows.Count = 0 Then
-                        ' If DataTable is empty, set jsonData to "0" and return
-                        jsonData = "0"
-                    Else
-                        ' If DataTable is not empty, convert it to JSON
-                        jsonData = JsonConvert.SerializeObject(dataTable)
-                    End If
+                Using cmd As New SQLiteCommand("PRAGMA journal_mode=WAL;", connection)
+                    cmd.ExecuteNonQuery()
                 End Using
-                Return jsonData
             End Using
         Catch ex As Exception
-            ' Handle exceptions
-            Console.WriteLine("Error: " & ex.Message)
-            ' Optionally, throw the exception to propagate it to the calling code
-            Throw
+            Console.WriteLine("Failed to enable WAL mode: " & ex.Message)
         End Try
+    End Sub
+
+    Public Function Load_dataSQLite(ByVal Sql As String) As String
+        SyncLock sqliteLock
+            Try
+                Dim connStr As String = Backoffice_model.sqliteConnect & ";Default Timeout=5;"
+                Using connection As New SQLiteConnection(connStr)
+                    connection.Open()
+
+                    ' ตัด PRAGMA ออก เพราะมันถูกตั้งแล้วตอนเริ่มต้น
+
+                    Using cmd As New SQLiteCommand(Sql, connection)
+                        Using reader As SQLiteDataReader = cmd.ExecuteReader()
+                            Dim dataTable As New DataTable()
+                            dataTable.Load(reader)
+
+                            If dataTable.Rows.Count = 0 Then
+                                Return "0"
+                            Else
+                                Return JsonConvert.SerializeObject(dataTable)
+                            End If
+                        End Using
+                    End Using
+                End Using
+            Catch ex As Exception
+                Console.WriteLine("Error in Load_dataSQLite: " & ex.Message)
+                Throw
+            End Try
+        End SyncLock
     End Function
+
+
     Public Function DownloadImage(ByVal _URL As String) As Image
         Dim _tmpImage As Image = Nothing
 

@@ -367,14 +367,14 @@ Public Class ins_qty
                     'MsgBox("TEST 2")
                     '  Timer1.Enabled = True
                     pb_ok.Visible = False
-                    Console.WriteLine("READY P1 ")
+                    ' Console.WriteLine("READY P1 ")
                     If Backoffice_model.S_chk_spec_line = 1 Then 'for M25
                         If Working_Pro.checkManualQtySpec = 0 Then ' ใช้แค่ ตอนกด Start ครั้งแรกเท่านั้น
                             Working_Pro.checkManualQtySpec += 1
                             'MsgBox("LOAD INSLOSS")
                             Try
                                 If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                                    Working_Pro.insLossClickStart(DateTime.Now.ToString("yyyy-MM-dd"), Start_input_data_spc.Text)
+                                    Working_Pro.insLossClickStart_Loss_X(DateTime.Now.ToString("yyyy-MM-dd"), Start_input_data_spc.Text)
                                 Else
                                     load_show.Show()
                                 End If
@@ -432,6 +432,7 @@ Public Class ins_qty
             Backoffice_model.qty_int = ins_qtyy
         If ins_qtyy > 0 And ins_qtyy <= max_val_int Then
             Working_Pro.lb_ins_qty.Text = tb
+            Working_Pro.insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
             Working_Pro.ins_qty_fn_manual()
             Working_Pro.Enabled = True
             select_int_qty.Close()

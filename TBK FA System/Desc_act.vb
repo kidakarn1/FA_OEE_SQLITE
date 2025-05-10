@@ -405,12 +405,14 @@ break_loop:
             Return 0
         End Try
         Dim totalDefect As Integer = (CDbl(Val(Working_Pro.lb_nc_qty.Text)) + CDbl(Val(Working_Pro.lb_ng_qty.Text))) 'CDbl(Val(md.mGetDefect(Working_Pro.wi_no.Text, Working_Pro.Label18.Text, Working_Pro.Label14.Text) + (CDbl(Val(Working_Pro.lb_nc_qty.Text)) + CDbl(Val(Working_Pro.lb_ng_qty.Text)))))
+        Dim totalDefectCP As Integer = (CDbl(Val(Working_Pro.lb_nc_child_part.Text)) + CDbl(Val(Working_Pro.lb_ng_child_part.Text)))
         'If inp_qty > (prd_qty - totalDefect) Then
         ' MsgBox("M6")
-        If inp_qty > (CDbl(Val(Working_Pro.LB_COUNTER_SEQ.Text) - totalDefect)) Then
+        Dim totalDefectAll As Integer = totalDefect
+        If inp_qty > (CDbl(Val(Working_Pro.LB_COUNTER_SEQ.Text) - (totalDefectAll))) Then
             PictureBox3.Enabled = False
             PictureBox2.Enabled = False
-            Dim listdetail = "Can't input the Qty. over : " & Label1.Text & " And Have Defect : " & totalDefect
+            Dim listdetail = "Can't input the Qty. over : " & Label1.Text & " And Have Defect : " & totalDefectAll
             PictureBox10.BringToFront()
             PictureBox10.Show()
             PictureBox1.BringToFront()
@@ -623,12 +625,13 @@ break_loop:
                     TextBox1.Clear()
                  End Try
                 Dim totalDefect As Integer = (CDbl(Val(Working_Pro.lb_nc_qty.Text)) + CDbl(Val(Working_Pro.lb_ng_qty.Text))) 'CDbl(Val(md.mGetDefect(Working_Pro.wi_no.Text, Working_Pro.Label18.Text, Working_Pro.Label14.Text) + (CDbl(Val(Working_Pro.lb_nc_qty.Text)) + CDbl(Val(Working_Pro.lb_ng_qty.Text)))))
+                Dim totalDefectCP As Integer = (CDbl(Val(Working_Pro.lb_nc_child_part.Text)) + CDbl(Val(Working_Pro.lb_ng_child_part.Text)))
+                Dim totalDefectAll As Integer = totalDefect
                 'If inp_qty > (prd_qty - totalDefect) Then
-                ' MsgBox("M6")
-                If inp_qty > (CDbl(Val(Working_Pro.LB_COUNTER_SEQ.Text) - totalDefect)) Then
+                If inp_qty > (CDbl(Val(Working_Pro.LB_COUNTER_SEQ.Text) - (totalDefectAll))) Then ' 
                     PictureBox3.Enabled = False
                     PictureBox2.Enabled = False
-                    Dim listdetail = "Can't input the Qty. over : " & Label1.Text & " And Have Defect : " & totalDefect
+                    Dim listdetail = "Can't input the Qty. over : " & Label1.Text & " And Have Defect : " & totalDefectAll
                     PictureBox10.BringToFront()
                     PictureBox10.Show()
                     PictureBox1.BringToFront()

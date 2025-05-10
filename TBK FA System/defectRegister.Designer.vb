@@ -182,6 +182,6 @@ Partial Class defectRegister
     Friend WithEvents btnPlusnc As PictureBox
     Friend WithEvents Button1 As PictureBox
     Friend WithEvents oK As PictureBox
-    Friend WithEvents tbQtydefectnc As Label
     Friend WithEvents Panel1 As Panel
+    Public WithEvents tbQtydefectnc As Label
 End Class

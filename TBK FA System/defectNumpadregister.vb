@@ -42,9 +42,9 @@ Public Class defectNumpadregister
                 If rsCheck Then
                     ' Dim objdefectregis As New defectRegister()
                     defectRegister.dfQty = CDbl(Val(tbAddqty.Text))
-                    defectRegister.tbQtydefectnc.Text = CDbl(Val(tbAddqty.Text))
-                    Me.Close()
-                    defectRegister.Show()
+                defectRegister.tbQtydefectnc.Text = CDbl(Val(tbAddqty.Text))
+                Me.Close()
+                defectRegister.Show()
                 Else
                     MsgBox("Please Check QTY Input")
                 End If

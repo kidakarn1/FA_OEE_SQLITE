@@ -5,7 +5,7 @@
     Public Async Function SatrtWork() As Task
         If PanelShowLoss.Visible Then
             UpdateAutoLoss()
-            Dim BreakTime = Backoffice_model.GetTimeAutoBreakTime(MainFrm.Label4.Text) ' for set data 
+            Dim BreakTime = Backoffice_model.GetTimeAutoBreakTime(MainFrm.Label4.Text, Working_Pro.Label14.Text) ' for set data 
             ' MsgBox("Next BreakTime ===>" & BreakTime)
             If MainFrm.chk_spec_line = "2" Then
                 Dim GenSEQ As Integer = CInt(Working_Pro.Label22.Text) - MainFrm.ArrayDataPlan.ToArray().Length
@@ -42,7 +42,7 @@
             End If
             Me.Close()
         Else
-            Dim BreakTime = Backoffice_model.GetTimeAutoBreakTime(MainFrm.Label4.Text) ' for set data 
+            Dim BreakTime = Backoffice_model.GetTimeAutoBreakTime(MainFrm.Label4.Text, Working_Pro.Label14.Text) ' for set data 
             If MainFrm.chk_spec_line = "2" Then
                 Dim GenSEQ As Integer = CInt(Working_Pro.Label22.Text) - MainFrm.ArrayDataPlan.ToArray().Length
                 Dim Iseq = GenSEQ
@@ -232,6 +232,7 @@
 
             End If
         Catch ex As Exception
+            Working_Pro.Enabled = True
         End Try
     End Sub
     Public Sub insLoss()
@@ -329,9 +330,7 @@
     End Sub
     Private Sub StopMenu_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         'Console.WriteLine("date_start_data ===>" & date_start_data) ' ไม่ต้องลบ 
-
         Console.WriteLine("Working_Pro.slm_flg_qr_prod ===>" & Working_Pro.slm_flg_qr_prod)
-
         Console.WriteLine("Working_Pro.check_bull ===>" & Working_Pro.check_bull)
         Console.WriteLine("Working_Pro.start_flg ===>" & Working_Pro.start_flg)
         If Working_Pro.check_in_up_seq = 0 Then

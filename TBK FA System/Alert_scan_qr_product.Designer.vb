@@ -37,7 +37,7 @@ Partial Class Alert_scan_qr_product
         Me.lbTitle.BackColor = System.Drawing.Color.FromArgb(CType(CType(31, Byte), Integer), CType(CType(46, Byte), Integer), CType(CType(67, Byte), Integer))
         Me.lbTitle.Font = New System.Drawing.Font("Microsoft Sans Serif", 24.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(222, Byte))
         Me.lbTitle.ForeColor = System.Drawing.Color.White
-        Me.lbTitle.Location = New System.Drawing.Point(276, 263)
+        Me.lbTitle.Location = New System.Drawing.Point(136, 268)
         Me.lbTitle.Name = "lbTitle"
         Me.lbTitle.Size = New System.Drawing.Size(437, 37)
         Me.lbTitle.TabIndex = 1
@@ -49,7 +49,7 @@ Partial Class Alert_scan_qr_product
         Me.lbDetail.BackColor = System.Drawing.Color.FromArgb(CType(CType(31, Byte), Integer), CType(CType(46, Byte), Integer), CType(CType(67, Byte), Integer))
         Me.lbDetail.Font = New System.Drawing.Font("Microsoft Sans Serif", 20.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(222, Byte))
         Me.lbDetail.ForeColor = System.Drawing.Color.White
-        Me.lbDetail.Location = New System.Drawing.Point(277, 313)
+        Me.lbDetail.Location = New System.Drawing.Point(162, 317)
         Me.lbDetail.Name = "lbDetail"
         Me.lbDetail.Size = New System.Drawing.Size(374, 31)
         Me.lbDetail.TabIndex = 2

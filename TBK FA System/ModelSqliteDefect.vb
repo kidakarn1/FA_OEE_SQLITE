@@ -470,7 +470,7 @@ Public Class ModelSqliteDefect
                     '" & mainCP & "',
                     '" & source_cd_supplier & "')
             "
-            'Console.WriteLine(cmd.CommandText)
+            Console.WriteLine(cmd.CommandText)
             Dim LoadSQL As SQLiteDataReader = cmd.ExecuteReader()
             sqliteConn.Close()
             Return True

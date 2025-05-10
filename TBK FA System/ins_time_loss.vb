@@ -13,6 +13,8 @@ Imports System.Drawing.Printing
 Imports System.Configuration
 Imports GenCode128
 Imports BarcodeLib.Barcode
+Imports System.Web.Script.Serialization
+
 Public Class ins_time_loss
     Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
         Dim text_now As String = TextBox1.Text
@@ -102,7 +104,7 @@ Public Class ins_time_loss
         End If
     End Sub
     Private Sub Button4_Click(sender As Object, e As EventArgs) Handles Button4.Click
-		Dim text_now As String = TextBox1.Text
+        Dim text_now As String = TextBox1.Text
         If text_now.Length > 4 Then
             Dim text_to2 As String = TextBox2.Text
 
@@ -124,74 +126,74 @@ Public Class ins_time_loss
         End If
         chk_ins()
         Dim text_to2_now As String = TextBox2.Text
-		If text_to2_now.Length > 4 Then
-			alldis()
+        If text_to2_now.Length > 4 Then
+            alldis()
 
-		End If
+        End If
 
-	End Sub
+    End Sub
 
-	Private Sub Button5_Click(sender As Object, e As EventArgs) Handles Button5.Click
-		Dim text_now As String = TextBox1.Text
-		If text_now.Length > 4 Then
-			Dim text_to2 As String = TextBox2.Text
+    Private Sub Button5_Click(sender As Object, e As EventArgs) Handles Button5.Click
+        Dim text_now As String = TextBox1.Text
+        If text_now.Length > 4 Then
+            Dim text_to2 As String = TextBox2.Text
 
-			If text_to2.Length = 2 Then
-				text_to2 = text_to2 & ":5"
-				TextBox2.Text = text_to2
-			Else
-				text_to2 = text_to2 & "5"
-				TextBox2.Text = text_to2
-			End If
+            If text_to2.Length = 2 Then
+                text_to2 = text_to2 & ":5"
+                TextBox2.Text = text_to2
+            Else
+                text_to2 = text_to2 & "5"
+                TextBox2.Text = text_to2
+            End If
 
-		Else
-			If text_now.Length = 2 Then
-				text_now = text_now & ":5"
-				TextBox1.Text = text_now
-			Else
-				text_now = text_now & "5"
-				TextBox1.Text = text_now
-			End If
-		End If
-		chk_ins()
-		Dim text_to2_now As String = TextBox2.Text
-		If text_to2_now.Length > 4 Then
-			alldis()
+        Else
+            If text_now.Length = 2 Then
+                text_now = text_now & ":5"
+                TextBox1.Text = text_now
+            Else
+                text_now = text_now & "5"
+                TextBox1.Text = text_now
+            End If
+        End If
+        chk_ins()
+        Dim text_to2_now As String = TextBox2.Text
+        If text_to2_now.Length > 4 Then
+            alldis()
 
-		End If
-	End Sub
+        End If
+    End Sub
 
-	Private Sub Button6_Click(sender As Object, e As EventArgs) Handles Button6.Click
-		Dim text_now As String = TextBox1.Text
-		If text_now.Length > 4 Then
-			Dim text_to2 As String = TextBox2.Text
+    Private Sub Button6_Click(sender As Object, e As EventArgs) Handles Button6.Click
+        Dim text_now As String = TextBox1.Text
+        If text_now.Length > 4 Then
+            Dim text_to2 As String = TextBox2.Text
 
-			If text_to2.Length = 2 Then
-				text_to2 = text_to2 & ":6"
-				TextBox2.Text = text_to2
-			Else
-				text_to2 = text_to2 & "6"
-				TextBox2.Text = text_to2
-			End If
+            If text_to2.Length = 2 Then
+                text_to2 = text_to2 & ":6"
+                TextBox2.Text = text_to2
+            Else
+                text_to2 = text_to2 & "6"
+                TextBox2.Text = text_to2
+            End If
 
-		Else
-			If text_now.Length = 2 Then
-				text_now = text_now & ":6"
-				TextBox1.Text = text_now
-			Else
-				text_now = text_now & "6"
-				TextBox1.Text = text_now
-			End If
-		End If
-		chk_ins()
-		Dim text_to2_now As String = TextBox2.Text
+        Else
+            If text_now.Length = 2 Then
+                text_now = text_now & ":6"
+                TextBox1.Text = text_now
+            Else
+                text_now = text_now & "6"
+                TextBox1.Text = text_now
+            End If
+        End If
+        chk_ins()
+        Dim text_to2_now As String = TextBox2.Text
         If text_to2_now.Length > 4 Then
             alldis()
         End If
     End Sub
 
-	Private Sub Button7_Click(sender As Object, e As EventArgs) Handles Button7.Click
-		Dim text_now As String = TextBox1.Text
+    Private Sub Button7_Click(sender As Object, e As EventArgs) Handles Button7.Click
+        Dim text_now As String = TextBox1.Text
         If text_now.Length > 4 Then
             Dim text_to2 As String = TextBox2.Text
 
@@ -204,170 +206,170 @@ Public Class ins_time_loss
             End If
         Else
             If text_now.Length = 2 Then
-				text_now = text_now & ":7"
-				TextBox1.Text = text_now
-			Else
-				text_now = text_now & "7"
-				TextBox1.Text = text_now
-			End If
-		End If
-		chk_ins()
-		Dim text_to2_now As String = TextBox2.Text
+                text_now = text_now & ":7"
+                TextBox1.Text = text_now
+            Else
+                text_now = text_now & "7"
+                TextBox1.Text = text_now
+            End If
+        End If
+        chk_ins()
+        Dim text_to2_now As String = TextBox2.Text
         If text_to2_now.Length > 4 Then
             alldis()
         End If
     End Sub
 
-	Private Sub Button8_Click(sender As Object, e As EventArgs) Handles Button8.Click
-		Dim text_now As String = TextBox1.Text
-		If text_now.Length > 4 Then
-			Dim text_to2 As String = TextBox2.Text
+    Private Sub Button8_Click(sender As Object, e As EventArgs) Handles Button8.Click
+        Dim text_now As String = TextBox1.Text
+        If text_now.Length > 4 Then
+            Dim text_to2 As String = TextBox2.Text
 
-			If text_to2.Length = 2 Then
-				text_to2 = text_to2 & ":8"
-				TextBox2.Text = text_to2
-			Else
-				text_to2 = text_to2 & "8"
-				TextBox2.Text = text_to2
-			End If
+            If text_to2.Length = 2 Then
+                text_to2 = text_to2 & ":8"
+                TextBox2.Text = text_to2
+            Else
+                text_to2 = text_to2 & "8"
+                TextBox2.Text = text_to2
+            End If
 
-		Else
-			If text_now.Length = 2 Then
-				text_now = text_now & ":8"
-				TextBox1.Text = text_now
-			Else
-				text_now = text_now & "8"
-				TextBox1.Text = text_now
-			End If
-		End If
-		chk_ins()
-		Dim text_to2_now As String = TextBox2.Text
-		If text_to2_now.Length > 4 Then
-			alldis()
+        Else
+            If text_now.Length = 2 Then
+                text_now = text_now & ":8"
+                TextBox1.Text = text_now
+            Else
+                text_now = text_now & "8"
+                TextBox1.Text = text_now
+            End If
+        End If
+        chk_ins()
+        Dim text_to2_now As String = TextBox2.Text
+        If text_to2_now.Length > 4 Then
+            alldis()
 
-		End If
-	End Sub
+        End If
+    End Sub
 
-	Private Sub Button9_Click(sender As Object, e As EventArgs) Handles Button9.Click
-		Dim text_now As String = TextBox1.Text
-		If text_now.Length > 4 Then
-			Dim text_to2 As String = TextBox2.Text
+    Private Sub Button9_Click(sender As Object, e As EventArgs) Handles Button9.Click
+        Dim text_now As String = TextBox1.Text
+        If text_now.Length > 4 Then
+            Dim text_to2 As String = TextBox2.Text
 
-			If text_to2.Length = 2 Then
-				text_to2 = text_to2 & ":9"
-				TextBox2.Text = text_to2
-			Else
-				text_to2 = text_to2 & "9"
-				TextBox2.Text = text_to2
-			End If
+            If text_to2.Length = 2 Then
+                text_to2 = text_to2 & ":9"
+                TextBox2.Text = text_to2
+            Else
+                text_to2 = text_to2 & "9"
+                TextBox2.Text = text_to2
+            End If
 
-		Else
-			If text_now.Length = 2 Then
-				text_now = text_now & ":9"
-				TextBox1.Text = text_now
-			Else
-				text_now = text_now & "9"
-				TextBox1.Text = text_now
-			End If
-		End If
-		chk_ins()
-		Dim text_to2_now As String = TextBox2.Text
-		If text_to2_now.Length > 4 Then
-			alldis()
+        Else
+            If text_now.Length = 2 Then
+                text_now = text_now & ":9"
+                TextBox1.Text = text_now
+            Else
+                text_now = text_now & "9"
+                TextBox1.Text = text_now
+            End If
+        End If
+        chk_ins()
+        Dim text_to2_now As String = TextBox2.Text
+        If text_to2_now.Length > 4 Then
+            alldis()
 
-		End If
-	End Sub
+        End If
+    End Sub
 
-	Private Sub Button13_Click(sender As Object, e As EventArgs) Handles Button13.Click
-		Dim text_now As String = TextBox1.Text
-		If text_now.Length > 4 Then
-			Dim text_to2 As String = TextBox2.Text
+    Private Sub Button13_Click(sender As Object, e As EventArgs) Handles Button13.Click
+        Dim text_now As String = TextBox1.Text
+        If text_now.Length > 4 Then
+            Dim text_to2 As String = TextBox2.Text
 
-			If text_to2.Length = 2 Then
-				text_to2 = text_to2 & ":0"
-				TextBox2.Text = text_to2
-			Else
-				text_to2 = text_to2 & "0"
-				TextBox2.Text = text_to2
-			End If
+            If text_to2.Length = 2 Then
+                text_to2 = text_to2 & ":0"
+                TextBox2.Text = text_to2
+            Else
+                text_to2 = text_to2 & "0"
+                TextBox2.Text = text_to2
+            End If
 
-		Else
-			If text_now.Length = 2 Then
-				text_now = text_now & ":0"
-				TextBox1.Text = text_now
-			Else
-				text_now = text_now & "0"
-				TextBox1.Text = text_now
-			End If
-		End If
-		chk_ins()
-		Dim text_to2_now As String = TextBox2.Text
-		If text_to2_now.Length > 4 Then
-			alldis()
+        Else
+            If text_now.Length = 2 Then
+                text_now = text_now & ":0"
+                TextBox1.Text = text_now
+            Else
+                text_now = text_now & "0"
+                TextBox1.Text = text_now
+            End If
+        End If
+        chk_ins()
+        Dim text_to2_now As String = TextBox2.Text
+        If text_to2_now.Length > 4 Then
+            alldis()
 
-		End If
-	End Sub
+        End If
+    End Sub
 
     Private Sub Button12_Click(sender As Object, e As EventArgs) Handles Button12.Click
-		TextBox1.Clear()
-		TextBox2.Clear()
-		ena012()
-		'Button1.Enabled = True
-		'Button2.Enabled = True
-		'Button3.Enabled = True
-		'Button4.Enabled = True
-		'Button5.Enabled = True
-		'Button6.Enabled = True
-		'Button7.Enabled = True
-		'Button8.Enabled = True
-		'Button9.Enabled = True
-		'Button13.Enabled = True
+        TextBox1.Clear()
+        TextBox2.Clear()
+        ena012()
+        'Button1.Enabled = True
+        'Button2.Enabled = True
+        'Button3.Enabled = True
+        'Button4.Enabled = True
+        'Button5.Enabled = True
+        'Button6.Enabled = True
+        'Button7.Enabled = True
+        'Button8.Enabled = True
+        'Button9.Enabled = True
+        'Button13.Enabled = True
 
-	End Sub
+    End Sub
 
-	Private Sub Button14_Click(sender As Object, e As EventArgs) Handles Button14.Click
-		Dim text_to2 As String = TextBox2.Text
-		Dim text_to1 As String = TextBox1.Text
-		If text_to2.Length > 0 Then
-			'MsgBox(text_to2.Length)
-			If text_to2.Length = 1 Then
-				Dim result_str As String = text_to2.Substring(1)
-				TextBox2.Text = result_str
-			ElseIf text_to2.Length = 2 Then
-				Dim result_str As String = text_to2.Substring(0, 1)
-				TextBox2.Text = result_str
-			ElseIf text_to2.Length = 4 Then
-				Dim result_str As String = text_to2.Substring(0, 2)
-				TextBox2.Text = result_str
-			ElseIf text_to2.Length = 5 Then
-				Dim result_str As String = text_to2.Substring(0, 4)
-				TextBox2.Text = result_str
-			End If
-		End If
+    Private Sub Button14_Click(sender As Object, e As EventArgs) Handles Button14.Click
+        Dim text_to2 As String = TextBox2.Text
+        Dim text_to1 As String = TextBox1.Text
+        If text_to2.Length > 0 Then
+            'MsgBox(text_to2.Length)
+            If text_to2.Length = 1 Then
+                Dim result_str As String = text_to2.Substring(1)
+                TextBox2.Text = result_str
+            ElseIf text_to2.Length = 2 Then
+                Dim result_str As String = text_to2.Substring(0, 1)
+                TextBox2.Text = result_str
+            ElseIf text_to2.Length = 4 Then
+                Dim result_str As String = text_to2.Substring(0, 2)
+                TextBox2.Text = result_str
+            ElseIf text_to2.Length = 5 Then
+                Dim result_str As String = text_to2.Substring(0, 4)
+                TextBox2.Text = result_str
+            End If
+        End If
 
-		If text_to2.Length = 0 Then
-			If text_to1.Length > 0 Then
-				'MsgBox(text_to2.Length)
-				If text_to1.Length = 1 Then
-					Dim result_str As String = text_to1.Substring(1)
-					TextBox1.Text = result_str
-				ElseIf text_to1.Length = 2 Then
-					Dim result_str As String = text_to1.Substring(0, 1)
-					TextBox1.Text = result_str
-				ElseIf text_to1.Length = 4 Then
-					Dim result_str As String = text_to1.Substring(0, 2)
-					TextBox1.Text = result_str
-				ElseIf text_to1.Length = 5 Then
-					Dim result_str As String = text_to1.Substring(0, 4)
-					TextBox1.Text = result_str
-				End If
-			End If
-		End If
+        If text_to2.Length = 0 Then
+            If text_to1.Length > 0 Then
+                'MsgBox(text_to2.Length)
+                If text_to1.Length = 1 Then
+                    Dim result_str As String = text_to1.Substring(1)
+                    TextBox1.Text = result_str
+                ElseIf text_to1.Length = 2 Then
+                    Dim result_str As String = text_to1.Substring(0, 1)
+                    TextBox1.Text = result_str
+                ElseIf text_to1.Length = 4 Then
+                    Dim result_str As String = text_to1.Substring(0, 2)
+                    TextBox1.Text = result_str
+                ElseIf text_to1.Length = 5 Then
+                    Dim result_str As String = text_to1.Substring(0, 4)
+                    TextBox1.Text = result_str
+                End If
+            End If
+        End If
 
-		'text_to2 = TextBox2.Text
-		'MsgBox(TextBox2.Text.Length)
-		chk_ins()
-	End Sub
+        'text_to2 = TextBox2.Text
+        'MsgBox(TextBox2.Text.Length)
+        chk_ins()
+    End Sub
     Private Sub Button11_Click(sender As Object, e As EventArgs) Handles Button11.Click
         TextBox1.Clear()
         TextBox2.Clear()
@@ -376,8 +378,8 @@ Public Class ins_time_loss
         Me.Hide()
     End Sub
     Private Sub Button10_Click(sender As Object, e As EventArgs) Handles Button10.Click
-		Try
-			If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
+        Try
+            If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
                 Try
                     If Backoffice_model.S_chk_spec_line = 0 Then ' Normal
                         Dim date_start_shift As Date = Backoffice_model.date_time_start_master_shift
@@ -487,11 +489,24 @@ Public Class ins_time_loss
                                         count_check_double = GET_CHECK_LOSS_reuslt
                                         'If CDbl(Val(Backoffice_model.CHECK_TRANSCETION_PRODUCTION_DETAIL(MainFrm.Label4.Text, start_time, end_time))) = 0 Then
                                         If CDbl(Val(count_check_double)) > 0 Then
+                                            Dim LossCodeDup As String = ""
+                                            Dim recordedDate As String = ""
+                                            Dim rsDataLossDup = Backoffice_model.GetDataLoss(start_time, end_time, MainFrm.Label4.Text)
+                                            If rsDataLossDup <> "0" Then
+                                                Dim dict As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(rsDataLossDup)
+                                                For Each item As Object In dict
+                                                    LossCodeDup = item("loss_cd").ToString()
+                                                    recordedDate = item("start_timeLoss").ToString() & " - " & item("end_timeLoss").ToString()
+                                                Next
+                                            End If
                                             ' MsgBox("Loss double please check start loss and end loss")
                                             ena012()
                                             Button10.Enabled = False
                                             Button11.Enabled = False
-                                            Dim listdetail = "Loss double please check start loss and end loss"
+                                            'Dim listdetail = "Loss double please check start loss and end loss"
+                                            Dim listdetail = "This time has been recorded loss." & vbCrLf
+                                            lbDetailLoss.Text = "Loss : " & LossCodeDup & " " & vbCrLf & recordedDate
+                                            lbDetailLoss.Visible = True
                                             PictureBox10.BringToFront()
                                             PictureBox10.Show()
                                             PictureBox2.BringToFront()
@@ -503,6 +518,7 @@ Public Class ins_time_loss
                                             Label3.Show()
                                         Else
                                             ena012()
+                                            lbDetailLoss.Visible = False
                                             Loss_reg_pass.Label8.Text = TextBox1.Text
                                             Loss_reg_pass.Label9.Text = TextBox2.Text
                                             Loss_reg_pass.Enabled = True
@@ -511,6 +527,7 @@ Public Class ins_time_loss
                                         End If
                                     Else
                                         ena012()
+                                        lbDetailLoss.Visible = False
                                         Button10.Enabled = False
                                         Button11.Enabled = False
                                         Dim listdetail = "Please Check Time 2 ."
@@ -527,6 +544,7 @@ Public Class ins_time_loss
                                     End If
                                 Else
                                     ena012()
+                                    lbDetailLoss.Visible = False
                                     Button10.Enabled = False
                                     Button11.Enabled = False
                                     Dim listdetail = "Please Check Shift."
@@ -543,6 +561,7 @@ Public Class ins_time_loss
                                 End If
                             Else
                                 ena012()
+                                lbDetailLoss.Visible = False
                                 Button10.Enabled = False
                                 Button11.Enabled = False
                                 Dim listdetail = "Please Check Shift."
@@ -561,6 +580,7 @@ Public Class ins_time_loss
                             ena012()
                             Button10.Enabled = False
                             Button11.Enabled = False
+                            lbDetailLoss.Visible = False
                             Dim listdetail = "Please Check time 3 ."
                             PictureBox10.BringToFront()
                             PictureBox10.Show()
@@ -574,7 +594,7 @@ Public Class ins_time_loss
                             ' MsgBox("Please Check time.")
                         End If
                     Else ' For K1M025
-                       ' MsgBox("K1M025")
+                        ' MsgBox("K1M025")
                         Dim date_start_shift As Date = Working_Pro.DateTimeStartofShift.Text ' Backoffice_model.date_time_start_master_shift
                         Dim date_end_shift As Date = Backoffice_model.date_time_end_check_date_paralell_linet
                         Dim date_start_time As String = date_start_shift.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
@@ -683,10 +703,10 @@ Public Class ins_time_loss
                                         'If CDbl(Val(Backoffice_model.CHECK_TRANSCETION_PRODUCTION_DETAIL(MainFrm.Label4.Text, start_time, end_time))) = 0 Then
                                         ena012()
                                         Loss_reg_pass.Label8.Text = TextBox1.Text
-                                            Loss_reg_pass.Label9.Text = TextBox2.Text
-                                            Loss_reg_pass.Enabled = True
-                                            Loss_reg_pass.Button1.Visible = True
-                                            Me.Hide()
+                                        Loss_reg_pass.Label9.Text = TextBox2.Text
+                                        Loss_reg_pass.Enabled = True
+                                        Loss_reg_pass.Button1.Visible = True
+                                        Me.Hide()
                                         'Else
                                         ' Button10.Enabled = False
                                         ' Button11.Enabled = False
@@ -781,66 +801,66 @@ Public Class ins_time_loss
                     Label3.BringToFront()
                     Label3.Show()
                 End Try
-			Else
-				load_show.Show()
-			End If
-		Catch ex As Exception
-			load_show.Show()
-		End Try
-	End Sub
-	Private Sub ena012()
-		Button1.Enabled = True
-		Button2.Enabled = True
-		Button3.Enabled = False
-		Button4.Enabled = False
-		Button5.Enabled = False
-		Button6.Enabled = False
-		Button7.Enabled = False
-		Button8.Enabled = False
-		Button9.Enabled = False
-		Button13.Enabled = True
-	End Sub
+            Else
+                load_show.Show()
+            End If
+        Catch ex As Exception
+            load_show.Show()
+        End Try
+    End Sub
+    Private Sub ena012()
+        Button1.Enabled = True
+        Button2.Enabled = True
+        Button3.Enabled = False
+        Button4.Enabled = False
+        Button5.Enabled = False
+        Button6.Enabled = False
+        Button7.Enabled = False
+        Button8.Enabled = False
+        Button9.Enabled = False
+        Button13.Enabled = True
+    End Sub
 
-	Private Sub ena0123()
-		Button1.Enabled = True
-		Button2.Enabled = True
-		Button3.Enabled = True
-		Button4.Enabled = False
-		Button5.Enabled = False
-		Button6.Enabled = False
-		Button7.Enabled = False
-		Button8.Enabled = False
-		Button9.Enabled = False
-		Button13.Enabled = True
-	End Sub
+    Private Sub ena0123()
+        Button1.Enabled = True
+        Button2.Enabled = True
+        Button3.Enabled = True
+        Button4.Enabled = False
+        Button5.Enabled = False
+        Button6.Enabled = False
+        Button7.Enabled = False
+        Button8.Enabled = False
+        Button9.Enabled = False
+        Button13.Enabled = True
+    End Sub
 
-	Private Sub ena012345()
-		Button1.Enabled = True
-		Button2.Enabled = True
-		Button3.Enabled = True
-		Button4.Enabled = True
-		Button5.Enabled = True
-		Button6.Enabled = False
-		Button7.Enabled = False
-		Button8.Enabled = False
-		Button9.Enabled = False
-		Button13.Enabled = True
-	End Sub
+    Private Sub ena012345()
+        Button1.Enabled = True
+        Button2.Enabled = True
+        Button3.Enabled = True
+        Button4.Enabled = True
+        Button5.Enabled = True
+        Button6.Enabled = False
+        Button7.Enabled = False
+        Button8.Enabled = False
+        Button9.Enabled = False
+        Button13.Enabled = True
+    End Sub
 
-	Private Sub alldis()
-		Button1.Enabled = False
-		Button2.Enabled = False
-		Button3.Enabled = False
-		Button4.Enabled = False
-		Button5.Enabled = False
-		Button6.Enabled = False
-		Button7.Enabled = False
-		Button8.Enabled = False
-		Button9.Enabled = False
-		Button13.Enabled = False
+    Private Sub alldis()
+        Button1.Enabled = False
+        Button2.Enabled = False
+        Button3.Enabled = False
+        Button4.Enabled = False
+        Button5.Enabled = False
+        Button6.Enabled = False
+        Button7.Enabled = False
+        Button8.Enabled = False
+        Button9.Enabled = False
+        Button13.Enabled = False
 
-		Button10.Enabled = True
-	End Sub
+        Button10.Enabled = True
+    End Sub
 
     Private Sub allena()
         Button1.Enabled = True
@@ -856,42 +876,42 @@ Public Class ins_time_loss
     End Sub
 
     Private Sub chk_ins()
-		If TextBox1.Text.Length = 1 Then
-			If TextBox1.Text = "0" Or TextBox1.Text = "1" Then
-				allena()
-			Else
-				ena0123()
-			End If
-		ElseIf TextBox1.Text.Length = 2 Then
-			ena012345()
-		ElseIf TextBox1.Text.Length = 4 Then
-			allena()
-		ElseIf TextBox1.Text.Length = 5 Then
-			ena012()
-		End If
+        If TextBox1.Text.Length = 1 Then
+            If TextBox1.Text = "0" Or TextBox1.Text = "1" Then
+                allena()
+            Else
+                ena0123()
+            End If
+        ElseIf TextBox1.Text.Length = 2 Then
+            ena012345()
+        ElseIf TextBox1.Text.Length = 4 Then
+            allena()
+        ElseIf TextBox1.Text.Length = 5 Then
+            ena012()
+        End If
 
-		If TextBox2.Text.Length = 1 Then
-			If TextBox2.Text = "0" Or TextBox2.Text = "1" Then
-				allena()
-			Else
-				ena0123()
-			End If
-		ElseIf TextBox2.Text.Length = 2 Then
-			ena012345()
-		ElseIf TextBox2.Text.Length = 4 Then
-			allena()
-		ElseIf TextBox2.Text.Length = 5 Then
-			ena012()
-		End If
+        If TextBox2.Text.Length = 1 Then
+            If TextBox2.Text = "0" Or TextBox2.Text = "1" Then
+                allena()
+            Else
+                ena0123()
+            End If
+        ElseIf TextBox2.Text.Length = 2 Then
+            ena012345()
+        ElseIf TextBox2.Text.Length = 4 Then
+            allena()
+        ElseIf TextBox2.Text.Length = 5 Then
+            ena012()
+        End If
 
-		If TextBox1.Text.Length = 0 Then
-			ena012()
-		End If
-	End Sub
+        If TextBox1.Text.Length = 0 Then
+            ena012()
+        End If
+    End Sub
 
-	Private Sub Label2_Click(sender As Object, e As EventArgs) Handles Label2.Click
+    Private Sub Label2_Click(sender As Object, e As EventArgs) Handles Label2.Click
 
-	End Sub
+    End Sub
 
     Private Sub ins_time_loss_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Lb_PartNo.Text = Working_Pro.Label3.Text

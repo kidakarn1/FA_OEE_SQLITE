@@ -1,3 +1,5 @@
+Imports System.Globalization
+
 Public Class Loss_reg_pass
     Public date_start_data As Date
     Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
@@ -121,6 +123,11 @@ Public Class Loss_reg_pass
                 Try
                     If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
                         transfer_flg = "1"
+                        ' Dim onlyDate As String = Working_Pro.DatTimeCodeXEndUpdate.Substring(0, 10)     ' "2025-05-05"
+                        ' Dim onlyTime As String = Working_Pro.DatTimeCodeXEndUpdate.Substring(11, 8)     ' "14:48:27"
+                        ' Working_Pro.insLossClickStart_Loss_X(onlyDate, onlyTime)
+                        Dim rsClickSTart = Backoffice_model.date_time_click_start.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+                        Working_Pro.insLossClickStart_Loss_X_adjust_loss(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture), rsClickSTart, Label8.Text)
                         If MainFrm.chk_spec_line = "2" Then
                             Dim j As Integer = 0
                             Dim GenSEQ As Integer = seq_no - 5

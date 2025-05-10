@@ -105,12 +105,10 @@ Public Class Sc
 recheck:
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-
                 Dim total = List_Emp.ListView1.Items.Count
                 If total < List_Emp.MaxManPower Then
                     TextBox2.Text = TextBox2.Text.ToUpper()
                     If Ck_dup(List_Emp.ListBox2, TextBox2.Text) Then
-
                         'MsgBox("คุณลงทะเบียนไว้เรียบร้อยแล้ว")
                         Button1.Enabled = False
                         PictureBox3.Enabled = False

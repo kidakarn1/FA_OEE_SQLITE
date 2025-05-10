@@ -9,7 +9,6 @@ Public Class OEE
         'Console.WriteLine("http://" & Backoffice_model.svApi & "/API_NEW_FA/index.php/GET_OEE/EXP_CHECK_SUPP?item_cd=" & item_cd)
         Return TarGet
     End Function
-
     Public Shared Function OEE_GET_TARGET(shift As String, WI As String, actual As String)
         Dim api = New api()
         Dim TarGet = api.Load_data("http://" & Backoffice_model.svApi & "/API_NEW_FA/index.php/GET_OEE/GET_TARGET?shift=" & shift & "&WI=" & WI & "&actual=" & actual)

@@ -1,4 +1,5 @@
-﻿Imports System.Web.Script.Serialization
+﻿Imports System.Net.NetworkInformation
+Imports System.Web.Script.Serialization
 Public Class closeLotsummary
     Shared datlvDefectsumary As ListViewItem
     Shared listviewSpecial As ListViewItem
@@ -27,8 +28,13 @@ Public Class closeLotsummary
     Shared aDefectcode As List(Of String) = New List(Of String)
     Shared aDefectQty As List(Of String) = New List(Of String)
     Public S_index As Integer = 0
+    Shared NextProcess As Integer = 0
+    Shared ClickCloseLot As Integer = 0
+    Dim ctsDelay As New Threading.CancellationTokenSource()
     Private Sub closeLotsummary_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Try
+            sizeLocation()
+            checkNetColselot()
             setVariable()
             Finish_work.Close()
             'If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
@@ -49,8 +55,13 @@ Public Class closeLotsummary
             'load_show.Show()
             '    End If
         Catch ex As Exception
-            load_show.Show()
+            checkNetColselot()
         End Try
+    End Sub
+    Public Sub sizeLocation()
+        loadNet.Width = 800
+        loadNet.Height = 600
+        loadNet.Location = New Point(1, 0)
     End Sub
     Public Sub setDataSpecial()
         Dim i As Integer = 0
@@ -85,7 +96,7 @@ Public Class closeLotsummary
             ListView2.Items.Add(listviewSpecial)
         Next
     End Sub
-    Public  Function getDefectdetailnc(wi As String, seq As String, lot As String)
+    Public Function getDefectdetailnc(wi As String, seq As String, lot As String)
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
                 aDefectcode.Clear()
@@ -163,7 +174,7 @@ Public Class closeLotsummary
                 Return rs
             End If
         Catch ex As Exception
-            load_show.Show()
+            checkNetColselot()
         End Try
     End Function
     Public Sub setVariable()
@@ -210,12 +221,31 @@ Public Class closeLotsummary
             Me.Close()
         End If
     End Sub
+
     Public Function calGoodqty(act As Integer, nc As Integer, ng As Integer)
         Dim result = act - (nc + ng)
         Return result
     End Function
-    Public Sub Manage_closelot()
+    Public Async Function WaitForNetworkWithPopup() As Task
+        Do While Not IsNetworkAvailable() OrElse Not My.Computer.Network.Ping(Backoffice_model.svp_ping)
+            If Not load_show.Visible Then
+                load_show.Show()
+            End If
+            Console.WriteLine("⛔ ยังไม่มี Network หรือ Ping ไม่ผ่าน... รอ 1 วินาที")
+            Await Task.Delay(1000)
+        Loop
+        If load_show.Visible Then
+            load_show.Hide()
+        End If
+    End Function
+
+    Private Function IsNetworkAvailable() As Boolean
+        Return NetworkInterface.GetIsNetworkAvailable()
+    End Function
+
+    Public Async Function Manage_closelot() As Task
         'Try
+        Await WaitForNetworkWithPopup()
         If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
             If Loss_reg.Visible = True Then
                 Loss_reg.Submit_loss()
@@ -243,6 +273,7 @@ Public Class closeLotsummary
                         Dim i As Integer = 1
                         For Each itemchild As Object In dcResultdatafg
                             Dim date_now = DateTime.Now.ToString("yyyy-MM-dd H:m:s")
+                            Await WaitForNetworkWithPopup()
                             ClickOk(itemPlanData.wi, lbLine.Text, itemchild("dt_item_cd").ToString(), "1", sLot, Iseq, itemchild("dt_type").ToString(), itemchild("dt_code").ToString(), itemchild("total_nc").ToString(), date_now, itemchild("pwi_id").ToString())
                             mdSqlite.UpdateStatusCloselotSqlite("1", itemchild("pwi_id").ToString())
                         Next
@@ -252,11 +283,14 @@ Public Class closeLotsummary
                         Dim i As Integer = 1
                         For Each itemfg As Object In dcResultdata
                             Dim date_now = DateTime.Now.ToString("yyyy-MM-dd H:m:s")
+                            Await WaitForNetworkWithPopup()
+
                             ClickOk(itemPlanData.wi, lbLine.Text, itemfg("dt_item_cd").ToString(), "2", sLot, Iseq, itemfg("dt_type").ToString(), itemfg("dt_code").ToString(), itemfg("total_nc").ToString(), date_now, itemfg("pwi_id").ToString())
                             mdSqlite.UpdateStatusCloselotSqlite("1", itemfg("pwi_id").ToString())
                         Next
                     End If
                     If Backoffice_model.S_chk_spec_line = 1 Then
+                        Await WaitForNetworkWithPopup()
                         Dim data = Backoffice_model.GET_START_END_PRODUCTION_DETAIL_SPECTAIL_TIME(Working_Pro.pwi_id)
                         If data <> "0" Then
                             Dim dFg As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(data)
@@ -280,6 +314,8 @@ Public Class closeLotsummary
                     Dim i As Integer = 1
                     For Each itemchild As Object In dcResultdatafg
                         Dim date_now = DateTime.Now.ToString("yyyy-MM-dd H:m:s")
+                        Await WaitForNetworkWithPopup()
+
                         ClickOk(sWi, lbLine.Text, itemchild("dt_item_cd").ToString(), "1", sLot, sSeq, itemchild("dt_type").ToString(), itemchild("dt_code").ToString(), itemchild("total_nc").ToString(), date_now, Working_Pro.pwi_id)
                     Next
                 End If
@@ -290,10 +326,12 @@ Public Class closeLotsummary
                     Dim i As Integer = 1
                     For Each itemfg As Object In dcResultdata
                         Dim date_now = DateTime.Now.ToString("yyyy-MM-dd H:m:s")
+                        Await WaitForNetworkWithPopup()
                         ClickOk(sWi, lbLine.Text, itemfg("dt_item_cd").ToString(), "2", sLot, sSeq, itemfg("dt_type").ToString(), itemfg("dt_code").ToString(), itemfg("total_nc").ToString(), date_now, Working_Pro.pwi_id)
                     Next
                 End If
                 If Backoffice_model.S_chk_spec_line = 1 Then
+                    Await WaitForNetworkWithPopup()
                     Dim data = Backoffice_model.GET_START_END_PRODUCTION_DETAIL_SPECTAIL_TIME(Working_Pro.pwi_id)
                     If data <> "0" Then
                         Dim dFg As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(data)
@@ -310,6 +348,8 @@ Public Class closeLotsummary
             If MainFrm.chk_spec_line = "2" Then
                 For Each itemPlanData As DataPlan In Confrime_work_production.ArrayDataPlan
                     Dim special_wi As String = itemPlanData.wi
+                    Await WaitForNetworkWithPopup()
+
                     If cFlg = 1 Then
                         Backoffice_model.work_complete(special_wi)
                     Else
@@ -317,13 +357,17 @@ Public Class closeLotsummary
                     End If
                 Next
             Else
+                Await WaitForNetworkWithPopup()
+
                 If cFlg = 1 Then
                     Backoffice_model.work_complete(sWi)
                 Else
                     Backoffice_model.work_complete_offline(sWi)
                 End If
             End If
+            Await WaitForNetworkWithPopup()
             insertProductionactual(sWi, sLine, sPart, pQty, seqQty, sSeq, sShift, staffNo, stDatetime, eDatetime, sLot, cFlg, trFlg, dFlg, prdFlg, clFlg, avarage_eff, avarage_act_prd_time)
+            Await WaitForNetworkWithPopup()
             checkPrintnormal()
             If MainFrm.chk_spec_line = "2" Then
                 Dim GenSEQ As Integer = sSeq - MainFrm.ArrayDataPlan.ToArray.Length
@@ -350,13 +394,14 @@ Public Class closeLotsummary
                 Me.Close()
             End If
         Else
-            load_show.Show()
+            checkNetColselot()
         End If
         'Catch ex As Exception
         'load_show.Show()
         ' End Try
-    End Sub
-    Private Sub btnOk_Click(sender As Object, e As EventArgs) Handles btnOk.Click
+    End Function
+    Private Async Sub btnOk_Click(sender As Object, e As EventArgs) Handles btnOk.Click
+        ClickCloseLot = 1
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
                 If StopMenu.Visible Then
@@ -371,10 +416,10 @@ Public Class closeLotsummary
                     ScanQRprod.Show()
                     Me.Enabled = False
                 Else
-                    Manage_closelot()
+                    Await Manage_closelot()
                 End If
             Else
-                load_show.Show()
+                checkNetColselot()
             End If
         Catch ex As Exception
             '  Working_Pro.Close()
@@ -383,10 +428,10 @@ Public Class closeLotsummary
             '  MainFrm.Show()
             '  Me.Close() ' add on 
             '  MsgBox("In Catch Function btnok In CloseLotSummary =>" & ex.Message)
-            load_show.Show()
+            checkNetColselot()
         End Try
     End Sub
-    Public Sub checkPrintdefect(wi As String, seq As String, lot As String)
+    Public Async Sub checkPrintdefect(wi As String, seq As String, lot As String)
         Dim md = New modelDefect()
         Dim mdSqlite = New ModelSqliteDefect()
         Dim dfType As String = "2" 'NC
@@ -414,6 +459,7 @@ Public Class closeLotsummary
                 For Each detailItemfg As Object In dFg
                     Dim objTagprintdefect = New printDefect()
                     Dim menu = "1"
+                    Await WaitForNetworkWithPopup()
                     objTagprintdefect.Set_parameter_print(itemdf("dt_item_cd").ToString(), detailItemfg("ITEM_NAME").ToString(), detailItemfg("MODEL").ToString(), sLine, stDatetime, detailItemfg("LOCATION_PART").ToString(), sShift, factory_cd, sLot, itemdf("total_nc"), seq, wi, itemType, dfType, menu)
                 Next
             Next
@@ -432,11 +478,13 @@ Public Class closeLotsummary
             End If
             For Each itemd As Object In dcResultdatachild
                 itemType = "2"
-                Dim rsApi = md.mGetdatepartdetail(itemd("dt_item_cd").ToString, "2")
+                Await WaitForNetworkWithPopup()
+                Dim rsApi = Await md.mGetdatepartdetail(itemd("dt_item_cd").ToString, "2")
                 Dim dChild As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(rsApi)
                 For Each detailItemchild As Object In dChild
                     Dim objTagprintdefect = New printDefect()
                     Dim menu = "1"
+                    Await WaitForNetworkWithPopup()
                     objTagprintdefect.Set_parameter_print(itemd("dt_item_cd").ToString(), detailItemchild("ITEM_NAME").ToString(), detailItemchild("MODEL").ToString(), sLine, stDatetime, detailItemchild("LOCATION_PART").ToString(), sShift, factory_cd, sLot, itemd("total_nc"), seq, wi, itemType, dfType, menu)
                 Next
             Next
@@ -461,11 +509,13 @@ Public Class closeLotsummary
             End If
             For Each itemdf As Object In dcResultdatafg
                 itemType = "1"
+                Await WaitForNetworkWithPopup()
                 Dim rsApi = md.mGetdatepartdetail(itemdf("dt_item_cd").ToString, "1")
                 Dim dFg As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(rsApi)
                 For Each detailItemfg As Object In dFg
                     Dim objTagprintdefect = New printDefect()
                     Dim menu = "1"
+                    Await WaitForNetworkWithPopup()
                     objTagprintdefect.Set_parameter_print(itemdf("dt_item_cd").ToString(), detailItemfg("ITEM_NAME").ToString(), detailItemfg("MODEL").ToString(), sLine, stDatetime, detailItemfg("LOCATION_PART").ToString(), sShift, factory_cd, sLot, itemdf("total_nc"), seq, wi, itemType, dfType, menu)
                 Next
             Next
@@ -484,11 +534,13 @@ Public Class closeLotsummary
             End If
             For Each itemd As Object In dcResultdatachild
                 itemType = "2"
+                Await WaitForNetworkWithPopup()
                 Dim rsApi = md.mGetdatepartdetail(itemd("dt_item_cd").ToString, "2")
                 Dim dChild As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(rsApi)
                 For Each detailItemchild As Object In dChild
                     Dim objTagprintdefect = New printDefect()
                     Dim menu = "1"
+                    Await WaitForNetworkWithPopup()
                     objTagprintdefect.Set_parameter_print(itemd("dt_item_cd").ToString(), detailItemchild("ITEM_NAME").ToString(), detailItemchild("MODEL").ToString(), sLine, stDatetime, detailItemchild("LOCATION_PART").ToString(), sShift, factory_cd, sLot, itemd("total_nc"), seq, wi, itemType, dfType, menu)
                 Next
             Next
@@ -564,7 +616,7 @@ Public Class closeLotsummary
         End Try
         ' End If
     End Sub
-    Public Sub insertProductionactual(wi_plan As String, line_cd As String, item_cd As String, plan_qty As String, act_qty As String, seq_no As String, shift_prd As String, staff_no As String, prd_st_datetime As String, prd_end_datetime As String, lot_no As String, comp_flg2 As String, transfer_flg As String, del_flg As String, prd_flg As String, close_lot_flg As String, avarage_eff As String, avarage_act_prd_time As String)
+    Public Async Sub insertProductionactual(wi_plan As String, line_cd As String, item_cd As String, plan_qty As String, act_qty As String, seq_no As String, shift_prd As String, staff_no As String, prd_st_datetime As String, prd_end_datetime As String, lot_no As String, comp_flg2 As String, transfer_flg As String, del_flg As String, prd_flg As String, close_lot_flg As String, avarage_eff As String, avarage_act_prd_time As String)
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
                 transfer_flg = "1"
@@ -577,6 +629,7 @@ Public Class closeLotsummary
                         Dim special_wi As String = itemPlanData.wi
                         Dim special_item_cd As String = itemPlanData.item_cd
                         Dim special_item_name As String = itemPlanData.item_name
+                        Await WaitForNetworkWithPopup()
                         Backoffice_model.Insert_prd_close_lot(special_wi, line_cd, special_item_cd, plan_qty, act_qty, Iseq, shift_prd, staff_no, prd_st_datetime, prd_end_datetime, lot_no, comp_flg2, transfer_flg, del_flg, prd_flg, close_lot_flg, avarage_eff, avarage_act_prd_time)
                         Backoffice_model.Insert_prd_close_lot_sqlite(special_wi, line_cd, special_item_cd, plan_qty, act_qty, Iseq, shift_prd, staff_no, prd_st_datetime, prd_end_datetime, lot_no, comp_flg2, transfer_flg, del_flg, prd_flg, close_lot_flg, avarage_eff, avarage_act_prd_time)
                         Dim temp_co_emp As Integer = List_Emp.ListView1.Items.Count
@@ -587,6 +640,8 @@ Public Class closeLotsummary
                         Next
                     Next
                 Else
+                    Await WaitForNetworkWithPopup()
+
                     Backoffice_model.Insert_prd_close_lot(wi_plan, line_cd, item_cd, plan_qty, act_qty, seq_no, shift_prd, staff_no, prd_st_datetime, prd_end_datetime, lot_no, comp_flg2, transfer_flg, del_flg, prd_flg, close_lot_flg, avarage_eff, avarage_act_prd_time)
                     Backoffice_model.Insert_prd_close_lot_sqlite(wi_plan, line_cd, item_cd, plan_qty, act_qty, seq_no, shift_prd, staff_no, prd_st_datetime, prd_end_datetime, lot_no, comp_flg2, transfer_flg, del_flg, prd_flg, close_lot_flg, avarage_eff, avarage_act_prd_time)
                     Dim temp_co_emp As Integer = List_Emp.ListView1.Items.Count
@@ -632,34 +687,48 @@ Public Class closeLotsummary
             End If
         End Try
     End Sub
-    Public Sub ClickOk(dtWino As String, dtLineno As String, dtItemcd As String, dtItemtype As String, dtLotno As String, dtSeqno As String, dtType As String, dtCode As String, dtQty As String, dtActualdate As String, pwi_id As String)
+    Public Async Sub ClickOk(dtWino As String, dtLineno As String, dtItemcd As String, dtItemtype As String, dtLotno As String, dtSeqno As String, dtType As String, dtCode As String, dtQty As String, dtActualdate As String, pwi_id As String)
         Dim md As New modelDefect()
-        Dim mdSQLite = New ModelSqliteDefect
+        Dim mdSQLite = New ModelSqliteDefect()
         Dim cFlg As Integer = comPleteflg(sAct, pQty)
         Try
-            If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                Dim lastId = md.mInsertdefectactual(dtWino, dtLineno, dtItemcd, dtItemtype, dtLotno, dtSeqno, dtType, dtCode, dtQty, "1", dtActualdate, pwi_id)
-                If dtItemtype = "2" Then
-                    Try
-                        Dim getData = mdSQLite.mSqliteGetdefectdetail(dtWino, dtSeqno, dtLotno, dtType, dtItemcd, dtCode)
-                        If getData <> "0" Then
-                            Dim rsData2 As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(getData)
-                            For Each item As Object In rsData2
-                                If item("dt_supplier_code").ToString() = "" Then
-                                Else
-                                    Dim insData = md.minsertDefectTrascetionSupplier(lastId, item("dt_supplier_code").ToString(), item("total_nc").ToString(), dtLineno)
-                                End If
-                            Next
-                        End If
-                    Catch ex As Exception
-                        load_show.Show()
-                    End Try
-                End If
+recheck_defect:
+            ' ✅ ตรวจสอบ network ก่อนเริ่ม insert defect actual
+            Await WaitForNetworkWithPopup()
+            Dim lastId = Await md.mInsertdefectactual(dtWino, dtLineno, dtItemcd, dtItemtype, dtLotno, dtSeqno, dtType, dtCode, dtQty, "1", dtActualdate, pwi_id)
+            'If lastId = "0" Then
+            ' 🔁 Net down หรือ insert fail ให้ loop ไปใหม่
+            'GoTo recheck_defect
+            'End If
+            ' ✅ ถ้าเป็นประเภท itemtype = 2 ต้อง Insert Supplier ด้วย
+            If dtItemtype = "2" Then
+                Try
+                    Dim getData = mdSQLite.mSqliteGetdefectdetail(dtWino, dtSeqno, dtLotno, dtType, dtItemcd, dtCode)
+                    If getData <> "0" Then
+                        Dim rsData2 As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(getData)
+                        For Each item As Object In rsData2
+                            If Not String.IsNullOrWhiteSpace(item("dt_supplier_code").ToString()) Then
+                                ' ✅ ตรวจ network ก่อน insert supplier defect
+                                Await WaitForNetworkWithPopup()
+                                Dim insData = md.minsertDefectTrascetionSupplier(lastId, item("dt_supplier_code").ToString(), item("total_nc").ToString(), dtLineno)
+                            End If
+                        Next
+                    End If
+                Catch ex As Exception
+                    ' ❗ ถ้า error ก็รอ Network แล้วปล่อย error ไปเพื่อไม่ให้ระบบ crash
+                    Task.Run(Async Function()
+                                 Await WaitForNetworkWithPopup()
+                             End Function)
+                End Try
             End If
         Catch ex As Exception
-            load_show.Show()
+            ' ❗ ถ้าเกิด exception ทั้งหมดในขั้นตอนหลักก็แสดง popup network และหยุดที่นี่
+            Task.Run(Async Function()
+                         Await WaitForNetworkWithPopup()
+                     End Function)
         End Try
     End Sub
+
     Public Function comPleteflg(Act As Integer, Plan As Integer)
         Dim cFlg As Integer = 0
         If Act < Plan Then
@@ -789,4 +858,32 @@ Public Class closeLotsummary
         btnOk.Visible = True
         ShowSpcDetailDefect.Show()
     End Sub
+    Async Function checkNetColselot() As Task
+        Await Task.Delay(3000).ContinueWith(Sub(task)
+                                                If Not task.IsCanceled Then
+                                                    ' ตรวจสอบว่า Handle ของฟอร์มยังถูกสร้างอยู่และไม่ถูก Dispose
+                                                    If Me.IsHandleCreated AndAlso Not Me.IsDisposed Then
+                                                        Try
+                                                            Me.Invoke(Sub()
+                                                                          Try
+                                                                              If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
+                                                                                  loadNet.Visible = False
+                                                                                  NextProcess = 1
+                                                                              Else
+                                                                                  loadNet.Visible = True
+                                                                                  NextProcess = 0
+                                                                              End If
+                                                                              checkNetColselot()
+                                                                          Catch ex As Exception
+                                                                              loadNet.Visible = True
+                                                                              NextProcess = 0
+                                                                              checkNetColselot()
+                                                                          End Try
+                                                                      End Sub)
+                                                        Catch ex As Exception
+                                                        End Try
+                                                    End If
+                                                End If
+                                            End Sub, TaskScheduler.FromCurrentSynchronizationContext())
+    End Function
 End Class

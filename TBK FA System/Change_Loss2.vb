@@ -1,6 +1,5 @@
 Imports System.Globalization
 Imports System.Web.Script.Serialization
-
 Public Class Change_Loss2
     Public Shared S_index As Integer = 0
     Private Sub Button3_Click(sender As Object, e As EventArgs) Handles Button3.Click
@@ -99,7 +98,6 @@ Public Class Change_Loss2
             load_show.Show()
         End Try
     End Sub
-
     Private Sub ListView2_SelectedIndexChanged(sender As Object, e As EventArgs) Handles ListView2.SelectedIndexChanged
         If ListView2.SelectedItems.Count <= 0 Then
             Button1.Enabled = False

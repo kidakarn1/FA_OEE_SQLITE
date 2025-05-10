@@ -6,17 +6,15 @@ Public Class model_api_sqlite
         If ins_qty.Visible = False Then ' check หาก อยู่ หน้า ins_qty จะไม่ Insert เพราะ เดี๋ยว Sqlite ชนกับตัวที่กำลัง Insert  
             Dim date_st = DateTime.Now.ToString("yyyy-MM-dd") & " 00:00:00"
             Dim date_end = DateTime.Now.ToString("yyyy-MM-dd") & " 23:59:59"
-            Dim Sql = "Select * from tag_print_detail where created_date between '" & date_st & "' and  '" & date_end & "' and tr_status = '0'"
-            Console.WriteLine(Sql)
+            ' Dim Sql = "Select * from tag_print_detail where created_date between '" & date_st & "' and  '" & date_end & "' and tr_status = '0'"
+            Dim Sql = "Select * from tag_print_detail where   tr_status = '0'"
+            'Console.WriteLine(Sql)
             Dim api = New api
             Dim jsonData As String = api.Load_dataSQLite(Sql)
             Try
                 Dim i As Integer = 0
                 Dim dcResultdata As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(jsonData)
                 For Each items As Object In dcResultdata
-                    If i = 0 Then
-                        TrasnferData.Show()
-                    End If
                     Dim id = items("id").ToString()
                     Dim wi = items("wi").ToString()
                     Dim qr_detail = items("qr_detail").ToString()
@@ -33,17 +31,16 @@ Public Class model_api_sqlite
                     Dim pk_tag_print_id = Backoffice_model.Trasnfer_tag_print_detail(wi, qr_detail, box_no, print_count, seq_no, shift, flg_control, item_cd, pwi_id, tag_group_no, "0", nextProcess, tr_status)
                     If pk_tag_print_id <> 0 Then
                         Dim sqlUpdate = "Update tag_print_detail set tr_status = '" & tr_status & "' where id = '" & id & "'"
-                        Console.WriteLine(sqlUpdate)
+                        'Console.WriteLine(sqlUpdate)
                         Dim jsonDataUpdate As String = api.Load_dataSQLite(sqlUpdate)
                     End If
                     i = i + 1
-                    Console.WriteLine("iiii+." & i & "=" & dcResultdata.Count)
+                    'Console.WriteLine("iiii+." & i & "=" & dcResultdata.Count)
                     If i = dcResultdata.Count Then
                         model_api_sqlite.UpdateStatus_tag_print_detail_sub(pk_tag_print_id, wi)
                         model_api_sqlite.UpdateStatus_tag_print_detail_main()
                     End If
                 Next
-                TrasnferData.Close()
             Catch ex As Exception
             End Try
         End If
@@ -54,8 +51,9 @@ Public Class model_api_sqlite
     Public Shared Function UpdateStatus_tag_print_detail_main()
         Dim date_st = DateTime.Now.ToString("yyyy-MM-dd") & " 00:00:00"
         Dim date_end = DateTime.Now.ToString("yyyy-MM-dd") & " 23:59:59"
-        Dim Sql = "Select * from tag_print_detail_main where created_date between '" & date_st & "' and  '" & date_end & "' and tr_status = '0'"
-        Console.WriteLine(Sql)
+        'Dim Sql = "Select * from tag_print_detail_main where created_date between '" & date_st & "' and  '" & date_end & "' and tr_status = '0'"
+        Dim Sql = "Select * from tag_print_detail_main where  tr_status = '0'"
+        'Console.WriteLine(Sql)
         Dim api = New api
         Dim jsonData As String = api.Load_dataSQLite(Sql)
         '  Try
@@ -80,19 +78,19 @@ Public Class model_api_sqlite
             Dim pkMainId = Backoffice_model.Trasnfer_tag_print_main(tag_ref_str_id, tag_ref_end_id, line_cd, tag_qr_detail, tag_batch_no, tag_next_proc, flg_control, created_date, updated_date, tag_wi_no, pwi_no, tag_group_no, tr_status, seq_no, lot_no)
             If pkMainId <> 0 Then
                 Dim sqlUpdate = "Update tag_print_detail_main set tr_status = '" & tr_status & "' where tag_id = '" & id & "'"
-                Console.WriteLine("sqlUpdate===>" & sqlUpdate)
+                'Console.WriteLine("sqlUpdate===>" & sqlUpdate)
                 Dim jsonDataUpdate As String = api.Load_dataSQLite(sqlUpdate)
             End If
         Next
         'Catch ex As Exception
         ' End Try
     End Function
-
     Public Shared Function UpdateStatus_tag_print_detail_sub(tag_print_detail_id As String, wi As String)
         Dim date_st = DateTime.Now.ToString("yyyy-MM-dd") & " 00:00:00"
         Dim date_end = DateTime.Now.ToString("yyyy-MM-dd") & " 23:59:59"
-        Dim Sql = "Select * from tag_print_detail_sub where created_date between '" & date_st & "' and  '" & date_end & "' and tr_status = '0'"
-        Console.WriteLine(Sql)
+        '  Dim Sql = "Select * from tag_print_detail_sub where created_date between '" & date_st & "' and  '" & date_end & "' and tr_status = '0'"
+        Dim Sql = "Select * from tag_print_detail_sub where   tr_status = '0'"
+        'Console.WriteLine(Sql)
         Dim api = New api
         Dim jsonData As String = api.Load_dataSQLite(Sql)
         Try
@@ -109,13 +107,12 @@ Public Class model_api_sqlite
                 Dim tr_status = 1
                 Backoffice_model.Transfer_Tag_Print_sub(wi, tag_print_detail_id, line_cd, tag_qr_detail, flg_control, created_date, updated_date, tag_wi_no, "1")
                 Dim sqlUpdate = "Update tag_print_detail_sub set tr_status = '" & tr_status & "' where tag_id = '" & tag_id & "'"
-                Console.WriteLine(sqlUpdate)
+                ' Console.WriteLine(sqlUpdate)
                 Dim jsonDataUpdate As String = api.Load_dataSQLite(sqlUpdate)
             Next
         Catch ex As Exception
         End Try
     End Function
-
     Public Shared Function mas_INSERT_production_working_info(ind_row As String, pwi_lot_no As String, pwi_seq_no As String, pwi_shift As String, pwi_id As String)
         Dim dateTime_Crr = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
         Try
@@ -149,7 +146,7 @@ Public Class model_api_sqlite
             mas_update_tagprint(wi, "2", "0", tr_status)
             tag_group_no = "1"
             Dim Sql = "INSERT INTO tag_print_detail(wi,qr_detail,box_no,print_count,created_date,updated_date,seq_no,shift , next_proc ,  flg_control , pwi_id , tag_group_no , tr_status) VALUES ('" & wi & "','" & qr_detail & "','" & box_no & "','" & print_count & "','" & currdated & "','" & currdated & "','" & seq_no & "','" & shift & "','" & nextProcess & "' ,'" & flg_control & "','" & pwi_id & "','" & tag_group_no & "','" & tr_status & "')"
-            Console.WriteLine(Sql)
+            'Console.WriteLine(Sql)
             Dim api = New api
             Dim jsonData As String = api.Load_dataSQLite(Sql)
             Return 1
@@ -161,7 +158,7 @@ Public Class model_api_sqlite
         Try
             Dim api = New api
             Dim Sql = " Select  tag_id  As id_print from tag_print_detail_main where tag_qr_detail = '" & qr_detail & "'"
-            Console.WriteLine(Sql)
+            'Console.WriteLine(Sql)
             Dim jsonData As String = api.Load_dataSQLite(Sql)
             Dim id_print As String = 0
             Try
@@ -183,7 +180,7 @@ Public Class model_api_sqlite
             mas_update_tagprint_sub(wi, "2", "0", tr_status)
             Dim tmp_tag_group_no As Integer = 1
             Dim Sql = "INSERT INTO tag_print_detail_sub(tag_ref_id , line_cd , tag_qr_detail , flg_control , created_date , updated_date , tag_wi_no , tag_group_no , tr_status , lot_no) VALUES ('" & ref_id & "','" & line & "','" & qr_code & "' ,'" & print_back.check_tagprint_main() & "' , '" & currdated & "' , '" & currdated & "' , '" & wi & "' , '" & tmp_tag_group_no & "' , '" & tr_status & "' , '" & lot_no & "')"
-            Console.WriteLine(Sql)
+            'Console.WriteLine(Sql)
             Dim api = New api
             Dim jsonData As String = api.Load_dataSQLite(Sql)
             Return 1
@@ -200,7 +197,7 @@ Public Class model_api_sqlite
             Dim end_id As String = mas_Get_ref_end_id(wi, seq_no, Working_Pro.Label18.Text)
             tag_group_no = "1"
             Dim Sql = "INSERT INTO tag_print_detail_main(tag_ref_str_id ,tag_ref_end_id , line_cd , tag_qr_detail , tag_batch_no , tag_next_proc , flg_control , created_date , updated_date , tag_wi_no , pwi_id , tag_group_no , tr_status , lot_no) VALUES ('" & start_id & "','" & end_id & "','" & MainFrm.Label4.Text & "','" & qr_detail & "' ,'" & batch_no & "' ,'" & next_process & "','" & flg_control & "','" & currdated & "','" & currdated & "','" & wi & "','" & pwi_id & "' ,'" & tag_group_no & "' ,'" & tr_status & "','" & lot_no & "')"
-            Console.WriteLine(Sql)
+            'Console.WriteLine(Sql)
             Dim api = New api
             Dim jsonData As String = api.Load_dataSQLite(Sql)
             Return 1
@@ -211,7 +208,7 @@ Public Class model_api_sqlite
     Public Shared Function mas_Get_ref_start_id(wi As String, seq_no As String, lot_no As String)
         Dim api = New api()
         Dim Sql = " select min(id) as id from tag_print_detail where wi = '" & wi & "'  and  SUBSTRING( qr_detail, 96, 3) = '" & seq_no & "' and SUBSTRING( qr_detail, 59, 4) = '" & lot_no & "'"
-        Console.WriteLine(Sql)
+        'Console.WriteLine(Sql)
         Dim id As Integer = 0
         Dim jsonData As String = api.Load_dataSQLite(Sql)
         Try
@@ -226,7 +223,7 @@ Public Class model_api_sqlite
     Public Shared Function mas_Get_ref_end_id(wi As String, seq_no As String, lot_no As String)
         Dim api = New api()
         Dim Sql = " select max(id) as id from tag_print_detail where wi = '" & wi & "'  and  SUBSTRING( qr_detail, 96, 3) = '" & seq_no & "' and SUBSTRING( qr_detail, 59, 4) = '" & lot_no & "'"
-        Console.WriteLine(Sql)
+        'Console.WriteLine(Sql)
         Dim id As Integer = 0
         Dim jsonData As String = api.Load_dataSQLite(Sql)
         Try
@@ -244,7 +241,7 @@ Public Class model_api_sqlite
         Try
             Dim currdated As String = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
             Dim Sql = "update tag_print_detail set flg_control = '" & flgUpdate & "' , tr_status ='" & tr_status & "' where flg_control = '" & conditionflg & "' and  wi = '" & wi & "'"
-            Console.WriteLine(Sql)
+            'Console.WriteLine(Sql)
             Dim api = New api
             Dim jsonData As String = api.Load_dataSQLite(Sql)
             Return 1
@@ -256,7 +253,7 @@ Public Class model_api_sqlite
         Try
             Dim currdated As String = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
             Dim Sql = "update tag_print_detail_main set flg_control = '" & flgUpdate & "' , tr_status ='" & tr_status & "' where flg_control = '" & conditionflg & "' and  tag_wi_no = '" & wi & "'"
-            Console.WriteLine(Sql)
+            ' Console.WriteLine(Sql)
             Dim api = New api
             Dim jsonData As String = api.Load_dataSQLite(Sql)
             Return 1
@@ -268,7 +265,7 @@ Public Class model_api_sqlite
         Try
             Dim currdated As String = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
             Dim Sql = "update tag_print_detail set flg_control = '" & flgUpdate & "' , tr_status ='" & tr_status & "' where flg_control = '" & conditionflg & "' and  wi = '" & wi & "'"
-            Console.WriteLine(Sql)
+            'Console.WriteLine(Sql)
             Dim api = New api
             Dim jsonData As String = api.Load_dataSQLite(Sql)
             Return 1
@@ -309,7 +306,7 @@ Public Class model_api_sqlite
             End Try
             Try
                 Dim sql = "SELECT tmp_id from tmp_planseq where tmp_created_date BETWEEN  '" & date_start & "' and '" & date_end_covert & "' and tmp_line_cd = '" & line_cd & "'"
-                Console.WriteLine("sql====>" & sql)
+                'Console.WriteLine("sql====>" & sql)
                 Dim jsonData As String = api.Load_dataSQLite(sql)
                 Dim dcResultdata As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(jsonData)
                 Dim tmp_id As String = ""
@@ -358,7 +355,7 @@ Public Class model_api_sqlite
                 ima_status_flg = "1"
             Next
             Dim sqlSum = "select IFNULL(SUM(qty), 0) as rs from act_ins where st_time >= '" & convertStDate & "' and end_time <= '" & convertdate_end & "' and line_cd ='" & line_cd & "' and seq_mold_no = '" & tmp_seq_mold_no & "'"
-            Console.WriteLine(sqlSum)
+            'Console.WriteLine(sqlSum)
             Dim jsonDataSum As String = api.Load_dataSQLite(sqlSum)
             Dim dcResultdataSum As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(jsonDataSum)
             Dim tmp_id As String = ""

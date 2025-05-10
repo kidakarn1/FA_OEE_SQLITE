@@ -7,6 +7,7 @@ Imports System.IO.Ports
 Imports Newtonsoft.Json.Linq
 Public Class Backoffice_model
     Public Shared total_nc As Integer = 0
+    Public Shared statusTransfer As Integer = 0
     Public Shared flg_cat_layout_line As Integer = 0
     'Public Shared myConnection As New SqlConnection 'ตัวแปรสำหรับติดต่อฐานข้อมูล
     'Public Shared sqlConnect As String = "Server=192.168.161.101\PCSDBSV;Initial Catalog=tbkkfa01_dev;User ID=sa;Password=Te@m1nw;"
@@ -51,6 +52,8 @@ Public Class Backoffice_model
     Public Shared gobal_DateTimeComputerDown As String = ""
     Public Shared gobal_QTYComputerDown As String = ""
     Public Shared WithEvents serialPort As New SerialPort
+    Public Shared printedTags As New List(Of String)
+    Public Shared checkSqliteTrasnfer As Boolean = False
     Public Shared Function sqlite_conn_dbsv()
         Dim sqliteConn As New SQLiteConnection(sqliteConnect)
         Check_connect_sqlite()
@@ -72,7 +75,7 @@ Public Class Backoffice_model
                 svDatabase = LoadSQL("ip_database").ToString()
             End While
             sqlConnect = temp_stre
-            model_api_sqlite.UpdateStatus_tag_print_detail()
+            '  model_api_sqlite.UpdateStatus_tag_print_detail()
             Return temp2Str
         Catch ex As Exception
             MsgBox("SQLite Database connect failed. Please contact PC System [Function sqlite_conn_dbsv]")
@@ -91,12 +94,13 @@ Public Class Backoffice_model
     Public Shared Sub CloseRS232()
         serialPort.Close()
     End Sub
-    Public Shared Function GetTimeAutoBreakTime(lineCd As String)
+    Public Shared Function GetTimeAutoBreakTime(lineCd As String, shift As String)
         Dim result As String = ""
         Try
             Dim api = New api()
             ' Fetch data from the API
-            Dim GetData = api.Load_data("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/GetTimeAutoBreakTime?lineCd=" & MainFrm.Label4.Text)
+            Dim GetData = api.Load_data("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/GetTimeAutoBreakTime?lineCd=" & MainFrm.Label4.Text & "&shift=" & shift)
+            ' Console.WriteLine("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/GetTimeAutoBreakTime?lineCd=" & MainFrm.Label4.Text & "&shift=" & shift)
             If GetData <> "0" Then
                 ' Deserialize JSON response into a list of objects
                 Dim dcResultdata As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(GetData)
@@ -111,7 +115,7 @@ Public Class Backoffice_model
             End If
         Catch ex As Exception
             ' Handle exceptions
-            MsgBox("MSSQL Database connect failed. Please contact PC System [Function GetTimeAutoBreakTime]" & ex.Message)
+           ' MsgBox("MSSQL Database connect failed. Please contact PC System [Function GetTimeAutoBreakTime]" & ex.Message)
         End Try
         Return result
     End Function
@@ -222,7 +226,7 @@ Public Class Backoffice_model
     Public Shared Function load_config_master_database()
         Dim api = New api()
         Dim check_tag_type = api.Load_data("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/JOIN_CHECK_LINE_MASTER?line_cd=" & MainFrm.Label4.Text)
-        Console.WriteLine("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/JOIN_CHECK_LINE_MASTER?line_cd=" & MainFrm.Label4.Text)
+        'Console.WriteLine("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/JOIN_CHECK_LINE_MASTER?line_cd=" & MainFrm.Label4.Text)
         Return check_tag_type
     End Function
     Public Shared Function F_NEXT_PROCESS(ITEM_CD As String)
@@ -263,10 +267,10 @@ Public Class Backoffice_model
                 "DELETE FROM close_lot_act where prd_st_date BETWEEN '" & convert_date_start & "' AND '" & convert_del_2_week & "' and transfer_flg = '1'",
                 "DELETE FROM loss_actual where start_loss BETWEEN '" & convert_date_start & "' AND '" & convert_del_2_week & "' and transfer_flg = '1'",
                 "DELETE FROM maintenance where mn_create_date BETWEEN '" & convert_date_start1 & "' AND '" & currdated1 & "' and mn_status = '2'",
-                "DELETE FROM defect_transactions where dt_created_date BETWEEN '" & convert_date_start & "' and '" & convert_del_2_week & "'" & "and dt_status_close_lot = '1'"
+                "DELETE FROM line_status_detail"
             }
         For i = 0 To command_data.Length - 1
-            Console.WriteLine(command_data(i))
+            'Console.WriteLine(command_data(i))
             Check_connect_sqlite()
             Dim sqliteConn As New SQLiteConnection(sqliteConnect)
             Try
@@ -534,7 +538,6 @@ Public Class Backoffice_model
             'Application.Exit()
         End Try
     End Function
-
     Public Shared Function Insert_Rm_Scan(WI As String, ITEM_CD As String, LOT_PO As String, SEQ As String, SHIFT As String, Rm_created_date As String, Rm_created_by As String, Rm_Updated_date As String, Rm_updated_by As String, Rm_line_cd As String, Rm_QR_code As String, ref_id As String)
         Dim reader As SqlDataReader
         Dim SQLConn As New SqlConnection() 'The SQL Connection
@@ -902,15 +905,15 @@ re_insert_rework_act:
             'Application.Exit()
         End Try
     End Function
-    Public Shared Function Check_detail_actual_insert_act()
-        updated_data_to_dbsvr()
+    Public Shared Function Check_detail_actual_insert_act(parentForm As Form)
+        updated_data_to_dbsvr(parentForm, "2")
         Dim api = New api()
         Dim result_update_count_pro = api.Load_data("http://" & svApi & "/API_NEW_FA/index.php/TESTAPITRANFER/Get_detail_act?line_cd=" & MainFrm.Label4.Text)
         'Console.WriteLine(result_update_count_pro)
         Return result_update_count_pro
     End Function
-    Public Shared Sub Check_detail_actual_insert_act_no_api()
-        updated_data_to_dbsvr()
+    Public Shared Sub Check_detail_actual_insert_act_no_api(parentForm As Form)
+        updated_data_to_dbsvr(parentForm, "2")
     End Sub
     Public Shared Function update_qty_seq(WI, SEQ, result_qty)
         Dim reader As SqlDataReader
@@ -1201,56 +1204,171 @@ where
 
     End Function
 
-    Public Shared Function Insert_prd_detail(pd As String, line_cd As String, wi_plan As String, item_cd As String, item_name As String, staff_no As Integer, seq_no As Integer, qty As Integer, st_time As String, end_time As String, use_time As Double, number_qty As Integer, pwi_id As String, status_sqlite As String) As Integer
-        Dim currdated As String = DateTime.Now.ToString("yyyy/MM/dd H:m:s", CultureInfo.InvariantCulture)
+    Public Shared Function Insert_prd_detail(
+    pd As String, line_cd As String, wi_plan As String,
+    item_cd As String, item_name As String, staff_no As Integer,
+    seq_no As Integer, qty As Integer, st_time As String,
+    end_time As String, use_time As Double, number_qty As Integer,
+    pwi_id As String, status_sqlite As String
+) As Integer
+        Dim currdated As String = DateTime.Now.ToString("yyyy/MM/dd H:mm:ss", CultureInfo.InvariantCulture)
         Dim result_date_start As Date = Date.Parse(st_time)
-        Dim st_time2 As String = result_date_start.ToString("yyyy/MM/dd H:m:s", CultureInfo.InvariantCulture)
+        Dim st_time2 As String = result_date_start.ToString("yyyy/MM/dd H:mm:ss", CultureInfo.InvariantCulture)
         Dim result_date_end As Date = Date.Parse(end_time)
-        Dim end_time2 As String = result_date_end.ToString("yyyy/MM/dd H:m:s", CultureInfo.InvariantCulture)
-
+        Dim end_time2 As String = result_date_end.ToString("yyyy/MM/dd H:mm:ss", CultureInfo.InvariantCulture)
         Dim insertId As Integer = 0
-        Dim sql As String = "
+        Try
+            If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
+                Dim sql As String = "
         INSERT INTO production_actual_detail 
             (pd, line_cd, wi_plan, item_cd, item_name, staff_no, seq_no, qty, st_time, end_time, use_time, updated_date, number_qty, pwi_id, status_transfer_sqlite) 
         VALUES 
             (@pd, @line_cd, @wi_plan, @item_cd, @item_name, @staff_no, @seq_no, @qty, @st_time, @end_time, @use_time, @updated_date, @number_qty, @pwi_id, @status_sqlite);
         SELECT SCOPE_IDENTITY();"
+                Try
+                    Using SQLConn As New SqlConnection(sqlConnect)
+                        Using SQLCmd As New SqlCommand(sql, SQLConn)
+                            SQLCmd.CommandTimeout = 120
+                            SQLCmd.Parameters.AddWithValue("@pd", pd)
+                            SQLCmd.Parameters.AddWithValue("@line_cd", line_cd)
+                            SQLCmd.Parameters.AddWithValue("@wi_plan", wi_plan)
+                            SQLCmd.Parameters.AddWithValue("@item_cd", item_cd)
+                            SQLCmd.Parameters.AddWithValue("@item_name", item_name)
+                            SQLCmd.Parameters.AddWithValue("@staff_no", staff_no)
+                            SQLCmd.Parameters.AddWithValue("@seq_no", seq_no)
+                            SQLCmd.Parameters.AddWithValue("@qty", qty)
+                            SQLCmd.Parameters.AddWithValue("@st_time", st_time2)
+                            SQLCmd.Parameters.AddWithValue("@end_time", end_time2)
+                            SQLCmd.Parameters.AddWithValue("@use_time", use_time)
+                            SQLCmd.Parameters.AddWithValue("@updated_date", currdated)
+                            SQLCmd.Parameters.AddWithValue("@number_qty", number_qty)
+                            SQLCmd.Parameters.AddWithValue("@pwi_id", pwi_id)
+                            SQLCmd.Parameters.AddWithValue("@status_sqlite", status_sqlite)
+                            SQLConn.Open()
+                            Try
+                                insertId = Convert.ToInt32(SQLCmd.ExecuteScalar())
+                                Console.WriteLine("Try insertId ==>" & insertId)
+                            Catch exTimeout As SqlException
+                                If exTimeout.Number = -2 OrElse exTimeout.Message.Contains("Timeout") Then
+                                    Console.WriteLine("⚠️ Timeout detected. Trying to recover inserted ID...")
+                                    '  insertId = GetInsertedIdFromData(pd, line_cd, wi_plan, seq_no)
+                                    Console.WriteLine("catch insertId ==>" & insertId)
+                                Else
+                                    Throw
+                                End If
+                            End Try
+                        End Using
+                    End Using
+                Catch ex As Exception
+                    Console.WriteLine("❌ Error inserting data: " & ex.Message)
+                    insertId = 0
+                End Try
+            End If
+        Catch ex As Exception
+            insertId = 0
+        End Try
+        Return insertId
+    End Function
+
+    Public Shared Async Function Insert_prd_detail_main(
+    pd As String, line_cd As String, wi_plan As String,
+    item_cd As String, item_name As String, staff_no As Integer,
+    seq_no As Integer, qty As Integer, st_time As String,
+    end_time As String, use_time As Double, number_qty As Integer,
+    pwi_id As String, status_sqlite As String, id_sqlite As String
+) As Task(Of Integer)
+        If checkSqliteTrasnfer = False Then
+            Dim insertId As Integer = 0
+            Dim currdated As String = DateTime.Now.ToString("yyyy/MM/dd H:mm:ss", CultureInfo.InvariantCulture)
+            Dim st_time2 As String = Date.Parse(st_time).ToString("yyyy/MM/dd H:mm:ss", CultureInfo.InvariantCulture)
+            Dim end_time2 As String = Date.Parse(end_time).ToString("yyyy/MM/dd H:mm:ss", CultureInfo.InvariantCulture)
+            Dim api = New api()
+
+            ' ⏳ รอจนกว่าจะ Ping ได้ (Network กลับมา)
+            Do While Not My.Computer.Network.Ping(Backoffice_model.svp_ping)
+                Console.WriteLine("⛔ ยังไม่มี Network... รอ 2 วินาที")
+
+                Await Task.Delay(2000)
+            Loop
+
+            'Console.WriteLine("✅ Network มาแล้ว เริ่ม Insert...")
+
+            Dim sql As String = "
+        INSERT INTO production_actual_detail 
+            (pd, line_cd, wi_plan, item_cd, item_name, staff_no, seq_no, qty, st_time, end_time, use_time, updated_date, number_qty, pwi_id, status_transfer_sqlite) 
+        VALUES 
+            (@pd, @line_cd, @wi_plan, @item_cd, @item_name, @staff_no, @seq_no, @qty, @st_time, @end_time, @use_time, @updated_date, @number_qty, @pwi_id, @status_sqlite);
+        SELECT SCOPE_IDENTITY();"
+
+            Try
+                Using SQLConn As New SqlConnection(sqlConnect)
+                    Using SQLCmd As New SqlCommand(sql, SQLConn)
+                        SQLCmd.CommandTimeout = 120
+
+                        ' Bind Parameters
+                        SQLCmd.Parameters.AddWithValue("@pd", pd)
+                        SQLCmd.Parameters.AddWithValue("@line_cd", line_cd)
+                        SQLCmd.Parameters.AddWithValue("@wi_plan", wi_plan)
+                        SQLCmd.Parameters.AddWithValue("@item_cd", item_cd)
+                        SQLCmd.Parameters.AddWithValue("@item_name", item_name)
+                        SQLCmd.Parameters.AddWithValue("@staff_no", staff_no)
+                        SQLCmd.Parameters.AddWithValue("@seq_no", seq_no)
+                        SQLCmd.Parameters.AddWithValue("@qty", qty)
+                        SQLCmd.Parameters.AddWithValue("@st_time", st_time2)
+                        SQLCmd.Parameters.AddWithValue("@end_time", end_time2)
+                        SQLCmd.Parameters.AddWithValue("@use_time", use_time)
+                        SQLCmd.Parameters.AddWithValue("@updated_date", currdated)
+                        SQLCmd.Parameters.AddWithValue("@number_qty", number_qty)
+                        SQLCmd.Parameters.AddWithValue("@pwi_id", pwi_id)
+                        SQLCmd.Parameters.AddWithValue("@status_sqlite", status_sqlite)
+
+                        SQLConn.Open()
+                        insertId = Convert.ToInt32(Await SQLCmd.ExecuteScalarAsync())
+                        Console.WriteLine("insertId ===>" & insertId)
+                        SQLConn.Close()
+                    End Using
+                End Using
+                ' ✅ Insert สำเร็จ → อัปเดต SQLite
+                If insertId > 0 Then
+                    Dim sqlUpdate = "UPDATE act_ins SET tr_status = '1', updated_date = '" & currdated & "' WHERE id = '" & id_sqlite & "' "
+                    Console.WriteLine("update id_sqlite ==>" & id_sqlite)
+                    Await api.Load_dataSQLite(sqlUpdate)
+                End If
+            Catch ex As Exception
+                Console.WriteLine("❌ Error while inserting: " & ex.Message)
+                insertId = 0
+            End Try
+            Return insertId
+        End If
+    End Function
+
+
+    Private Shared Function GetInsertedIdFromData(pd As String, line_cd As String, wi_plan As String, seq_no As Integer) As Integer
         Try
-            Using SQLConn As New SqlConnection(sqlConnect)
-                Using SQLCmd As New SqlCommand(sql, SQLConn)
-                    ' เพิ่ม Parameter ป้องกัน SQL Injection
-                    SQLCmd.Parameters.AddWithValue("@pd", pd)
-                    SQLCmd.Parameters.AddWithValue("@line_cd", line_cd)
-                    SQLCmd.Parameters.AddWithValue("@wi_plan", wi_plan)
-                    SQLCmd.Parameters.AddWithValue("@item_cd", item_cd)
-                    SQLCmd.Parameters.AddWithValue("@item_name", item_name)
-                    SQLCmd.Parameters.AddWithValue("@staff_no", staff_no)
-                    SQLCmd.Parameters.AddWithValue("@seq_no", seq_no)
-                    SQLCmd.Parameters.AddWithValue("@qty", qty)
-                    SQLCmd.Parameters.AddWithValue("@st_time", st_time2)
-                    SQLCmd.Parameters.AddWithValue("@end_time", end_time2)
-                    SQLCmd.Parameters.AddWithValue("@use_time", use_time)
-                    SQLCmd.Parameters.AddWithValue("@updated_date", currdated)
-                    SQLCmd.Parameters.AddWithValue("@number_qty", number_qty)
-                    SQLCmd.Parameters.AddWithValue("@pwi_id", pwi_id)
-                    SQLCmd.Parameters.AddWithValue("@status_sqlite", status_sqlite)
-                    ' เปิด Connection และ Execute
-                    SQLConn.Open()
-                    insertId = Convert.ToInt32(SQLCmd.ExecuteScalar()) ' ดึงค่า ID ล่าสุด
-                    'Console.WriteLine("Insert ID ===> " & insertId)
-                    Return insertId ' คืนค่า ID ที่ถูก Insert
+            Using conn As New SqlConnection(sqlConnect)
+                Dim sqlCheck As String = "
+                SELECT TOP 1 id FROM production_actual_detail
+                WHERE pd = @pd AND line_cd = @line_cd AND wi_plan = @wi_plan AND seq_no = @seq_no
+                ORDER BY id DESC"
+                Using cmd As New SqlCommand(sqlCheck, conn)
+                    cmd.Parameters.AddWithValue("@pd", pd)
+                    cmd.Parameters.AddWithValue("@line_cd", line_cd)
+                    cmd.Parameters.AddWithValue("@wi_plan", wi_plan)
+                    cmd.Parameters.AddWithValue("@seq_no", seq_no)
+                    conn.Open()
+                    Dim result = cmd.ExecuteScalar()
+                    If result IsNot Nothing Then
+                        Return Convert.ToInt32(result)
+                    End If
                 End Using
             End Using
         Catch ex As Exception
-            Console.WriteLine("error cmd sqlite tranfer ===>" & ex.Message)
-            ' MsgBox("error sqlite tranfer")
-            insertId = 0
-            Return insertId
-            'Console.WriteLine("Error: " & ex.Message)
+            Console.WriteLine("⚠️ Error while checking inserted ID: " & ex.Message)
         End Try
-        ' MsgBox("Insert ID ===> " & insertId)
-        Return insertId ' คืนค่า ID ที่ถูก Insert
+        Return 0
     End Function
+
+
     Public Shared Function work_complete_offline(wi As String)
         Dim currdated As String = DateTime.Now.ToString("yyyy/MM/dd H:m:s")
         '  Dim reader As SqlDataReader
@@ -1635,7 +1753,7 @@ where
             '   reader = SQLCmd.ExecuteReader()
             '   reader.Close()
             Dim api = New api()
-            Console.WriteLine("http://" & svApi & "/apiShopfloor/index.php/updateDatadefect/update_tagprint_main?wi=" & wi & "&flgUpdate=" & flgUpdate & "&conditionflg=" & conditionflg)
+            'Console.WriteLine("http://" & svApi & "/apiShopfloor/index.php/updateDatadefect/update_tagprint_main?wi=" & wi & "&flgUpdate=" & flgUpdate & "&conditionflg=" & conditionflg)
             Dim result = api.Load_data("http://" & svApi & "/apiShopfloor/index.php/updateDatadefect/update_tagprint_main?wi=" & wi & "&flgUpdate=" & flgUpdate & "&conditionflg=" & conditionflg)
             Return result
             'Return reader
@@ -1649,7 +1767,7 @@ where
         Dim SQLConn As New SqlConnection()
         Dim SQLCmd As New SqlCommand()
         Try
-            Console.WriteLine("F1")
+            'Console.WriteLine("F1")
             ' กำหนดค่าเริ่มต้นให้ tag_group_no ถ้ามันเป็น Nothing หรือ ว่างเปล่า
             ' Set the connection string and open the connection
             SQLConn.ConnectionString = sqlConnect
@@ -1688,7 +1806,7 @@ where
         Dim SQLConn As New SqlConnection()
         Dim SQLCmd As New SqlCommand()
         Try
-            Console.WriteLine("F1")
+            ' Console.WriteLine("F1")
             ' กำหนดค่าเริ่มต้นให้ tag_group_no ถ้ามันเป็น Nothing หรือ ว่างเปล่า
             ' Set the connection string and open the connection
             SQLConn.ConnectionString = sqlConnect
@@ -1711,27 +1829,27 @@ where
             SQLCmd.Parameters.AddWithValue("@flg_control", flg_control)
             SQLCmd.Parameters.AddWithValue("@pwi_id", pwi_id)
             SQLCmd.Parameters.AddWithValue("@tag_group_no", "1") ' ✅ ใช้ค่า param ป้องกัน null
-            Console.WriteLine("F221")
+            'Console.WriteLine("F221")
             ' Execute the query and get the insert id
             Try
                 If My.Computer.Network.Ping(svp_ping) Then
                     model_api_sqlite.mas_Insert_tag_print(wi, qr_detail, box_no, print_count, seq_no, shift, flg_control, item_cd, pwi_id, tag_group_no, goodQty, Gobal_NEXT_PROCESS, "1")
                     Dim insertId As Integer = Convert.ToInt32(SQLCmd.ExecuteScalar())
-                    Console.WriteLine("F1333")
+                    ' Console.WriteLine("F1333")
                     Return insertId
                 Else
                     model_api_sqlite.mas_Insert_tag_print(wi, qr_detail, box_no, print_count, seq_no, shift, flg_control, item_cd, pwi_id, tag_group_no, goodQty, Gobal_NEXT_PROCESS, "0")
                     Return 0
                 End If
             Catch ex As Exception
-                Console.WriteLine("catch TRY ===>" & ex.Message)
+                'Console.WriteLine("catch TRY ===>" & ex.Message)
                 model_api_sqlite.mas_Insert_tag_print(wi, qr_detail, box_no, print_count, seq_no, shift, flg_control, item_cd, pwi_id, tag_group_no, goodQty, Gobal_NEXT_PROCESS, "0")
                 Return 0
             End Try
         Catch ex As Exception
             ' Console.WriteLine("F555555")
             ' MsgBox("MSSQL Database connect failed. Please contact PC System [Function Insert_tag_print]")
-            Console.WriteLine("Error tag_print_detail: " & ex.Message)
+            '  Console.WriteLine("Error tag_print_detail: " & ex.Message)
             model_api_sqlite.mas_Insert_tag_print(wi, qr_detail, box_no, print_count, seq_no, shift, flg_control, item_cd, pwi_id, tag_group_no, goodQty, Gobal_NEXT_PROCESS, "0")
             Return 0 ' Return 0 in case of error
         Finally
@@ -1752,7 +1870,7 @@ where
     End Function
     Public Shared Function Trasnfer_tag_print_main(tag_ref_str_id As String, tag_ref_end_id As String, line_cd As String, tag_qr_detail As String, tag_batch_no As String, tag_next_proc As String, flg_control As String, created_date As String, updated_date As String, wi As String, pwi_no As String, tag_group_no As String, tr_status As String, seq_no As String, lot_no As String) As Integer
         Dim currdated As String = DateTime.Now.ToString("yyyy/MM/dd H:m:s")
-        Console.WriteLine("Transfer_tag_print_main ====>")
+        ' Console.WriteLine("Transfer_tag_print_main ====>")
         ' อัปเดตค่าใน tag_print
         update_tagprint(wi, "2", "0")
         update_tagprint_main(wi, "2", "0")
@@ -1814,13 +1932,13 @@ where
     End Function
     Public Shared Function Get_ref_start_id(wi As String, seq_no As String, lot_no As String)
         Dim api = New api()
-        Console.WriteLine("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/Get_ref_start_id?wi=" & wi & "&seq_no=" & seq_no & "&lot_no=" & lot_no)
+        'Console.WriteLine("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/Get_ref_start_id?wi=" & wi & "&seq_no=" & seq_no & "&lot_no=" & lot_no)
         Dim result = api.Load_data("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/Get_ref_start_id?wi=" & wi & "&seq_no=" & seq_no & "&lot_no=" & lot_no)
         Return result
     End Function
     Public Shared Function Get_ref_end_id(wi As String, seq_no As String, lot_no As String)
         Dim api = New api()
-        Console.WriteLine("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/Get_ref_end_id?wi=" & wi & "&seq_no=" & seq_no & "&lot_no=" & lot_no)
+        'Console.WriteLine("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/Get_ref_end_id?wi=" & wi & "&seq_no=" & seq_no & "&lot_no=" & lot_no)
         Dim result = api.Load_data("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/Get_ref_end_id?wi=" & wi & "&seq_no=" & seq_no & "&lot_no=" & lot_no)
         Return result
     End Function
@@ -2919,133 +3037,345 @@ re_insert_data:
             'Application.Exit()
         End Try
     End Function
-    Public Shared Function updated_data_to_dbsvr()
-        Dim currdated As String = DateTime.Now.ToString("yyyy/MM/dd")
-        Dim LoadSQL = Backoffice_model.get_trdata_sqlite()
-        Dim num_arr As Integer = 0
-        Dim arr_list_id As ArrayList = New ArrayList()
-        Dim tmp_wi As String = ""
-        Check_connect_sqlite()
-        'If LoadSQL.read Then
-        Dim i As Integer = 0
-        While LoadSQL.Read()
-            If i = 0 Then
-                TrasnferData.Show()
-            End If
-            i = i + 1
-            Dim id As String = LoadSQL("id").ToString()
-            Dim pd As String = LoadSQL("pd").ToString()
-            Dim line_cd As String = LoadSQL("line_cd").ToString()
-            Dim wi_plan As String = LoadSQL("wi_plan").ToString()
-            tmp_wi = wi_plan
-            Dim item_cd As String = LoadSQL("item_cd").ToString()
-            Dim item_name As String = LoadSQL("item_name").ToString()
-            Dim staff_no As Integer = LoadSQL("staff_no").ToString()
-            Dim seq_no As Integer = LoadSQL("seq_no").ToString()
-            Dim qty As Integer = LoadSQL("qty").ToString()
-            Dim number_qty As Integer = LoadSQL("number_qty").ToString()
-            Dim st_time As Date = LoadSQL("st_time").ToString()
-            Dim end_time As Date = LoadSQL("end_time").ToString()
-            Dim use_time As Integer = LoadSQL("use_time").ToString()
-            Dim pwi_id As Integer = LoadSQL("pwi_id").ToString()
-            Dim status_sqlite = "0"
-            Check_connect_sqlite()
-            '  Dim check_rs = checkTransection(pwi_id, number_qty, st_time) ' ตรวจสอบว่าเข้า DB ไปรึยัง
-            ' MsgBox(check_rs)
-            '  If check_rs = "1" Then
-            Dim rsInsertid = Insert_prd_detail(pd, line_cd, wi_plan, item_cd, item_name, staff_no, seq_no, qty, st_time, end_time, use_time, number_qty, pwi_id, status_sqlite)
-            If rsInsertid <> 0 Then
-                arr_list_id.Add(id)
-            End If
-            'End If
-        End While
-        'End If
-        Check_connect_sqlite()
-        Dim array_id() As Object = arr_list_id.ToArray()
-        Check_connect_sqlite()
-        For Each element_id In array_id
-            Dim value As String = element_id
-            Check_connect_sqlite()
-            Dim LoadSQLUpdate = Backoffice_model.update_tr_status(value)
-            num_arr = num_arr + 1
-        Next
-        Check_connect_sqlite()
-        Dim LoadSQLcl = Backoffice_model.get_tr_closelot_flg_sqlite()
-        Dim num_arr2 As Integer = 0
-        Dim arr_list_id2 As ArrayList = New ArrayList()
-        Dim tag_print_detail_id = model_api_sqlite.UpdateStatus_tag_print_detail()
-        Dim j = 0
-        If LoadSQLcl.HasRows Then
-            While LoadSQLcl.Read()
-                If j = 0 Then
-                    TrasnferData.Show()
+    Public Shared Async Function updated_data_to_dbsvr(parentForm As Form, statusCheckData As String) As Task
+        Dim formName As String = parentForm.Name
+        Dim objTranferData
+        Try
+            If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
+                Dim currdated As String = DateTime.Now.ToString("yyyy/MM/dd")
+                Dim api = New api
+                api.InitSQLiteWAL()
+                Dim LoadSQL = Backoffice_model.get_trdata_sqlite()
+                Dim LoadSQLcl = Backoffice_model.get_tr_closelot_flg_sqlite()
+                Dim LoadSQL_tag_print_detail = Backoffice_model.get_tr_tag_print_detail()
+                Dim LoadSQLcl_tag_print_detail_main = Backoffice_model.get_tr_tag_print_detail_main()
+                Dim LoadSQLcl_tag_print_detail_sub = Backoffice_model.get_tr_tag_print_detail_sub()
+                If LoadSQL.HasRows Or LoadSQLcl.HasRows Or LoadSQL_tag_print_detail.HasRows Or LoadSQLcl_tag_print_detail_main.HasRows Or LoadSQLcl_tag_print_detail_sub.HasRows Then
+                    If objTranferData IsNot Nothing AndAlso Not objTranferData.IsDisposed AndAlso objTranferData.Visible Then
+                        ' ฟอร์มเปิดอยู่แล้ว ไม่ต้องทำอะไร
+                    Else
+                        ' ฟอร์มยังไม่ถูกสร้าง หรือถูกปิดไปแล้ว ต้องสร้างใหม่
+                        If objTranferData Is Nothing OrElse objTranferData.IsDisposed Then
+                            objTranferData = New TrasnferData()
+                        End If
+                        ' ถ้ายังไม่แสดง ก็แสดงฟอร์ม
+                        If Not objTranferData.Visible Then
+                            If statusTransfer = 0 Then
+                                objTranferData.Show()
+                            End If
+                        End If
+                    End If
+                    statusTransfer = 1 ' 1 = Tranfering 0 = Not Trasnfer
+                    If formName = "MainFrm" Then
+                        parentForm.Enabled = False
+                    End If
+                    Task.Run(Sub()
+                                 Dim tag_print_detail_id = model_api_sqlite.UpdateStatus_tag_print_detail()
+                                 Dim num_arr As Integer = 0
+                                 Dim arr_list_id As ArrayList = New ArrayList()
+                                 Dim tmp_wi As String = ""
+                                 Check_connect_sqlite()
+                                 'If LoadSQL.read Then
+                                 Dim i As Integer = 0
+                                 If LoadSQL.HasRows Then
+                                     While LoadSQL.Read()
+                                         i = i + 1
+                                         Dim id As String = LoadSQL("id").ToString()
+                                         Dim pd As String = LoadSQL("pd").ToString()
+                                         Dim line_cd As String = LoadSQL("line_cd").ToString()
+                                         Dim wi_plan As String = LoadSQL("wi_plan").ToString()
+                                         tmp_wi = wi_plan
+                                         Dim item_cd As String = LoadSQL("item_cd").ToString()
+                                         Dim item_name As String = LoadSQL("item_name").ToString()
+                                         Dim staff_no As Integer = LoadSQL("staff_no").ToString()
+                                         Dim seq_no As Integer = LoadSQL("seq_no").ToString()
+                                         Dim qty As Integer = LoadSQL("qty").ToString()
+                                         Dim number_qty As Integer = LoadSQL("number_qty").ToString()
+                                         Dim st_time As Date = LoadSQL("st_time").ToString()
+                                         Dim end_time As Date = LoadSQL("end_time").ToString()
+                                         Dim use_time As Integer = LoadSQL("use_time").ToString()
+                                         Dim pwi_id As Integer = LoadSQL("pwi_id").ToString()
+                                         Dim status_sqlite = "0"
+                                         Check_connect_sqlite()
+                                         '  Dim check_rs = checkTransection(pwi_id, number_qty, st_time) ' ตรวจสอบว่าเข้า DB ไปรึยัง
+                                         ' MsgBox(check_rs)
+                                         '  If check_rs = "1" Then
+                                         Dim rsInsertid = Insert_prd_detail(pd, line_cd, wi_plan, item_cd, item_name, staff_no, seq_no, qty, st_time, end_time, use_time, number_qty, pwi_id, status_sqlite)
+                                         If rsInsertid <> 0 Then
+                                             arr_list_id.Add(id)
+                                         End If
+                                         ' End If
+                                     End While
+                                     'End If
+                                     Check_connect_sqlite()
+                                     Dim array_id() As Object = arr_list_id.ToArray()
+                                     Check_connect_sqlite()
+                                     For Each element_id In array_id
+                                         Dim value As String = element_id
+                                         Check_connect_sqlite()
+                                         Dim LoadSQLUpdate = Backoffice_model.update_tr_status(value)
+                                         num_arr = num_arr + 1
+                                     Next
+                                     Check_connect_sqlite()
+                                 End If
+                                 Dim num_arr2 As Integer = 0
+                                 Dim arr_list_id2 As ArrayList = New ArrayList()
+                                 Dim j = 0
+                                 If LoadSQLcl.HasRows Then
+                                     While LoadSQLcl.Read()
+                                         j = j + 1
+                                         Dim wi_plan As String = LoadSQLcl("wi").ToString()
+                                         Dim line_cd As String = LoadSQLcl("line_cd").ToString()
+                                         Dim item_cd As String = LoadSQLcl("item_cd").ToString()
+                                         Dim plan_qty As Integer = LoadSQLcl("plan_qty").ToString()
+                                         Dim act_qty As Integer = LoadSQLcl("act_qty").ToString()
+                                         Dim seq_no As Integer = LoadSQLcl("seq_no").ToString()
+                                         Dim shift_prd As String = LoadSQLcl("shift_prd").ToString()
+                                         Dim staff_no As Integer = LoadSQLcl("manpower_no").ToString()
+                                         Dim prd_st_date As Date = LoadSQLcl("prd_st_date").ToString()
+                                         'Dim prd_st_time As Date = LoadSQLcl("prd_st_time").ToString()
+                                         Dim prd_end_date As Date = LoadSQLcl("prd_end_date").ToString()
+                                         'Dim prd_end_time As Date = LoadSQLcl("prd_end_time").ToString()
+                                         Dim lot_no As String = LoadSQLcl("lot_no").ToString()
+                                         Dim comp_flg As String = check_completed_plan(wi_plan, plan_qty)
+                                         Dim transfer_flg As String = "1"
+                                         Dim del_flg As String = "0"
+                                         Dim prd_flg As String = "1"
+                                         Dim close_lot_flg As String = "1"
+                                         Dim avarage_eff As Double = LoadSQLcl("avarage_eff").ToString()
+                                         Dim avarage_act_prd_time As Double = LoadSQLcl("avarage_act_prd_time").ToString()
+                                         If check_data(wi_plan, seq_no) = 0 Then
+                                             Check_connect_sqlite()
+                                             Backoffice_model.Insert_prd_close_lot(wi_plan, line_cd, item_cd, plan_qty, act_qty, seq_no, shift_prd, staff_no, prd_st_date, prd_end_date, lot_no, comp_flg, transfer_flg, del_flg, prd_flg, close_lot_flg, avarage_eff, avarage_act_prd_time)
+                                             If comp_flg = "1" Then
+                                                 Backoffice_model.work_complete(wi_plan)
+                                             End If
+                                         Else
+                                             Check_connect_sqlite()
+                                             update_qty_seq(wi_plan, seq_no, act_qty)
+                                         End If
+                                         arr_list_id2.Add(LoadSQLcl("id").ToString())
+                                     End While
+                                 End If
+                                 Dim Load_check_act_rework = check_rework_actual()
+                                 If Load_check_act_rework > 0 Then
+                                     Check_connect_sqlite()
+                                     Get_data_rework_actual()
+                                 End If
+                                 Dim Load_check_loss_actual = check_loss_actual()
+                                 If Load_check_loss_actual > 0 Then
+                                     Check_connect_sqlite()
+                                     Get_data_loss_actual()
+                                 End If
+                                 Dim check_defact_detail = check_data_defact_detail()
+                                 If check_defact_detail > 0 Then
+                                     Check_connect_sqlite()
+                                     Get_data_defact_actual()
+                                 End If
+                                 Dim array_id2() As Object = arr_list_id2.ToArray()
+                                 For Each element_id2 In array_id2
+                                     Dim value2 As String = element_id2
+                                     Check_connect_sqlite()
+                                     Dim LoadSQLUpdate2 = Backoffice_model.update_tr_close_lot_status(value2)
+                                     num_arr2 = num_arr2 + 1
+                                 Next
+                                 If objTranferData IsNot Nothing Then
+                                     If objTranferData.IsHandleCreated Then
+                                         objTranferData.Invoke(Sub()
+                                                                   statusTransfer = 0
+                                                                   parentForm.Enabled = True
+                                                                   objTranferData.Close()
+                                                               End Sub)
+                                     End If
+                                 End If
+                                 ''Console.WriteLine(array_id(2))
+                                 'Dim array() As Object = arr_list.ToArray()
+                                 'For Each element In array
+                                 '    ' Cast object to string.
+                                 '    Dim value As String = element
+                                 '    'Console.WriteLine(value)
+                                 'Next
+                                 'MsgBox(arr_id(0))
+                             End Sub)
+                Else
+                    If objTranferData IsNot Nothing Then
+                        If objTranferData.IsHandleCreated Then
+                            objTranferData.Invoke(Sub()
+                                                      statusTransfer = 0
+                                                      parentForm.Enabled = True
+                                                      objTranferData.Close()
+                                                  End Sub)
+                        End If
+                    End If
                 End If
-                j = j + 1
-                Dim wi_plan As String = LoadSQLcl("wi").ToString()
-                Dim line_cd As String = LoadSQLcl("line_cd").ToString()
-                Dim item_cd As String = LoadSQLcl("item_cd").ToString()
-                Dim plan_qty As Integer = LoadSQLcl("plan_qty").ToString()
-                Dim act_qty As Integer = LoadSQLcl("act_qty").ToString()
-                Dim seq_no As Integer = LoadSQLcl("seq_no").ToString()
-                Dim shift_prd As String = LoadSQLcl("shift_prd").ToString()
-                Dim staff_no As Integer = LoadSQLcl("manpower_no").ToString()
-                Dim prd_st_date As Date = LoadSQLcl("prd_st_date").ToString()
-                'Dim prd_st_time As Date = LoadSQLcl("prd_st_time").ToString()
-                Dim prd_end_date As Date = LoadSQLcl("prd_end_date").ToString()
-                'Dim prd_end_time As Date = LoadSQLcl("prd_end_time").ToString()
-                Dim lot_no As String = LoadSQLcl("lot_no").ToString()
-                Dim comp_flg As String = check_completed_plan(wi_plan, plan_qty)
-                Dim transfer_flg As String = "1"
-                Dim del_flg As String = "0"
-                Dim prd_flg As String = "1"
-                Dim close_lot_flg As String = "1"
-                Dim avarage_eff As Double = LoadSQLcl("avarage_eff").ToString()
-                Dim avarage_act_prd_time As Double = LoadSQLcl("avarage_act_prd_time").ToString()
+            Else
+                ' NoNet
+                If objTranferData IsNot Nothing Then
+                    If objTranferData.IsHandleCreated Then
+                        objTranferData.Invoke(Sub()
+                                                  statusTransfer = 0
+                                                  parentForm.Enabled = True
+                                                  objTranferData.Close()
+                                              End Sub)
+                    End If
+                End If
+            End If
+        Catch ex As Exception
+            If objTranferData IsNot Nothing Then
+                If objTranferData.IsHandleCreated Then
+                    objTranferData.Invoke(Sub()
+                                              statusTransfer = 0
+                                              parentForm.Enabled = True
+                                              objTranferData.Close()
+                                          End Sub)
+                End If
+            End If
+        End Try
+    End Function
+
+
+
+    Public Shared Async Function updated_data_to_dbsvr_main(parentForm As Form, statusCheckData As String) As Task
+        Dim formName As String = parentForm.Name
+        Dim objTranferData
+
+        Try
+            If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
+                Dim currdated As String = DateTime.Now.ToString("yyyy/MM/dd")
+                Dim api = New api
+                api.InitSQLiteWAL()
+                Dim LoadSQL = Backoffice_model.get_trdata_sqlite()
+                Dim LoadSQLcl = Backoffice_model.get_tr_closelot_flg_sqlite()
+                Dim LoadSQL_tag_print_detail = Backoffice_model.get_tr_tag_print_detail()
+                Dim LoadSQLcl_tag_print_detail_main = Backoffice_model.get_tr_tag_print_detail_main()
+                Dim LoadSQLcl_tag_print_detail_sub = Backoffice_model.get_tr_tag_print_detail_sub()
+
+                If LoadSQL.HasRows Or LoadSQLcl.HasRows Or LoadSQL_tag_print_detail.HasRows Or LoadSQLcl_tag_print_detail_main.HasRows Or LoadSQLcl_tag_print_detail_sub.HasRows Then
+                    If objTranferData Is Nothing OrElse objTranferData.IsDisposed Then
+                        objTranferData = New TrasnferData()
+                    End If
+                    If Not objTranferData.Visible AndAlso statusTransfer = 0 Then
+                        objTranferData.Show()
+                    End If
+
+                    statusTransfer = 1
+                    If formName = "MainFrm" Then parentForm.Enabled = False
+                    Await DoTransferWork(parentForm, objTranferData, LoadSQL, LoadSQLcl)
+                Else
+                    If objTranferData IsNot Nothing AndAlso objTranferData.IsHandleCreated Then
+                        objTranferData.Invoke(Sub()
+                                                  statusTransfer = 0
+                                                  parentForm.Enabled = True
+                                                  objTranferData.Close()
+                                              End Sub)
+                    End If
+                End If
+            Else
+                If objTranferData IsNot Nothing AndAlso objTranferData.IsHandleCreated Then
+                    objTranferData.Invoke(Sub()
+                                              statusTransfer = 0
+                                              parentForm.Enabled = True
+                                              objTranferData.Close()
+                                          End Sub)
+                End If
+            End If
+        Catch ex As Exception
+            If objTranferData IsNot Nothing AndAlso objTranferData.IsHandleCreated Then
+                objTranferData.Invoke(Sub()
+                                          statusTransfer = 0
+                                          parentForm.Enabled = True
+                                          objTranferData.Close()
+                                      End Sub)
+            End If
+        End Try
+    End Function
+
+    Private Shared Async Function DoTransferWork(parentForm As Form, objTranferData As Form, LoadSQL As Object, LoadSQLcl As Object) As Task
+        Dim tmp_wi As String = ""
+        Dim i As Integer = 0
+
+        If LoadSQL.HasRows Then
+            While LoadSQL.Read()
+                i += 1
+                Dim id = LoadSQL("id").ToString()
+                Dim pd = LoadSQL("pd").ToString()
+                Dim line_cd = LoadSQL("line_cd").ToString()
+                Dim wi_plan = LoadSQL("wi_plan").ToString()
+                tmp_wi = wi_plan
+                Dim item_cd = LoadSQL("item_cd").ToString()
+                Dim item_name = LoadSQL("item_name").ToString()
+                Dim staff_no = Integer.Parse(LoadSQL("staff_no").ToString())
+                Dim seq_no = Integer.Parse(LoadSQL("seq_no").ToString())
+                Dim qty = Integer.Parse(LoadSQL("qty").ToString())
+                Dim number_qty = Integer.Parse(LoadSQL("number_qty").ToString())
+                Dim st_time = Date.Parse(LoadSQL("st_time").ToString())
+                Dim end_time = Date.Parse(LoadSQL("end_time").ToString())
+                Dim use_time = Integer.Parse(LoadSQL("use_time").ToString())
+                Dim pwi_id = Integer.Parse(LoadSQL("pwi_id").ToString())
+                Dim status_sqlite = "0"
+
+                ' ✅ รอ Network กลับมาก่อนเริ่ม Insert (ครั้งเดียวต่อ record)
+                While Not My.Computer.Network.Ping(Backoffice_model.svp_ping)
+                    Await Task.Delay(1000)
+                End While
+
+                ' ✅ ทำ Insert ทันที ไม่ใช้ retry loop เพื่อลดเวลาหน่วงรวม
+                Dim rsInsertid = Await Insert_prd_detail_main(pd, line_cd, wi_plan, item_cd, item_name, staff_no, seq_no, qty, st_time, end_time, use_time, number_qty, pwi_id, status_sqlite, id)
+            End While
+        End If
+
+        If LoadSQLcl.HasRows Then
+            Dim arr_list_id2 As New ArrayList()
+            While LoadSQLcl.Read()
+                Dim wi_plan = LoadSQLcl("wi").ToString()
+                Dim line_cd = LoadSQLcl("line_cd").ToString()
+                Dim item_cd = LoadSQLcl("item_cd").ToString()
+                Dim plan_qty = Integer.Parse(LoadSQLcl("plan_qty").ToString())
+                Dim act_qty = Integer.Parse(LoadSQLcl("act_qty").ToString())
+                Dim seq_no = Integer.Parse(LoadSQLcl("seq_no").ToString())
+                Dim shift_prd = LoadSQLcl("shift_prd").ToString()
+                Dim staff_no = Integer.Parse(LoadSQLcl("manpower_no").ToString())
+                Dim prd_st_date = Date.Parse(LoadSQLcl("prd_st_date").ToString())
+                Dim prd_end_date = Date.Parse(LoadSQLcl("prd_end_date").ToString())
+                Dim lot_no = LoadSQLcl("lot_no").ToString()
+                Dim comp_flg = check_completed_plan(wi_plan, plan_qty)
+                Dim transfer_flg = "1"
+                Dim del_flg = "0"
+                Dim prd_flg = "1"
+                Dim close_lot_flg = "1"
+                Dim avarage_eff = Double.Parse(LoadSQLcl("avarage_eff").ToString())
+                Dim avarage_act_prd_time = Double.Parse(LoadSQLcl("avarage_act_prd_time").ToString())
+
+                While Not My.Computer.Network.Ping(Backoffice_model.svp_ping)
+                    Await Task.Delay(1000)
+                End While
+
                 If check_data(wi_plan, seq_no) = 0 Then
                     Check_connect_sqlite()
                     Backoffice_model.Insert_prd_close_lot(wi_plan, line_cd, item_cd, plan_qty, act_qty, seq_no, shift_prd, staff_no, prd_st_date, prd_end_date, lot_no, comp_flg, transfer_flg, del_flg, prd_flg, close_lot_flg, avarage_eff, avarage_act_prd_time)
-                    If comp_flg = "1" Then
-                        Backoffice_model.work_complete(wi_plan)
-                    End If
+                    If comp_flg = "1" Then Backoffice_model.work_complete(wi_plan)
                 Else
-                    Check_connect_sqlite()
                     update_qty_seq(wi_plan, seq_no, act_qty)
                 End If
                 arr_list_id2.Add(LoadSQLcl("id").ToString())
             End While
-        End If
-        Dim Load_check_act_rework = check_rework_actual()
-        If Load_check_act_rework > 0 Then
-            Check_connect_sqlite()
-            Get_data_rework_actual()
-        End If
-        Dim Load_check_loss_actual = check_loss_actual()
-        If Load_check_loss_actual > 0 Then
-            Check_connect_sqlite()
-            Get_data_loss_actual()
-        End If
-        Dim check_defact_detail = check_data_defact_detail()
-        If check_defact_detail > 0 Then
-            Check_connect_sqlite()
-            Get_data_defact_actual()
+
+            For Each element_id2 In arr_list_id2.ToArray()
+                Backoffice_model.update_tr_close_lot_status(element_id2.ToString())
+            Next
         End If
 
-        Dim array_id2() As Object = arr_list_id2.ToArray()
-        For Each element_id2 In array_id2
-            Dim value2 As String = element_id2
-            Check_connect_sqlite()
-            Dim LoadSQLUpdate2 = Backoffice_model.update_tr_close_lot_status(value2)
-            num_arr2 = num_arr2 + 1
-        Next
-        TrasnferData.Close()
-        ''Console.WriteLine(array_id(2))
-        'Dim array() As Object = arr_list.ToArray()
-        'For Each element In array
-        '    ' Cast object to string.
-        '    Dim value As String = element
-        '    'Console.WriteLine(value)
-        'Next
-        'MsgBox(arr_id(0))
+        If check_rework_actual() > 0 Then Get_data_rework_actual()
+        If check_loss_actual() > 0 Then Get_data_loss_actual()
+        If check_data_defact_detail() > 0 Then Get_data_defact_actual()
+
+        If objTranferData IsNot Nothing AndAlso objTranferData.IsHandleCreated Then
+            objTranferData.Invoke(Sub()
+                                      statusTransfer = 0
+                                      parentForm.Enabled = True
+                                      objTranferData.Close()
+                                  End Sub)
+        End If
     End Function
     Public Shared Function check_rework_actual()
         Dim sqliteConn As New SQLiteConnection(sqliteConnect)
@@ -3127,7 +3457,7 @@ recheck:
             sqliteConn.Close()
             sqliteConn = Nothing
         Catch ex As Exception
-            MsgBox("SQLite Database connect failed. Please contact PC System [Function update_tr_status]")
+            'MsgBox("SQLite Database connect failed. Please contact PC System [Function update_flg_rework_act_sqlite]")
             sqliteConn.Close()
         End Try
     End Function
@@ -3147,7 +3477,7 @@ recheck:
             sqliteConn.Close()
             sqliteConn = Nothing
         Catch ex As Exception
-            MsgBox("SQLite Database connect failed. Please contact PC System [Function update_tr_status]")
+            '  MsgBox("SQLite Database connect failed. Please contact PC System [Function update_flg_loss_atc_sqlite]")
             sqliteConn.Close()
         End Try
     End Function
@@ -3186,7 +3516,7 @@ recheck:
             sqliteConn.Close()
             sqliteConn = Nothing
         Catch ex As Exception
-            MsgBox("SQLite Database connect failed. Please contact PC System [Function update_tr_status]")
+            '  MsgBox("SQLite Database connect failed. Please contact PC System [Function check_data_sqlite]")
             sqliteConn.Close()
         End Try
     End Function
@@ -3311,10 +3641,10 @@ recheck:
         Try
             Dim api = New api
             Dim Sql = " UPDATE act_ins SET tr_status = '1', updated_date = '" & currdated & "' WHERE id = '" & id & "'"
-            Console.WriteLine(Sql)
             Dim jsonData As String = api.Load_dataSQLite(Sql)
+            Console.WriteLine(Sql)
         Catch ex As Exception
-            MsgBox("Error Files Backoffice_model In Function update_tr_status")
+            ' MsgBox("Error Files Backoffice_model In Function update_tr_status")
         End Try
     End Function
 
@@ -3334,7 +3664,7 @@ recheck:
             sqliteConn.Close()
             sqliteConn = Nothing
         Catch ex As Exception
-            MsgBox("SQLite Database connect failed. Please contact PC System [Function update_tr_close_lot_status]")
+            ' MsgBox("SQLite Database connect failed. Please contact PC System [Function update_tr_close_lot_status]")
             sqliteConn.Close()
             Check_connect_sqlite()
             GoTo recheck
@@ -3365,7 +3695,6 @@ recheck:
 
 
     Public Shared Function get_tr_closelot_flg_sqlite()
-
         Dim sqliteConn As New SQLiteConnection(sqliteConnect)
         Try
             Check_connect_sqlite()
@@ -3384,8 +3713,65 @@ recheck:
             sqliteConn.Close()
         End Try
     End Function
+    Public Shared Function get_tr_tag_print_detail()
+        Dim sqliteConn As New SQLiteConnection(sqliteConnect)
+        Try
+            Check_connect_sqlite()
+            sqliteConn.Open()
+            Dim cmd As New SQLiteCommand
+            cmd.Connection = sqliteConn
+            cmd.CommandText = "SELECT * FROM tag_print_detail where tr_status = '0'"
+            Dim LoadSQL As SQLiteDataReader = cmd.ExecuteReader()
+            'MsgBox(LoadSQL)
+            Return LoadSQL
+            sqliteConn.Dispose()
+            sqliteConn.Close()
+            sqliteConn = Nothing
+        Catch ex As Exception
+            MsgBox("SQLite Database connect failed. Please contact PC System [Function get_tr_tag_print_detail]")
+            sqliteConn.Close()
+        End Try
+    End Function
 
+    Public Shared Function get_tr_tag_print_detail_main()
+        Dim sqliteConn As New SQLiteConnection(sqliteConnect)
+        Try
+            Check_connect_sqlite()
+            sqliteConn.Open()
+            Dim cmd As New SQLiteCommand
+            cmd.Connection = sqliteConn
+            cmd.CommandText = "SELECT * FROM tag_print_detail_main where tr_status = '0'"
+            Dim LoadSQL As SQLiteDataReader = cmd.ExecuteReader()
+            'MsgBox(LoadSQL)
+            Return LoadSQL
+            sqliteConn.Dispose()
+            sqliteConn.Close()
+            sqliteConn = Nothing
+        Catch ex As Exception
+            MsgBox("SQLite Database connect failed. Please contact PC System [Function get_tr_tag_print_detail_main]")
+            sqliteConn.Close()
+        End Try
+    End Function
 
+    Public Shared Function get_tr_tag_print_detail_sub()
+        Dim sqliteConn As New SQLiteConnection(sqliteConnect)
+        Try
+            Check_connect_sqlite()
+            sqliteConn.Open()
+            Dim cmd As New SQLiteCommand
+            cmd.Connection = sqliteConn
+            cmd.CommandText = "SELECT * FROM tag_print_detail_sub where tr_status = '0'"
+            Dim LoadSQL As SQLiteDataReader = cmd.ExecuteReader()
+            'MsgBox(LoadSQL)
+            Return LoadSQL
+            sqliteConn.Dispose()
+            sqliteConn.Close()
+            sqliteConn = Nothing
+        Catch ex As Exception
+            MsgBox("SQLite Database connect failed. Please contact PC System [Function tag_print_detail_sub]")
+            sqliteConn.Close()
+        End Try
+    End Function
     Public Shared Function get_trdata_sqlite_act()
         Dim sqliteConn As New SQLiteConnection(sqliteConnect)
         Try
@@ -3418,29 +3804,33 @@ recheck:
         Catch ex As Exception
             SQLConn.Close()
         End Try
-        'MsgBox(st_time.ToString("dd'/'MM'/'yyyy H':'m':'ss"))
         Dim st_time2 As String = st_time.ToString("H:m:s")
         Dim st_datetime2 As String = st_time.ToString("yyyy/MM/dd HH:mm:ss")
         Dim end_time2 As String = end_time.ToString("H:m:s")
         Dim end_datetime2 As String = end_time.ToString("yyyy/MM/dd HH:mm:ss")
-        'MsgBox("INSERT INTO production_actual_detail(pd,line_cd,wi_plan,item_cd,item_name,staff_no,seq_no,qty,st_time,end_time,use_time,updated_date) VALUES ('" & pd & "','" & line_cd & "','" & wi_plan & "','" & item_cd & "','" & item_name & "','" & staff_no & "','" & seq_no & "','" & qty & "','" & st_time & "','" & end_time & "','" & use_time & "','" & currdated & "')")
         Try
 recheck:
             SQLConn.ConnectionString = sqlConnect 'Set the Connection String
             SQLConn.Open()
             SQLCmd.Connection = SQLConn
-            'SQLCmd.CommandText = "SELECT * FROM sys_user WHERE emp_id = '" & usernm & "' AND passwd = '" & passwd & "'"
-            'SQLCmd.CommandText = "INSERT INTO production_actual_detail(pd,line_cd,st_time,updated_date) VALUES ('" & pd & "','" & line_cd & "','" & st_time2 & "','" & currdated & "')"
             SQLCmd.CommandText = "INSERT INTO production_actual (wi,line_cd,item_cd,plan_qty,act_qty,seq_no,shift_prd,manpower_no,prd_st_date,prd_st_time,prd_end_date,prd_end_time,lot_no,comp_flg,transfer_flg,del_flg,updated_date,prd_flg,close_lot_flg,avarage_eff,avarage_act_prd_time) VALUES ('" & wi_plan & "','" & line_cd & "','" & item_cd & "','" & plan_qty & "','" & act_qty & "','" & seq_no & "','" & shift_prd & "','" & manpower_no & "','" & st_datetime2 & "','" & st_time2 & "','" & end_datetime2 & "','" & end_time2 & "','" & lot_no & "','" & comp_flg & "','" & transfer_flg & "','" & del_flg & "','" & currdated & "','" & prd_flg & "','" & close_lot_flg & "','" & avarage_eff & "','" & avarage_act_prd_time & "')"
             reader = SQLCmd.ExecuteReader()
-            'Return reader
             SQLConn.Close()
             Return True
         Catch ex As Exception
             MsgBox("MSSQL Database connect failed. Please contact PC System [Function Insert_prd_close_lot]", ex.Message)
-            SQLConn.Close()
-            GoTo recheck
+        SQLConn.Close()
+        GoTo recheck
         End Try
+        '  Try
+        '   Dim api = New api()
+        '    Dim GetData = api.Load_data("http://" & svApi & "/API_NEW_FA/index.php/INSERT_DATA_NEW_FA/InsertProductionActualAppFA?wi=" & wi_plan & "&line_cd=" & line_cd & "&item_cd=" & item_cd & "&plan_qty=" & plan_qty & "&act_qty=" & act_qty & "&seq_no=" & seq_no & "&shift_prd=" & shift_prd & "&manpower_no=" & manpower_no & "&st_time=" & st_time & "&end_time=" & end_time & "&lot_no=" & lot_no & "&comp_flg=" & comp_flg & "&transfer_flg=" & transfer_flg & "&del_flg=" & del_flg & "&prd_flg=" & prd_flg & "&close_lot_flg=" & close_lot_flg & "&avarage_eff=" & avarage_eff & "&avarage_act_prd_time=" & avarage_act_prd_time & "&prd_st_date=" & st_datetime2 & "&prd_st_time=" & st_time2 & "&prd_end_date=" & end_datetime2 & "&prd_end_time=" & end_time2 & "&updated_date=" & currdated)
+        '    Console.WriteLine("http://" & svApi & "/API_NEW_FA/index.php/INSERT_DATA_NEW_FA/InsertProductionActualAppFA?wi=" & wi_plan & "&line_cd=" & line_cd & "&item_cd=" & item_cd & "&plan_qty=" & plan_qty & "&act_qty=" & act_qty & "&seq_no=" & seq_no & "&shift_prd=" & shift_prd & "&manpower_no=" & manpower_no & "&st_time=" & st_time & "&end_time=" & end_time & "&lot_no=" & lot_no & "&comp_flg=" & comp_flg & "&transfer_flg=" & transfer_flg & "&del_flg=" & del_flg & "&prd_flg=" & prd_flg & "&close_lot_flg=" & close_lot_flg & "&avarage_eff=" & avarage_eff & "&avarage_act_prd_time=" & avarage_act_prd_time & "&prd_st_date=" & st_datetime2 & "&prd_st_time=" & st_time2 & "&prd_end_date=" & end_datetime2 & "&prd_end_time=" & end_time2 & "&updated_date=" & currdated)
+        '     Return GetData
+        '     Catch ex As Exception
+        'MsgBox("Error Function Get_Plan_All_By_Line_LOSS_A In Backoffice_model")
+        '    GoTo recheck
+        '   End Try
     End Function
 
 
@@ -3626,7 +4016,7 @@ re_insert_rework_act:
             Else
                 cmd.CommandText = "INSERT INTO loss_actual(wi,line_cd,item_cd,seq_no,shift_prd,start_loss,end_loss,loss_time,updated_date,loss_type,loss_cd_id,line_op_id,pd,transfer_flg , flg_control , pwi_id) VALUES ('" & wi_plan & "','" & line_cd & "','" & item_cd & "','" & seq_no & "','" & shift_prd & "','" & st_datetime2 & "','" & end_datetime2 & "','" & loss_time & "','" & currdated & "','" & loss_type & "','" & loss_id & "','" & op_id & "','" & pd & "','" & transfer_flg & "','" & flg_control & "','" & pwi_id & "')"
             End If
-            Console.WriteLine("LOSSSS=>>>" & cmd.CommandText)
+            ' Console.WriteLine("LOSSSS=>>>" & cmd.CommandText)
             Loss_reg.date_time_commit_data.Text = st_datetime2
             Dim LoadSQL As SQLiteDataReader = cmd.ExecuteReader()
             sqliteConn.Close()
@@ -3871,7 +4261,7 @@ re_insert_rework_act:
             Else
                 cmd.CommandText = "Update loss_actual set end_loss = '" & end_datetime2 & "',loss_time = '" & loss_time & "' , updated_date = '" & currdated & "' , line_op_id = '" & op_id & "'  , transfer_flg = '" & transfer_flg & "' , flg_control ='" & flg_control & "' where wi='" & wi_plan & "' and line_cd = '" & line_cd & "' and item_cd = '" & item_cd & "' and seq_no = '" & seq_no & "' and shift_prd = '" & shift_prd & "' and start_loss = '" & st_datetime2 & "'"
             End If
-            Console.WriteLine("update ===>" & cmd.CommandText)
+            'Console.WriteLine("Update_flg_loss_sqlite update ===>" & cmd.CommandText)
             Dim LoadSQL As SQLiteDataReader = cmd.ExecuteReader()
             LoadSQL.Close()
             sqliteConn.Close()
@@ -3902,10 +4292,54 @@ re_insert_rework_act:
         Try
             Dim api = New api()
             Dim GetData = api.Load_data("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/Get_Plan_All_By_Line?line_cd=" & line_cd & "&shift=" & shift & "&dateStart=" & dateStart & "&timeStart=" & timeStart & "&flg_spec=" & flg_spec & "&item_cd=" & item_cd)
-            Console.WriteLine("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/Get_Plan_All_By_Line?line_cd=" & line_cd & "&shift=" & shift & "&dateStart=" & dateStart & "&timeStart=" & timeStart & "&flg_spec=" & flg_spec & "&item_cd=" & item_cd)
+            'Console.WriteLine("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/Get_Plan_All_By_Line?line_cd=" & line_cd & "&shift=" & shift & "&dateStart=" & dateStart & "&timeStart=" & timeStart & "&flg_spec=" & flg_spec & "&item_cd=" & item_cd)
             Return GetData
         Catch ex As Exception
             MsgBox("Error Function Get_Plan_All_By_Line In Backoffice_model")
+        End Try
+        Return 0
+    End Function
+    Public Function Get_Plan_All_By_Line_Auto_Loss_X(line_cd As String, shift As String, dateStart As String, timeStart As String, flg_spec As String, item_cd As String)
+        Try
+            Dim api = New api()
+            Console.WriteLine("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/Get_Plan_All_By_Line_Auto_Loss_X?line_cd=" & line_cd & "&shift=" & shift & "&dateStart=" & dateStart & "&timeStart=" & timeStart & "&flg_spec=" & flg_spec & "&item_cd=" & item_cd)
+            Dim GetData = api.Load_data("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/Get_Plan_All_By_Line_Auto_Loss_X?line_cd=" & line_cd & "&shift=" & shift & "&dateStart=" & dateStart & "&timeStart=" & timeStart & "&flg_spec=" & flg_spec & "&item_cd=" & item_cd)
+            Return GetData
+        Catch ex As Exception
+            MsgBox("Error Function Get_Plan_All_By_Line_Auto_Loss_X In Backoffice_model")
+        End Try
+        Return 0
+    End Function
+    Public Function Get_Plan_All_By_Line_Auto_Loss_X_adjust_loss(line_cd As String, shift As String, dateStart As String, timeStart As String, flg_spec As String, item_cd As String, dateEnd As String, timeEnd As String)
+        Try
+            Dim api = New api()
+            Console.WriteLine("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/Get_Plan_All_By_Line_Auto_Loss_X_adjust_loss?line_cd=" & line_cd & "&shift=" & shift & "&dateStart=" & dateStart & "&timeStart=" & timeStart & "&flg_spec=" & flg_spec & "&item_cd=" & item_cd & "&dateEnd=" & dateEnd & "&timeEnd=" & timeEnd)
+            Dim GetData = api.Load_data("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/Get_Plan_All_By_Line_Auto_Loss_X_adjust_loss?line_cd=" & line_cd & "&shift=" & shift & "&dateStart=" & dateStart & "&timeStart=" & timeStart & "&flg_spec=" & flg_spec & "&item_cd=" & item_cd & "&dateEnd=" & dateEnd & "&timeEnd=" & timeEnd)
+            Return GetData
+        Catch ex As Exception
+            MsgBox("Error Function Get_Plan_All_By_Line_Auto_Loss_X_adjust_loss In Backoffice_model")
+        End Try
+        Return 0
+    End Function
+    Public Function Get_Plan_All_By_Line_LOSS_A(line_cd As String, shift As String, dateStart As String, timeStart As String, flg_spec As String, item_cd As String)
+        Try
+            Dim api = New api()
+            Dim GetData = api.Load_data("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/Get_Plan_All_By_Line_Auto_Loss_A?line_cd=" & line_cd & "&shift=" & shift & "&dateStart=" & dateStart & "&timeStart=" & timeStart & "&flg_spec=" & flg_spec & "&item_cd=" & item_cd)
+            Console.WriteLine("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/Get_Plan_All_By_Line_Auto_Loss_A?line_cd=" & line_cd & "&shift=" & shift & "&dateStart=" & dateStart & "&timeStart=" & timeStart & "&flg_spec=" & flg_spec & "&item_cd=" & item_cd)
+            Return GetData
+        Catch ex As Exception
+            MsgBox("Error Function Get_Plan_All_By_Line_LOSS_A In Backoffice_model")
+        End Try
+        Return 0
+    End Function
+    Public Function Get_Plan_All_By_Line_LOSS_E1(line_cd As String, shift As String, dateStart As String, timeStart As String, flg_spec As String, item_cd As String)
+        Try
+            Dim api = New api()
+            Dim GetData = api.Load_data("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/Get_Plan_All_By_Line_Auto_Loss_E1?line_cd=" & line_cd & "&shift=" & shift & "&dateStart=" & dateStart & "&timeStart=" & timeStart & "&flg_spec=" & flg_spec & "&item_cd=" & item_cd)
+            Console.WriteLine("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/Get_Plan_All_By_Line_Auto_Loss_E1?line_cd=" & line_cd & "&shift=" & shift & "&dateStart=" & dateStart & "&timeStart=" & timeStart & "&flg_spec=" & flg_spec & "&item_cd=" & item_cd)
+            Return GetData
+        Catch ex As Exception
+            MsgBox("Error Function Get_Plan_All_By_Line_LOSS_E1 In Backoffice_model")
         End Try
         Return 0
     End Function
@@ -3980,6 +4414,28 @@ re_insert_rework_act:
             Return result
         Catch ex As Exception
             MsgBox("Error Function M_Get_mst_line In Backoffice_model")
+        End Try
+    End Function
+    Public Shared Function M_loadsecPopUp_Loss_E1(dateStart As String, timeStart As String, shift As String, item_cd As String, flg_spec As String, line_cd As String)
+        Try
+            Dim api = New api()
+            'Dim reusult_data = api.Load_data("http://" & svApi & "/API_NEW_FA/index.php/INSERT_DATA_NEW_FA/Update_supply_dev_WorkingSpecial?wi1=" & wi1 & "&wi2=" & wi2 & "&wi3=" & wi3 & "&wi4=" & wi4 & "&wi5=" & wi5)
+            Dim result = api.Load_data("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/loadsecPopUp_Loss_E1?dateStart=" & dateStart & "&timeStart=" & timeStart & "&Shift=" & shift & "&item_cd=" & item_cd & "&flg_spec=" & flg_spec & "&line_cd=" & line_cd)
+            Console.WriteLine("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/loadsecPopUp_Loss_E1?dateStart=" & dateStart & "&timeStart=" & timeStart & "&Shift=" & shift & "&item_cd=" & item_cd & "&flg_spec=" & flg_spec & "&line_cd=" & line_cd)
+            Return result
+        Catch ex As Exception
+            MsgBox("Error Function M_loadsecPopUp_Loss_E1 In Backoffice_model")
+        End Try
+    End Function
+    Public Shared Function GetDataLoss(start_loss As String, end_loss As String, line_cd As String)
+        Try
+            Dim api = New api()
+            'Dim reusult_data = api.Load_data("http://" & svApi & "/API_NEW_FA/index.php/INSERT_DATA_NEW_FA/Update_supply_dev_WorkingSpecial?wi1=" & wi1 & "&wi2=" & wi2 & "&wi3=" & wi3 & "&wi4=" & wi4 & "&wi5=" & wi5)
+            Dim result = api.Load_data("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/getDataloss?dateStart=" & start_loss & "&dateEnd=" & end_loss & "&line_cd=" & line_cd)
+            Console.WriteLine("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/getDataloss?dateStart=" & start_loss & "&dateEnd=" & end_loss & "&line_cd=" & line_cd)
+            Return result
+        Catch ex As Exception
+            MsgBox("Error Function GetDataLoss In Backoffice_model")
         End Try
     End Function
 End Class

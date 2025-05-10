@@ -8,7 +8,7 @@ Public Class Finish_work
 		Backoffice_model.line_status_upd(line_id)
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                Backoffice_model.updated_data_to_dbsvr()
+                Backoffice_model.updated_data_to_dbsvr(Me, "2")
             End If
         Catch ex As Exception
         End Try

@@ -58,8 +58,4 @@ Public Class CheckWindow
             Return "Please Check USB DIO"
         End Try
     End Function
-
-    Private Sub CheckWindow_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-
-    End Sub
 End Class

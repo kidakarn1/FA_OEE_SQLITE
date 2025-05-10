@@ -171,7 +171,6 @@ Partial Class Working_Pro
         Me.progressbarQ = New CircularProgressBar.CircularProgressBar()
         Me.progressbarA = New CircularProgressBar.CircularProgressBar()
         Me.lbNG = New System.Windows.Forms.Label()
-        Me.PictureBox12 = New System.Windows.Forms.PictureBox()
         Me.panelpcWorker2 = New System.Windows.Forms.PictureBox()
         Me.PanelACTP = New System.Windows.Forms.Panel()
         Me.Label19 = New System.Windows.Forms.Label()
@@ -234,6 +233,7 @@ Partial Class Working_Pro
         Me.TextBox2 = New System.Windows.Forms.TextBox()
         Me.TextBox3 = New System.Windows.Forms.TextBox()
         Me.TextBox4 = New System.Windows.Forms.TextBox()
+        Me.PictureBox12 = New System.Windows.Forms.PictureBox()
         Me.Panel1.SuspendLayout()
         Me.Panel7.SuspendLayout()
         CType(Me.PictureBox9, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -254,7 +254,6 @@ Partial Class Working_Pro
         CType(Me.PictureBox10, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.redBox, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.WebView21, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.PictureBox12, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.panelpcWorker2, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.PanelACTP.SuspendLayout()
         Me.PanelSTDJOBP.SuspendLayout()
@@ -273,6 +272,7 @@ Partial Class Working_Pro
         CType(Me.qrScanChecklist, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.Panel_log_scan_qr_product.SuspendLayout()
         CType(Me.pb_netdown, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.PictureBox12, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'Label4
@@ -1792,9 +1792,9 @@ Partial Class Working_Pro
         'redBox
         '
         Me.redBox.BackgroundImage = Global.TBK_FA_System.My.Resources.Resources.tabStartProd
-        Me.redBox.Location = New System.Drawing.Point(0, 421)
+        Me.redBox.Location = New System.Drawing.Point(0, 417)
         Me.redBox.Name = "redBox"
-        Me.redBox.Size = New System.Drawing.Size(800, 179)
+        Me.redBox.Size = New System.Drawing.Size(800, 182)
         Me.redBox.TabIndex = 4657
         Me.redBox.TabStop = False
         '
@@ -2131,16 +2131,6 @@ Partial Class Working_Pro
         Me.lbNG.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
         Me.lbNG.UseMnemonic = False
         '
-        'PictureBox12
-        '
-        Me.PictureBox12.BackgroundImage = CType(resources.GetObject("PictureBox12.BackgroundImage"), System.Drawing.Image)
-        Me.PictureBox12.Location = New System.Drawing.Point(0, -1)
-        Me.PictureBox12.Name = "PictureBox12"
-        Me.PictureBox12.Size = New System.Drawing.Size(800, 598)
-        Me.PictureBox12.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage
-        Me.PictureBox12.TabIndex = 4645
-        Me.PictureBox12.TabStop = False
-        '
         'panelpcWorker2
         '
         Me.panelpcWorker2.BackColor = System.Drawing.Color.Transparent
@@ -2244,9 +2234,9 @@ Partial Class Working_Pro
         'PictureBox11
         '
         Me.PictureBox11.BackgroundImage = Global.TBK_FA_System.My.Resources.Resources.tabStopProd
-        Me.PictureBox11.Location = New System.Drawing.Point(0, 420)
+        Me.PictureBox11.Location = New System.Drawing.Point(0, 417)
         Me.PictureBox11.Name = "PictureBox11"
-        Me.PictureBox11.Size = New System.Drawing.Size(800, 179)
+        Me.PictureBox11.Size = New System.Drawing.Size(800, 182)
         Me.PictureBox11.TabIndex = 4682
         Me.PictureBox11.TabStop = False
         Me.PictureBox11.Visible = False
@@ -2431,7 +2421,7 @@ Partial Class Working_Pro
         Me.btnDefects.BackgroundImage = Global.TBK_FA_System.My.Resources.Resources.btnDefectNew
         Me.btnDefects.Location = New System.Drawing.Point(298, 514)
         Me.btnDefects.Name = "btnDefects"
-        Me.btnDefects.Size = New System.Drawing.Size(162, 84)
+        Me.btnDefects.Size = New System.Drawing.Size(162, 91)
         Me.btnDefects.TabIndex = 4701
         Me.btnDefects.TabStop = False
         Me.btnDefects.Visible = False
@@ -2717,9 +2707,10 @@ Partial Class Working_Pro
         'pb_netdown
         '
         Me.pb_netdown.Image = CType(resources.GetObject("pb_netdown.Image"), System.Drawing.Image)
-        Me.pb_netdown.Location = New System.Drawing.Point(0, 419)
+        Me.pb_netdown.Location = New System.Drawing.Point(0, 417)
         Me.pb_netdown.Name = "pb_netdown"
-        Me.pb_netdown.Size = New System.Drawing.Size(800, 181)
+        Me.pb_netdown.Size = New System.Drawing.Size(800, 182)
+        Me.pb_netdown.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage
         Me.pb_netdown.TabIndex = 4713
         Me.pb_netdown.TabStop = False
         Me.pb_netdown.Visible = False
@@ -2783,6 +2774,16 @@ Partial Class Working_Pro
         Me.TextBox4.Size = New System.Drawing.Size(20, 28)
         Me.TextBox4.TabIndex = 4719
         Me.TextBox4.Text = "%"
+        '
+        'PictureBox12
+        '
+        Me.PictureBox12.BackgroundImage = CType(resources.GetObject("PictureBox12.BackgroundImage"), System.Drawing.Image)
+        Me.PictureBox12.Location = New System.Drawing.Point(0, -1)
+        Me.PictureBox12.Name = "PictureBox12"
+        Me.PictureBox12.Size = New System.Drawing.Size(800, 598)
+        Me.PictureBox12.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage
+        Me.PictureBox12.TabIndex = 4645
+        Me.PictureBox12.TabStop = False
         '
         'Working_Pro
         '
@@ -2983,7 +2984,6 @@ Partial Class Working_Pro
         CType(Me.PictureBox10, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.redBox, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.WebView21, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.PictureBox12, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.panelpcWorker2, System.ComponentModel.ISupportInitialize).EndInit()
         Me.PanelACTP.ResumeLayout(False)
         Me.PanelACTP.PerformLayout()
@@ -3004,6 +3004,7 @@ Partial Class Working_Pro
         CType(Me.qrScanChecklist, System.ComponentModel.ISupportInitialize).EndInit()
         Me.Panel_log_scan_qr_product.ResumeLayout(False)
         CType(Me.pb_netdown, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.PictureBox12, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -3153,7 +3154,6 @@ Partial Class Working_Pro
     Friend WithEvents progressbarP As CircularProgressBar.CircularProgressBar
     Friend WithEvents progressbarQ As CircularProgressBar.CircularProgressBar
     Friend WithEvents lbNG As Label
-    Friend WithEvents PictureBox12 As PictureBox
     Friend WithEvents panelpcWorker2 As PictureBox
     Friend WithEvents PanelACTP As Panel
     Friend WithEvents Label19 As Label
@@ -3218,4 +3218,5 @@ Partial Class Working_Pro
     Friend WithEvents TextBox2 As TextBox
     Friend WithEvents TextBox3 As TextBox
     Friend WithEvents TextBox4 As TextBox
+    Friend WithEvents PictureBox12 As PictureBox
 End Class

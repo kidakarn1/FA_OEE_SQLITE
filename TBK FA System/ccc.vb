@@ -40,7 +40,6 @@ Public Class Sel_prd_setup
     End Sub
     Private Sub Button4_Click(sender As Object, e As EventArgs) Handles Button4.Click
         Try
-
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
                 Change_Loss2.ListView2.View = View.Details
                 Dim checkRs As Integer = 0

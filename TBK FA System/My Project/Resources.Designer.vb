@@ -853,9 +853,29 @@ Namespace My.Resources
         '''<summary>
         '''  Looks up a localized resource of type System.Drawing.Bitmap.
         '''</summary>
+        Friend ReadOnly Property ingif() As System.Drawing.Bitmap
+            Get
+                Dim obj As Object = ResourceManager.GetObject("ingif", resourceCulture)
+                Return CType(obj,System.Drawing.Bitmap)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Looks up a localized resource of type System.Drawing.Bitmap.
+        '''</summary>
         Friend ReadOnly Property insertQTY() As System.Drawing.Bitmap
             Get
                 Dim obj As Object = ResourceManager.GetObject("insertQTY", resourceCulture)
+                Return CType(obj,System.Drawing.Bitmap)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Looks up a localized resource of type System.Drawing.Bitmap.
+        '''</summary>
+        Friend ReadOnly Property JgIO() As System.Drawing.Bitmap
+            Get
+                Dim obj As Object = ResourceManager.GetObject("JgIO", resourceCulture)
                 Return CType(obj,System.Drawing.Bitmap)
             End Get
         End Property
@@ -956,6 +976,16 @@ Namespace My.Resources
         Friend ReadOnly Property logScanProduction() As System.Drawing.Bitmap
             Get
                 Dim obj As Object = ResourceManager.GetObject("logScanProduction", resourceCulture)
+                Return CType(obj,System.Drawing.Bitmap)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Looks up a localized resource of type System.Drawing.Bitmap.
+        '''</summary>
+        Friend ReadOnly Property LossE1() As System.Drawing.Bitmap
+            Get
+                Dim obj As Object = ResourceManager.GetObject("LossE1", resourceCulture)
                 Return CType(obj,System.Drawing.Bitmap)
             End Get
         End Property

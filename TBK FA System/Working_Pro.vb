@@ -20,6 +20,8 @@ Imports Microsoft.Web.WebView2.Core
 Imports Microsoft.Web.WebView2.WinForms
 Imports QRCoder
 Public Class Working_Pro
+    Dim tmpActual As Integer = 0
+    Private lossPopupCts As CancellationTokenSource
     Private WithEvents WebViewProgressbar As WebView2
     Private WithEvents WebViewEmergency As WebView2
     ' Public Shared comportTowerLamp = "COM7"
@@ -35,6 +37,7 @@ Public Class Working_Pro
     Dim start_year As Integer = 0
     Dim start_month As Integer = 0
     Dim start_days As Integer = 0
+    Public Shared tmp_good As Integer = 0
     Dim Id As Short                             ' Device ID
     Dim Ret As Integer                          ' Return Code
     Dim szError As New StringBuilder("", 256)   ' Error String
@@ -49,6 +52,7 @@ Public Class Working_Pro
     Dim Edit_Up(1) As TextBox
     Dim Edit_Down(7) As TextBox
     Dim loadingForm As New loadData()
+    Friend WithEvents TimerCheckDIO As System.Windows.Forms.Timer
     Dim delay_btn As Integer = 0
     Public Shared check_bull As Integer = 0
     Public check_in_up_seq As Integer = 0
@@ -157,21 +161,29 @@ Public Class Working_Pro
     End Sub
     Public Function load_data_defeult_master_server(line_cd As String)
         Dim api = New api()
-        Dim result_data As String = api.Load_data("http://" & Backoffice_model.svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/JOIN_CHECK_LINE_MASTER?line_cd=" & line_cd)
-        If result_data <> "0" Then
-            Dim dict2 As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(result_data)
-            For Each item As Object In dict2
-                s_mecg_name = item("mecg_name").ToString()
-                mec_name = item("mec_name").ToString()
-                comportTowerLamp = item("metl_comport").ToString()
-                If Backoffice_model.GET_STATUS_DELAY_BY_LINE(MainFrm.Label4.Text) = 0 Then
-                    status_conter = 0
-                    s_delay = item("me_sig_del").ToString()
-                Else
-                    status_conter = 1
+        Try
+            If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
+                Dim result_data As String = api.Load_data("http://" & Backoffice_model.svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/JOIN_CHECK_LINE_MASTER?line_cd=" & line_cd)
+                If result_data <> "0" Then
+                    Dim dict2 As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(result_data)
+                    For Each item As Object In dict2
+                        s_mecg_name = item("mecg_name").ToString()
+                        mec_name = item("mec_name").ToString()
+                        comportTowerLamp = item("metl_comport").ToString()
+                        If Backoffice_model.GET_STATUS_DELAY_BY_LINE(MainFrm.Label4.Text) = 0 Then
+                            status_conter = 0
+                            s_delay = item("me_sig_del").ToString()
+                        Else
+                            status_conter = 1
+                        End If
+                    Next
                 End If
-            Next
-        End If
+            Else
+                status_conter = 1
+            End If
+        Catch ex As Exception
+            status_conter = 1
+        End Try
     End Function
     Public Async Function setlvA(line_cd As String, lot_no As String, shift As String, dateStart As String, timeShift As String, stTimeModel As String, special_flg As String) As Task
         Dim OEE = New OEE_NODE
@@ -681,7 +693,7 @@ Public Class Working_Pro
         lb_loss_status.Parent = Panel6
         check_tag_type = api.Load_data("http://" & Backoffice_model.svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/GET_LINE_TYPE?line_cd=" & MainFrm.Label4.Text)
         load_data = api.Load_data("http://" & Backoffice_model.svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/GET_DATA_WORKING?WI=" & Prd_detail.lb_wi.Text)
-        BreakTime = Backoffice_model.GetTimeAutoBreakTime(MainFrm.Label4.Text)
+        BreakTime = Backoffice_model.GetTimeAutoBreakTime(MainFrm.Label4.Text, Label14.Text)
         lbNextTime.Text = BreakTime
         HourOverAllShift.Text = OEE.OEE_GET_Hour(Label14.Text)
         'TimerLossBT.Start()
@@ -747,7 +759,7 @@ Public Class Working_Pro
         Dim mdDf = New modelDefect
         lb_good.Text = mdDf.mGetGoodWILot(wi_no.Text, Label18.Text)
         pb_netdown.Visible = False
-        Main()
+        ' Main() ' P1 Loss Code 36 
         Dim P = setgetSpeedLoss(lbOverTimeQuality.Text, lb_good.Text, Prd_detail.Label12.Text.Substring(3, 5), Label38.Text, MainFrm.Label4.Text, gobal_stTimeModel)
         Dim GoodByPartNo As Integer = CDbl(Val(actualP.Text)) - CDbl(Val(lbOverTimeQuality.Text))
         Dim Q = cal_progressbarQ(lbOverTimeQuality.Text, GoodByPartNo)
@@ -760,6 +772,7 @@ Public Class Working_Pro
             'SetStartTime.Show()
             SetStartTime.ShowDialog()
         End If
+        load_popup_loss_E1()
     End Sub
     Public Sub check_seq_data()
         If CDbl(Val(LB_COUNTER_SEQ.Text)) <> "0" Then
@@ -774,80 +787,76 @@ Public Class Working_Pro
     Public Sub connect_counter_qty()
         Dim load_total As String = load_data_defeult_master_server(MainFrm.Label4.Text)
         If s_mecg_name = "DIO-3232LX-USB" Then
+            Dim checkRet As Integer
+            Dim errorStr As String = ""
             Try
+                ' ====== 1. เชื่อมต่อ DIO ======
                 Dim szDeviceName As String
-                ' Get device name from screen
-                szDeviceName = Edit_DeviceName.Text
-                ' Execute initialization function and get ID
-                Ret = DioInit(szDeviceName, Id)
-                ' Error process
-                Call DioGetErrorString(Ret, szError)
-                If Ret = 10000 Then
-                    Edit_DeviceName.Text = "DIO001"
-                    ' Get device name from screen
-                    szDeviceName = Edit_DeviceName.Text
-                    ' Execute initialization function and get ID
+                Dim deviceNames As String() = {Edit_DeviceName.Text}
+                For Each name As String In deviceNames
+                    szDeviceName = name
                     Ret = DioInit(szDeviceName, Id)
-                    ' Error process
                     Call DioGetErrorString(Ret, szError)
-                    If Ret = 10000 Then
-                        Edit_DeviceName.Text = "DIO002"
-                        ' Get device name from screen
-                        szDeviceName = Edit_DeviceName.Text
-                        ' Execute initialization function and get ID
-                        Ret = DioInit(szDeviceName, Id)
-                        ' Error process
-                        Call DioGetErrorString(Ret, szError)
+                    If Ret <> 10000 Then
+                        Edit_DeviceName.Text = name ' อัปเดต DeviceName บนหน้าจอด้วย
+                        Exit For
                     End If
-                End If
-                'MsgBox(Ret)
-                'Edit_ReturnCode.Text = "Ret = " & Ret & ":" & szError.ToString()
+                Next
+                ' ====== 2. ตั้งค่าการทำงานเบื้องต้น ======
                 Dim i As Short
                 Dim BitNo As Short
                 Dim Kind As Short
                 Dim Tim As Integer
+
                 For i = 0 To 1
                     UpCount(i) = 0
                     DownCount(i) = 0
                 Next i
+
                 Tim = 100
                 Kind = DIO_TRG_RISE
+
                 For BitNo = 0 To 1
                     If Check(BitNo).CheckState = 1 Then
                         Ret = DioNotifyTrg(Id, BitNo, Kind, Tim, Me.Handle.ToInt32)
                         If (Ret <> DIO_ERR_SUCCESS) Then
-                            'MsgBox("Connect success")
                             Exit For
                         End If
                     Else
                         Ret = DioStopNotifyTrg(Id, BitNo)
                         If (Ret <> DIO_ERR_SUCCESS) Then
-                            'MsgBox("Connect Failed")
                             Exit For
                         End If
                     End If
                 Next BitNo
+                ' ====== 3. ซ่อน Error Panel หลังเชื่อมต่อ ======
                 PictureBox10.Visible = False
                 Label2.Visible = False
                 Panel2.Visible = False
                 PictureBox16.Visible = False
                 Call DioGetErrorString(Ret, szError)
+                ' ====== 4. เริ่มเช็คการเชื่อมต่อทุกๆ 3 วินาที ======
+                TimerCheckDIO = New System.Windows.Forms.Timer()
+                TimerCheckDIO.Interval = 3000 ' เช็คทุก 3 วินาที
+                TimerCheckDIO.Start()
             Catch ex As Exception
-                'Button1.Enabled = False
-                btnStart.Enabled = False
-                btn_back.Enabled = False
-                panelpcWorker1.Enabled = False
-                btnInfo.Enabled = False
-                Dim listdetail = "Please check DIO !"
-                PictureBox10.BringToFront()
-                PictureBox10.Show()
-                PictureBox16.BringToFront()
-                PictureBox16.Show()
-                Panel2.BringToFront()
-                Panel2.Show()
-                Label2.Text = listdetail
-                Label2.BringToFront()
-                Label2.Show()
+                If StatusClickStart = 1 Then
+                    'Button1.Enabled = False
+                    btnStart.Enabled = False
+                    btn_back.Enabled = False
+                    panelpcWorker1.Enabled = False
+                    btnInfo.Enabled = False
+                    Dim listdetail = "Please check DIO Contect !"
+                    PictureBox10.BringToFront()
+                    PictureBox10.Show()
+                    PictureBox16.BringToFront()
+                    PictureBox16.Show()
+                    Panel2.BringToFront()
+                    Panel2.Show()
+                    Label2.Text = listdetail
+                    Label2.BringToFront()
+                    Label2.Show()
+                End If
             End Try
         ElseIf s_mecg_name = "RS232" Then
             Try
@@ -869,21 +878,23 @@ Public Class Working_Pro
                 Panel2.Visible = False
                 PictureBox16.Visible = False
             Catch ex As Exception
-                'Button1.Enabled = False
-                btnStart.Enabled = False
-                btn_back.Enabled = False
-                panelpcWorker1.Enabled = False
-                btnInfo.Enabled = False
-                Dim listdetail = "Port Not Found Please Check Port. " & mec_name & "."
-                PictureBox10.BringToFront()
-                PictureBox10.Show()
-                PictureBox16.BringToFront()
-                PictureBox16.Show()
-                Panel2.BringToFront()
-                Panel2.Show()
-                Label2.Text = listdetail
-                Label2.BringToFront()
-                Label2.Show()
+                If StatusClickStart = 1 Then
+                    'Button1.Enabled = False
+                    btnStart.Enabled = False
+                    btn_back.Enabled = False
+                    panelpcWorker1.Enabled = False
+                    btnInfo.Enabled = False
+                    Dim listdetail = "Port Not Found Please Check Port. " & mec_name & "."
+                    PictureBox10.BringToFront()
+                    PictureBox10.Show()
+                    PictureBox16.BringToFront()
+                    PictureBox16.Show()
+                    Panel2.BringToFront()
+                    Panel2.Show()
+                    Label2.Text = listdetail
+                    Label2.BringToFront()
+                    Label2.Show()
+                End If
             End Try
         ElseIf s_mecg_name = "NO DEVICE" Then
             PictureBox10.Visible = False
@@ -895,21 +906,23 @@ Public Class Working_Pro
             If CheckOs() Then
                 Dim rs = counterNewDIO.count_NIMAX()
                 If rs <> "OK" Then
-                    'Button1.Enabled = False
-                    btnStart.Enabled = False
-                    btn_back.Enabled = False
-                    panelpcWorker1.Enabled = False
-                    btnInfo.Enabled = False
-                    Dim listdetail = "Please check DIO !"
-                    PictureBox10.BringToFront()
-                    PictureBox10.Show()
-                    PictureBox16.BringToFront()
-                    PictureBox16.Show()
-                    Panel2.BringToFront()
-                    Panel2.Show()
-                    Label2.Text = listdetail
-                    Label2.BringToFront()
-                    Label2.Show()
+                    If StatusClickStart = 1 Then
+                        'Button1.Enabled = False
+                        btnStart.Enabled = False
+                        btn_back.Enabled = False
+                        panelpcWorker1.Enabled = False
+                        btnInfo.Enabled = False
+                        Dim listdetail = "Please check NI MAX DIO !"
+                        PictureBox10.BringToFront()
+                        PictureBox10.Show()
+                        PictureBox16.BringToFront()
+                        PictureBox16.Show()
+                        Panel2.BringToFront()
+                        Panel2.Show()
+                        Label2.Text = listdetail
+                        Label2.BringToFront()
+                        Label2.Show()
+                    End If
                 Else
                     PictureBox10.Visible = False
                     Label2.Visible = False
@@ -935,6 +948,50 @@ Public Class Working_Pro
                 Label2.Show()
             End If
         End If
+    End Sub
+    Private Sub TimerCheckDIO_Tick(sender As Object, e As EventArgs) Handles TimerCheckDIO.Tick
+        CheckDIOConnection()
+    End Sub
+
+    Private Sub CheckDIOConnection()
+        Try
+            Dim checkRet As Integer
+            Dim errorStr As New System.Text.StringBuilder(256)
+            Dim dummyData As Byte = 0
+            ' อ่านบิต 0 เท่านั้น, เร็วสุด
+            checkRet = DioInpBit(Id, 0, dummyData)
+            If checkRet <> DIO_ERR_SUCCESS Then
+                Call DioGetErrorString(checkRet, errorStr)
+                TimerCheckDIO.Stop()
+                HandleDIOError("DIO Disconnected! Error: " & errorStr.ToString())
+            End If
+        Catch ex As Exception
+            TimerCheckDIO.Stop()
+            HandleDIOError("Unexpected error while checking DIO: " & ex.Message)
+        End Try
+    End Sub
+
+
+
+    ' ====== 7. ฟังก์ชันจัดการเมื่อเจอ Error ======
+    Private Sub HandleDIOError(message As String)
+        ' ปิดการใช้งานปุ่มที่เกี่ยวข้อง
+        btnStart.Enabled = False
+        btn_back.Enabled = False
+        panelpcWorker1.Enabled = False
+        btnInfo.Enabled = False
+
+        ' แสดงข้อความเตือนบนหน้าจอ
+        PictureBox10.BringToFront()
+        PictureBox10.Show()
+        PictureBox16.BringToFront()
+        PictureBox16.Show()
+        Panel2.BringToFront()
+        Panel2.Show()
+
+        Label2.Text = message
+        Label2.BringToFront()
+        Label2.Show()
     End Sub
     Private Sub Label8_Click(sender As Object, e As EventArgs)
     End Sub
@@ -964,12 +1021,12 @@ Public Class Working_Pro
     End Sub
     Public Sub stop_working()
         StatusClickStart = 0
-        Console.WriteLine("READY 1")
+        'Console.WriteLine("READY 1")
         PanelProgressbar.Visible = False
         btnInfo.Visible = True
         btnStart.BringToFront()
         pb_netdown.Visible = False
-        Console.WriteLine("READY 2")
+        'Console.WriteLine("READY 2")
         ' LB_COUNTER_SHIP.Visible = False
         'btnStart.Visible = True
         'PictureBox11.Visible = True
@@ -1004,7 +1061,7 @@ Public Class Working_Pro
         '   Label10.Location = New Point(41, 510)
         'Label10.BackColor = Color.FromArgb(12, 27, 45)
         'Label10.BringToFront()
-        Console.WriteLine("READY 3")
+        'Console.WriteLine("READY 3")
         Dim line_id As String = MainFrm.line_id.Text
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
@@ -1017,7 +1074,7 @@ Public Class Working_Pro
         End Try '
         Dim date_st As String = DateTime.Now.ToString("yyyy/MM/dd H:m:s")
         Dim date_end As String = DateTime.Now.ToString("yyyy/MM/dd H:m:s")
-        Console.WriteLine("READY 4")
+        'Console.WriteLine("READY 4")
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
                 Backoffice_model.line_status_ins(line_id, date_st, date_end, "1", "0", 24, "0", Prd_detail.lb_wi.Text)
@@ -1027,7 +1084,7 @@ Public Class Working_Pro
         Catch ex As Exception
             Backoffice_model.line_status_ins_sqlite(line_id, date_st, date_end, "1", "0", 24, "0", Prd_detail.lb_wi.Text)
         End Try
-        Console.WriteLine("READY 5")
+        ' Console.WriteLine("READY 5")
         pb_netdown.Visible = False
         start_flg = 0
         Try
@@ -1045,7 +1102,7 @@ Public Class Working_Pro
         'Button1.Visible = False
         Panel1.BackColor = Color.Red
         Label30.Text = "STOPPED"
-        Console.WriteLine("READY 6")
+        ' Console.WriteLine("READY 6")
         'btn_back.Visible = True
         btnSetUp.Visible = True
         btn_ins_act.Visible = True
@@ -1057,9 +1114,9 @@ Public Class Working_Pro
         redBox.Visible = True
         btn_stop.Visible = True
         btnStart.Visible = True
-        Console.WriteLine("READY 7")
+        'Console.WriteLine("READY 7")
         CheckMenu()
-        Console.WriteLine("READY 8")
+        'Console.WriteLine("READY 8")
     End Sub
     Private Sub btn_stop_Click(sender As Object, e As EventArgs) Handles btn_stop.Click
         check_network_frist = 1
@@ -1244,12 +1301,12 @@ Public Class Working_Pro
             Backoffice_model.ins_loss_act_sqlite(pd, line_cd, wi_plan, item_cd, seq_no, shift_prd, start_loss, end_loss, total_loss, loss_type, loss_cd_id, op_id, transfer_flg, flg_control, pwi_id)
         End Try
     End Sub
-    Public Sub insLossClickStart(dateNow As String, timeNow As String)
+    Public Sub insLossClickStart_Loss_X(dateNow As String, timeNow As String)
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
                 Dim bf = New Backoffice_model
                 ' Dim RsCheckProduction_Plan = bf.Get_Plan_All_By_Line(Backoffice_model.GET_LINE_PRODUCTION(), Label14.Text, DateTime.Now.ToString("yyyy-MM-dd"))
-                Dim RsCheckProduction_Plan = bf.Get_Plan_All_By_Line(Backoffice_model.GET_LINE_PRODUCTION(), Label14.Text, dateNow, timeNow, Backoffice_model.S_chk_spec_line, Label3.Text)
+                Dim RsCheckProduction_Plan = bf.Get_Plan_All_By_Line_Auto_Loss_X(Backoffice_model.GET_LINE_PRODUCTION(), Label14.Text, dateNow, timeNow, Backoffice_model.S_chk_spec_line, Label3.Text)
                 ''Console.WriteLine(RsCheckProduction_Plan)
                 If RsCheckProduction_Plan <> "0" Then
                     Dim loss_type As String = "0"
@@ -1286,6 +1343,151 @@ Public Class Working_Pro
                         Next
                     Catch ex As Exception
                         MsgBox(ex.Message)
+                    End Try
+                End If
+            End If
+        Catch ex As Exception
+        End Try
+    End Sub
+    Public Sub insLossClickStart_Loss_X_adjust_loss(dateNow As String, timeNow As String, dateEnd As String, timeEnd As String)
+        Try
+            If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
+                Dim bf = New Backoffice_model
+                ' Dim RsCheckProduction_Plan = bf.Get_Plan_All_By_Line(Backoffice_model.GET_LINE_PRODUCTION(), Label14.Text, DateTime.Now.ToString("yyyy-MM-dd"))
+                Dim RsCheckProduction_Plan = bf.Get_Plan_All_By_Line_Auto_Loss_X_adjust_loss(Backoffice_model.GET_LINE_PRODUCTION(), Label14.Text, dateNow, timeNow, Backoffice_model.S_chk_spec_line, Label3.Text, dateEnd, timeEnd)
+                ''Console.WriteLine(RsCheckProduction_Plan)
+                If RsCheckProduction_Plan <> "0" Then
+                    Dim loss_type As String = "0"
+                    Dim op_id As String = "0"
+                    Dim dict3 As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(RsCheckProduction_Plan)
+                    Dim start_loss As String = ""
+                    Dim end_loss_codex As String = ""
+                    Dim start_loss_codex As String = ""
+                    Dim Loss_Time_codex As String = ""
+                    Dim Loss_Code As String = ""
+                    Try
+                        For Each item As Object In dict3
+                            start_loss_codex = item("Start_Loss").ToString()
+                            end_loss_codex = item("End_Loss").ToString()
+                            Loss_Time_codex = item("Loss_Time").ToString()
+                            Loss_Code = item("Loss_Code").ToString()
+                            If CDbl(Val(Loss_Time_codex)) > 0 Then
+                                If MainFrm.chk_spec_line = "2" Then
+                                    Dim GenSEQ As Integer = CInt(Label22.Text) - MainFrm.ArrayDataPlan.ToArray().Length
+                                    Dim Iseq = GenSEQ
+                                    Dim j As Integer = 0
+                                    For Each itemPlanData As DataPlan In Confrime_work_production.ArrayDataPlan
+                                        Iseq += 1
+                                        Dim indRow As String = itemPlanData.IND_ROW
+                                        Dim wi As String = itemPlanData.wi
+                                        Dim item_cd As String = itemPlanData.item_cd
+                                        ins_loss_code(MainFrm.Label6.Text, MainFrm.Label4.Text, wi, item_cd, Iseq, Label14.Text, start_loss_codex, end_loss_codex, Loss_Time_codex, loss_type, Loss_Code, "0", Spwi_id(j))
+                                        j = j + 1
+                                    Next
+                                Else
+                                    ins_loss_code(MainFrm.Label6.Text, MainFrm.Label4.Text, wi_no.Text, Label3.Text, CDbl(Val(Label22.Text)), Label14.Text, start_loss_codex, end_loss_codex, Loss_Time_codex, loss_type, Loss_Code, "0", pwi_id)
+                                End If
+                            End If
+                        Next
+                    Catch ex As Exception
+                        MsgBox(ex.Message)
+                    End Try
+                End If
+            End If
+        Catch ex As Exception
+        End Try
+    End Sub
+    Public Sub insLossClickStart_Loss_A(dateNow As String, timeNow As String)
+        Try
+            If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
+                Dim bf = New Backoffice_model
+                ' Dim RsCheckProduction_Plan = bf.Get_Plan_All_By_Line(Backoffice_model.GET_LINE_PRODUCTION(), Label14.Text, DateTime.Now.ToString("yyyy-MM-dd"))
+                Dim RsCheckProduction_Plan = bf.Get_Plan_All_By_Line_Loss_A(Backoffice_model.GET_LINE_PRODUCTION(), Label14.Text, dateNow, timeNow, Backoffice_model.S_chk_spec_line, Label3.Text)
+                ''Console.WriteLine(RsCheckProduction_Plan)
+                If RsCheckProduction_Plan <> "0" Then
+                    Dim loss_type As String = "0"
+                    Dim op_id As String = "0"
+                    Dim dict3 As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(RsCheckProduction_Plan)
+                    Dim start_loss As String = ""
+                    Dim end_loss_codex As String = ""
+                    Dim start_loss_codex As String = ""
+                    Dim Loss_Time_codex As String = ""
+                    Dim Loss_Code As String = ""
+                    Dim Status_Los_A As String = ""
+                    Try
+                        For Each item As Object In dict3
+                            start_loss_codex = item("Start_Loss").ToString()
+                            end_loss_codex = item("End_Loss").ToString()
+                            Loss_Time_codex = item("Loss_Time").ToString()
+                            Loss_Code = item("Loss_Code").ToString()
+                            If CDbl(Val(Loss_Time_codex)) > 0 Then
+                                If MainFrm.chk_spec_line = "2" Then
+                                    Dim GenSEQ As Integer = CInt(Label22.Text) - MainFrm.ArrayDataPlan.ToArray().Length
+                                    Dim Iseq = GenSEQ
+                                    Dim j As Integer = 0
+                                    For Each itemPlanData As DataPlan In Confrime_work_production.ArrayDataPlan
+                                        Iseq += 1
+                                        Dim indRow As String = itemPlanData.IND_ROW
+                                        Dim wi As String = itemPlanData.wi
+                                        Dim item_cd As String = itemPlanData.item_cd
+                                        ins_loss_code(MainFrm.Label6.Text, MainFrm.Label4.Text, wi, item_cd, Iseq, Label14.Text, start_loss_codex, end_loss_codex, Loss_Time_codex, loss_type, Loss_Code, "0", Spwi_id(j))
+                                        j = j + 1
+                                    Next
+                                Else
+                                    ins_loss_code(MainFrm.Label6.Text, MainFrm.Label4.Text, wi_no.Text, Label3.Text, CDbl(Val(Label22.Text)), Label14.Text, start_loss_codex, end_loss_codex, Loss_Time_codex, loss_type, Loss_Code, "0", pwi_id)
+                                End If
+                            End If
+                        Next
+                    Catch ex As Exception
+                        '   MsgBox("err catch ===>" & ex.Message)
+                    End Try
+                End If
+            End If
+        Catch ex As Exception
+            'MsgBox("catch ====>" & ex.Message)
+        End Try
+    End Sub
+    Public Sub insLossClickStart_Loss_E1(dateNow As String, timeNow As String)
+        Try
+            If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
+                Dim bf = New Backoffice_model
+                ' Dim RsCheckProduction_Plan = bf.Get_Plan_All_By_Line(Backoffice_model.GET_LINE_PRODUCTION(), Label14.Text, DateTime.Now.ToString("yyyy-MM-dd"))
+                Dim RsCheckProduction_Plan = bf.Get_Plan_All_By_Line_Loss_E1(Backoffice_model.GET_LINE_PRODUCTION(), Label14.Text, dateNow, timeNow, Backoffice_model.S_chk_spec_line, Label3.Text)
+                If RsCheckProduction_Plan <> "0" Then
+                    Dim loss_type As String = "0"
+                    Dim op_id As String = "0"
+                    Dim dict3 As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(RsCheckProduction_Plan)
+                    Dim start_loss As String = ""
+                    Dim end_loss_codex As String = ""
+                    Dim start_loss_codex As String = ""
+                    Dim Loss_Time_codex As String = ""
+                    Dim Loss_Code As String = ""
+                    Try
+                        For Each item As Object In dict3
+                            start_loss_codex = item("Start_Loss").ToString()
+                            end_loss_codex = item("End_Loss").ToString()
+                            Loss_Time_codex = item("Loss_Time").ToString()
+                            Loss_Code = item("Loss_Code").ToString()
+                            If CDbl(Val(Loss_Time_codex)) > 0 Then
+                                If MainFrm.chk_spec_line = "2" Then
+                                    Dim GenSEQ As Integer = CInt(Label22.Text) - MainFrm.ArrayDataPlan.ToArray().Length
+                                    Dim Iseq = GenSEQ
+                                    Dim j As Integer = 0
+                                    For Each itemPlanData As DataPlan In Confrime_work_production.ArrayDataPlan
+                                        Iseq += 1
+                                        Dim indRow As String = itemPlanData.IND_ROW
+                                        Dim wi As String = itemPlanData.wi
+                                        Dim item_cd As String = itemPlanData.item_cd
+                                        ins_loss_code(MainFrm.Label6.Text, MainFrm.Label4.Text, wi, item_cd, Iseq, Label14.Text, start_loss_codex, end_loss_codex, Loss_Time_codex, loss_type, Loss_Code, "0", Spwi_id(j))
+                                        j = j + 1
+                                    Next
+                                Else
+                                    ins_loss_code(MainFrm.Label6.Text, MainFrm.Label4.Text, wi_no.Text, Label3.Text, CDbl(Val(Label22.Text)), Label14.Text, start_loss_codex, end_loss_codex, Loss_Time_codex, loss_type, Loss_Code, "0", pwi_id)
+                                End If
+                            End If
+                        Next
+                    Catch ex As Exception
+                        MsgBox("error ===>" & ex.Message)
                     End Try
                 End If
             End If
@@ -1422,9 +1624,25 @@ Public Class Working_Pro
                 load_show.Show()
                 GoTo outNet
             End Try
+            Try
+                If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
+                    insLossClickStart_Loss_A(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture))
+                End If
+            Catch ex As Exception
+
+            End Try
         End If
+        Try
+            If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
+                insLossClickStart_Loss_X(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture))
+                Dim BreakTime = Backoffice_model.GetTimeAutoBreakTime(MainFrm.Label4.Text, Label14.Text) ' for set data 
+                Backoffice_model.ILogLossBreakTime(MainFrm.Label4.Text, wi_no.Text, Label22.Text)
+                lbNextTime.Text = BreakTime
+            End If
+        Catch ex As Exception
+
+        End Try
         Main()
-        insLossClickStart(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss", CultureInfo.InvariantCulture))
         Dim line_id As String = MainFrm.line_id.Text
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
@@ -1614,6 +1832,7 @@ Public Class Working_Pro
         Else
             'Label32.Text = "0"
         End If
+
         statusPrint = "Normal"
         cal_eff()
         'asdasdas
@@ -1700,25 +1919,36 @@ Public Class Working_Pro
         CheckMN()
         If (CDbl(Val(check_in_up_seq)) - 1) = 0 Then
             Dim OEE = New OEE_NODE
-            DateTimeStartofShift.Text = OEE.OEE_getDateTimeStart(Prd_detail.Label12.Text.Substring(3, 5), MainFrm.Label4.Text)
-            '  MsgBox("DateTimeStartofShift.Text load seq ====>" & DateTimeStartofShift.Text)
-            ' Await the completion of LOAD_OEE
-            ' MsgBox("frith start ===>")
-            Await LOAD_OEE()
+            Try
+                If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
+                    DateTimeStartofShift.Text = OEE.OEE_getDateTimeStart(Prd_detail.Label12.Text.Substring(3, 5), MainFrm.Label4.Text)
+                    '  MsgBox("DateTimeStartofShift.Text load seq ====>" & DateTimeStartofShift.Text)
+                    ' Await the completion of LOAD_OEE
+                    ' MsgBox("frith start ===>")
+                    Await LOAD_OEE()
+                End If
+            Catch ex As Exception
+            End Try
         End If
 outNet:
     End Function
     Public Async Function CheckMN() As Task
         Dim modelmn = New modelMaintenance
-        If modelmn.getDataMN(MainFrm.Label4.Text) <> "0" Then
-            Me.Enabled = False
-            Sel_prd_setup.loadDataLossCrr()
-            Chang_Loss.btnNextLossCrr()
-            Loss_reg.Button4.Visible = True
-            Loss_reg.GetDefectMenuMaintenance()
-            Await Loss_reg.LoadMN()
-            'Chang_Loss.Show()
-        End If
+        Try
+            If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
+                If modelmn.getDataMN(MainFrm.Label4.Text) <> "0" Then
+                    Me.Enabled = False
+                    Sel_prd_setup.loadDataLossCrr()
+                    Chang_Loss.btnNextLossCrr()
+                    Loss_reg.Button4.Visible = True
+                    Loss_reg.GetDefectMenuMaintenance()
+                    Await Loss_reg.LoadMN()
+                    'Chang_Loss.Show()
+                End If
+            End If
+        Catch ex As Exception
+
+        End Try
     End Function
     Public Sub insComputerDown(tb As String)
         'MsgBox("tb===>" & tb)
@@ -1786,7 +2016,7 @@ outNet:
         End Try
     End Function
     Private Sub Button1_Click(sender As Object, e As EventArgs)
-        BreakTime = Backoffice_model.GetTimeAutoBreakTime(MainFrm.Label4.Text)
+        BreakTime = Backoffice_model.GetTimeAutoBreakTime(MainFrm.Label4.Text, Label14.Text)
         lbNextTime.Text = BreakTime
         Dim yearNow As Integer = DateTime.Now.ToString("yyyy")
         Dim monthNow As Integer = DateTime.Now.ToString("MM")
@@ -2125,7 +2355,8 @@ outNet:
     Public Async Function counter_contect_DIO() As Task
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                Backoffice_model.updated_data_to_dbsvr()
+                Backoffice_model.updated_data_to_dbsvr(Me, "2")
+                insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
             End If
         Catch ex As Exception
 
@@ -2504,7 +2735,8 @@ outNet:
     Public Async Function counter_contect_DIO_RS232() As Task
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                Backoffice_model.updated_data_to_dbsvr()
+                Backoffice_model.updated_data_to_dbsvr(Me, "2")
+                insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
             End If
         Catch ex As Exception
 
@@ -3082,7 +3314,13 @@ outNet:
         Me.Enabled = False
         ' Dim clSummary As New closeLotsummary()
         closeLotsummary.statusPage.Text = "working"
-        closeLotsummary.Show()
+        Dim totalDefectCP As Integer = (CDbl(Val(lb_nc_child_part.Text)) + CDbl(Val(lb_ng_child_part.Text)))
+        If LB_COUNTER_SEQ.Text <= 0 And totalDefectCP >= 1 Then
+            MsgBox("ไม่สามารถ Close Lot ได้ เนื่องจาก ไม่มี ยอดการผลิต แต่มีงานเสียในระบบ")
+            Me.Enabled = True
+        Else
+            closeLotsummary.Show()
+        End If
         'Close_lot_cfm.Show()
     End Sub
     Public Function check_tagprint()
@@ -3690,7 +3928,7 @@ outNet:
             If check_format_tag = "1" Then ' for tag_type = '2' and tag_issue_flg = '2'  OR K1M183
                 lb_box_count.Text = lb_box_count.Text + 1
                 print_back.PrintDocument2.Print()
-                Console.WriteLine("result Print ===>" & index_check_print & "Mod" & CDbl(Val(Label27.Text)) & " = " & result_mod)
+                'Console.WriteLine("result Print ===>" & index_check_print & "Mod" & CDbl(Val(Label27.Text)) & " = " & result_mod)
                 If result_mod = "0" Or Label10.Text = "0" Then
                     Label_bach.Text += 1
                     ' MsgBox("Label6.Text==>" & Label6.Text)
@@ -4085,7 +4323,7 @@ outNet:
         Dim secSt As Integer = st_time.Text.Substring(17, 2)
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                Backoffice_model.updated_data_to_dbsvr()
+                Backoffice_model.updated_data_to_dbsvr(Me, "2")
             End If
         Catch ex As Exception
         End Try
@@ -4336,7 +4574,7 @@ outNet:
         Desc_act.Label1.Text = CDbl(Val(LB_COUNTER_SEQ.Text)) 'result
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                Backoffice_model.updated_data_to_dbsvr()
+                Backoffice_model.updated_data_to_dbsvr(Me, "2")
                 Desc_act.Show()
                 Me.Enabled = False
             Else
@@ -4406,7 +4644,8 @@ outNet:
         ''Console.WriteLine("READY NI MAX")
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                Backoffice_model.updated_data_to_dbsvr()
+                Backoffice_model.updated_data_to_dbsvr(Me, "2")
+                insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
             Else
                 ' MsgBox("NO NET")
             End If
@@ -4745,8 +4984,8 @@ outNet:
         If rsWindow Then
             Try
                 CheckWindow.data_new_dio = CheckWindow.reader_new_dio.ReadSingleSamplePortUInt32()
-                Console.WriteLine("[Timer] data_new_dio: " & CheckWindow.data_new_dio.ToString())
-                If CheckWindow.data_new_dio.ToString() = "254" Then
+                ' Console.WriteLine("[Timer] data_new_dio: " & CheckWindow.data_new_dio.ToString())
+                If CheckWindow.data_new_dio.ToString() <> "255" Then
                     If check_bull = 0 Then
                         If start_flg = 1 Then
                             Await Manage_counter_NI_MAX()
@@ -4818,12 +5057,12 @@ outNet:
                                                                            Me.Invoke(Sub()
                                                                                          Try
                                                                                              If Application.OpenForms().OfType(Of closeLotsummary).Any Then
-                                                                                                 Dim BreakTime = Backoffice_model.GetTimeAutoBreakTime(MainFrm.Label4.Text) ' for set data 
+                                                                                                 Dim BreakTime = Backoffice_model.GetTimeAutoBreakTime(MainFrm.Label4.Text, Label14.Text) ' for set data 
                                                                                                  Backoffice_model.ILogLossBreakTime(MainFrm.Label4.Text, wi_no.Text, Label22.Text)
                                                                                                  lbNextTime.Text = BreakTime
                                                                                                  Main()
                                                                                              ElseIf Application.OpenForms().OfType(Of Loss_reg).Any Or Application.OpenForms().OfType(Of Loss_reg_pass).Any Then
-                                                                                                 Dim BreakTime = Backoffice_model.GetTimeAutoBreakTime(MainFrm.Label4.Text) ' for set data 
+                                                                                                 Dim BreakTime = Backoffice_model.GetTimeAutoBreakTime(MainFrm.Label4.Text, Label14.Text) ' for set data 
                                                                                                  Backoffice_model.ILogLossBreakTime(MainFrm.Label4.Text, wi_no.Text, Label22.Text)
                                                                                                  lbNextTime.Text = BreakTime
                                                                                                  Main()
@@ -4833,9 +5072,12 @@ outNet:
                                                                                                  If check_in_up_seq = 0 Then
                                                                                                      Backoffice_model.IDLossCodeAuto = "36"
                                                                                                  End If
-                                                                                                 Me.Enabled = False
-                                                                                                 ' StopMenu.ShowDialog()
+                                                                                                 insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
                                                                                                  StopMenu.Show()
+                                                                                                 ' StopMenu.ShowDialog()
+                                                                                                 'If StopMenu.Visible Then
+                                                                                                 'Me.Enabled = False
+                                                                                                 'End If
                                                                                              End If
                                                                                          Catch ex As Exception
 
@@ -4855,38 +5097,6 @@ outNet:
                 End If
             End If
         Catch
-        End Try
-    End Sub
-    Private Sub TimerCountBT_Tick(sender As Object, e As EventArgs)
-        Try
-            If Application.OpenForms().OfType(Of Loss_reg).Any Or Application.OpenForms().OfType(Of Loss_reg_pass).Any Then
-            ElseIf Application.OpenForms().OfType(Of closeLotsummary).Any Then
-                If TimeOfDay.ToString("HH:mm:ss") = Backoffice_model.TimeShowBreakTime Then
-                    Dim BreakTime = Backoffice_model.GetTimeAutoBreakTime(MainFrm.Label4.Text) ' for set data 
-                    Backoffice_model.ILogLossBreakTime(MainFrm.Label4.Text, wi_no.Text, Label22.Text)
-                    lbNextTime.Text = BreakTime
-                End If
-            ElseIf Application.OpenForms().OfType(Of closeLotsummary).Any Then
-                If TimeOfDay.ToString("HH:mm:ss") = Backoffice_model.TimeShowBreakTime Then
-                    Dim BreakTime = Backoffice_model.GetTimeAutoBreakTime(MainFrm.Label4.Text) ' for set data 
-                    Backoffice_model.ILogLossBreakTime(MainFrm.Label4.Text, wi_no.Text, Label22.Text)
-                    lbNextTime.Text = BreakTime
-                End If
-            Else
-                If Backoffice_model.TimeShowBreakTime <> "" Then
-                    If TimeOfDay.ToString("HH:mm:ss") = Backoffice_model.TimeShowBreakTime Then
-                        check_network_frist = 1
-                        stop_working()
-                        Backoffice_model.TimeStartBreakTime = TimeOfDay.ToString("HH:mm:ss")
-                        Me.Enabled = False
-                        'StopMenu.ShowDialog()
-                        StopMenu.Show()
-                    End If
-                Else
-                    ' TimerLossBT.Enabled = False
-                End If
-            End If
-        Catch ex As Exception
         End Try
     End Sub
     Public Function calTimeBreakTime(pdStart As Date, timeNextBreak As String)
@@ -4910,7 +5120,7 @@ outNet:
 
             ElseIf Application.OpenForms().OfType(Of closeLotsummary).Any Then
                 If TimeOfDay.ToString("HH:mm:ss") = Backoffice_model.TimeShowBreakTime Then
-                    Dim BreakTime = Backoffice_model.GetTimeAutoBreakTime(MainFrm.Label4.Text) ' for set data 
+                    Dim BreakTime = Backoffice_model.GetTimeAutoBreakTime(MainFrm.Label4.Text, Label14.Text) ' for set data 
                     Backoffice_model.ILogLossBreakTime(MainFrm.Label4.Text, wi_no.Text, Label22.Text)
                     lbNextTime.Text = BreakTime
                 End If
@@ -4975,6 +5185,7 @@ outNet:
         'Button1.Enabled = True
         btnStart.Enabled = True
         btn_back.Enabled = True
+        connect_counter_qty()
     End Sub
     Private Sub TIME_CAL_EFF_Tick(sender As Object, e As EventArgs) Handles TIME_CAL_EFF.Tick
         'If check_cal_eff = 1000 Then
@@ -5124,5 +5335,45 @@ outNet:
     End Sub
     Private Sub Button1_Click_1(sender As Object, e As EventArgs) Handles btn_close_log_scan_product.Click
         Panel_log_scan_qr_product.Visible = False
+    End Sub
+    Public Sub stop_popup_loss_E1()
+        If lossPopupCts IsNot Nothing Then
+            lossPopupCts.Cancel()
+            lossPopupCts.Dispose()
+            lossPopupCts = Nothing
+        End If
+    End Sub
+    Public Sub load_popup_loss_E1()
+        Dim rsString = Backoffice_model.M_loadsecPopUp_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"), Label14.Text, Label3.Text, MainFrm.chk_spec_line, MainFrm.Label4.Text)
+        Try
+            ' ยกเลิก Task เดิมถ้ามี
+            If lossPopupCts IsNot Nothing Then
+                lossPopupCts.Cancel()
+                lossPopupCts.Dispose()
+            End If
+            Dim rs As Integer
+            If Integer.TryParse(rsString, rs) AndAlso rs > 0 Then
+                lossPopupCts = New CancellationTokenSource()
+                Dim token = lossPopupCts.Token
+                Task.Delay(TimeSpan.FromSeconds(rs), token).ContinueWith(Sub(t)
+                                                                             If t.IsCanceled Then Return
+                                                                             Try
+                                                                                 Me.Invoke(Sub()
+                                                                                               Try
+                                                                                                   If check_in_up_seq = 0 Then
+                                                                                                       PopUpLossDelayStart.ShowDialog()
+                                                                                                   End If
+                                                                                               Catch ex As Exception
+                                                                                                   ' Handle inner error
+                                                                                               End Try
+                                                                                           End Sub)
+                                                                             Catch ex As Exception
+                                                                                 ' Handle outer error
+                                                                             End Try
+                                                                         End Sub, TaskScheduler.FromCurrentSynchronizationContext())
+            End If
+        Catch ex As Exception
+            ' Handle global error
+        End Try
     End Sub
 End Class

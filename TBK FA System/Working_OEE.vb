@@ -165,7 +165,7 @@ Public Class Working_OEE
         Desc_act.Label1.Text = CDbl(Val(LB_COUNTER_SEQ.Text)) 'result
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                Backoffice_model.updated_data_to_dbsvr()
+                Backoffice_model.updated_data_to_dbsvr(Me, "2")
                 Desc_act.Show()
                 Me.Enabled = False
             Else
