@@ -145,7 +145,7 @@ Public Class Working_OEE
     Private Sub btnDesc_Click(sender As Object, e As EventArgs) Handles btnDesc.Click
         Desc()
     End Sub
-    Public Sub Desc()
+    Public Async Sub Desc()
         Dim snp As Integer = Convert.ToInt32(Label27.Text)
         Try
             Desc_act.Label1.Text = Label12.Text 'LB_COUNTER_SHIP.Text '_Edit_Up_0.Text Mod snp
@@ -165,7 +165,7 @@ Public Class Working_OEE
         Desc_act.Label1.Text = CDbl(Val(LB_COUNTER_SEQ.Text)) 'result
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                Backoffice_model.updated_data_to_dbsvr(Me, "2")
+                Await Backoffice_model.updated_data_to_dbsvr(Me, "2")
                 Desc_act.Show()
                 Me.Enabled = False
             Else

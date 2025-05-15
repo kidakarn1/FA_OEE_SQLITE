@@ -7,6 +7,7 @@ Public Class MainFrm
         Application.Exit()
     End Sub
     Public Shared rsCheckCriticalFlg = ""
+    Private isRunning As Boolean = False
     Public chk_spec_line As String = "0"
     Public dbClass As New Backoffice_model
     Public dbClass2 As New Backoffice_model
@@ -74,19 +75,14 @@ Public Class MainFrm
     Private Async Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         check_process()
         If CheckIfRunning() = 0 Then
-            ' dbClass.GetLocalServerAPI()
-            ' dbClass.GetLocalServerping()
-            ' dbClass.GetLocalServerOEE()
-            ' dbClass.sqlite_conn_dbsv()
-            ' dbClass.updated_data_to_dbsvr()
             Await Task.Run(Sub()
                                dbClass.GetLocalServerAPI()
                                dbClass.GetLocalServerping()
                                dbClass.GetLocalServerOEE()
                                dbClass.sqlite_conn_dbsv()
                            End Sub)
-            Await dbClass.updated_data_to_dbsvr(Me, "1")
 
+            Await dbClass.updated_data_to_dbsvr(Me, "1")
             Timer1.Start()
             Timer2.Start()
             Dim sqlss = Backoffice_model.ConnectDBSQLite()
@@ -97,16 +93,16 @@ Public Class MainFrm
                 cavity.Text = sqlss("cavity").ToString()
                 lb_scanner_port.Text = sqlss("scanner_port").ToString()
                 lb_printer_port.Text = sqlss("printer_port").ToString()
-                Backoffice_model.SCANNER_PORT = sqlss("scanner_port").ToString()
                 lb_dio_port.Text = sqlss("dio_port").ToString()
+                Backoffice_model.SCANNER_PORT = sqlss("scanner_port").ToString()
             End While
-            If Backoffice_model.SCANNER_PORT <> "" And Backoffice_model.SCANNER_PORT <> "USB" Then
+
+            If Backoffice_model.SCANNER_PORT <> "" AndAlso Backoffice_model.SCANNER_PORT <> "USB" Then
                 lb_ctrl_sc_flg.Text = "emp"
             End If
             Insert_list.Label3.Text = Label4.Text
             Prd_detail.Label3.Text = Label4.Text
-            checkcmd()
-            ' RobotApppSuport.loadMain()
+            Await checkcmd()
         Else
             Application.Exit()
         End If
@@ -321,7 +317,7 @@ Public Class MainFrm
         Return critical_flg
     End Function
     Private Async Sub menu1_Click_1(sender As Object, e As EventArgs) Handles menu1.Click
-        Backoffice_model.gobal_Flg_autoTranferProductions = Backoffice_model.Check_detail_actual_insert_act(Me) 'กรณีเครื่องดับ'
+        Backoffice_model.gobal_Flg_autoTranferProductions = Await Backoffice_model.Check_detail_actual_insert_act(Me) 'กรณีเครื่องดับ'
         check_lot()
         'Prd_detail.Label2.Text = ListView1.Items.Count
         Working_Pro.Label24.Text = Label4.Text
@@ -333,17 +329,16 @@ Public Class MainFrm
             Prd_detail.Label3.Text = Backoffice_model.GET_LINE_PRODUCTION()
             'Sel_prod_start.Show()
             rsCheckCriticalFlg = Check_critical_flg()
-            Await load_page()
+            load_page()
         End If
     End Sub
-    Public Async Function load_page() As Task
+    Public Function load_page()
         Working_Pro.lb_nc_qty.Text = "0"
         Working_Pro.lb_ng_qty.Text = "0"
         'MsgBox(line_id.Text)
         Try
             ArrayDataPlan = New List(Of DataPlan)
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                Backoffice_model.updated_data_to_dbsvr(Me, "1")
                 Dim LoadSQL_prd_plan As String = ""
                 If rsCheckCriticalFlg = "0" Then
                     LoadSQL_prd_plan = Backoffice_model.Get_prd_plan_new(Label4.Text)
@@ -487,14 +482,16 @@ Public Class MainFrm
         Me.Enabled = False
     End Sub
     Private Async Sub Timer2_Elapsed(sender As Object, e As Timers.ElapsedEventArgs) Handles Timer2.Elapsed
+        If isRunning Then Exit Sub
+        isRunning = True
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                dbClass.updated_data_to_dbsvr(Me, "2")
-                'MsgBox("Synchronous completed")
-            Else
-                'MsgBox("Synchronous not completed")
+                Await dbClass.updated_data_to_dbsvr(Me, "2")
             End If
         Catch ex As Exception
+            ' Optional: log error
+        Finally
+            isRunning = False
         End Try
     End Sub
     Private Sub menu3_Click_2(sender As Object, e As EventArgs) Handles menu3.Click

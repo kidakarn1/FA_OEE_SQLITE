@@ -217,6 +217,7 @@ Public Class closeLotsummary
             Sel_prd_setup.Enabled = True
             Me.Close()
         Else
+            Working_Pro.Show()
             Working_Pro.Enabled = True
             Me.Close()
         End If
@@ -284,7 +285,6 @@ Public Class closeLotsummary
                         For Each itemfg As Object In dcResultdata
                             Dim date_now = DateTime.Now.ToString("yyyy-MM-dd H:m:s")
                             Await WaitForNetworkWithPopup()
-
                             ClickOk(itemPlanData.wi, lbLine.Text, itemfg("dt_item_cd").ToString(), "2", sLot, Iseq, itemfg("dt_type").ToString(), itemfg("dt_code").ToString(), itemfg("total_nc").ToString(), date_now, itemfg("pwi_id").ToString())
                             mdSqlite.UpdateStatusCloselotSqlite("1", itemfg("pwi_id").ToString())
                         Next
@@ -710,7 +710,7 @@ recheck_defect:
                             If Not String.IsNullOrWhiteSpace(item("dt_supplier_code").ToString()) Then
                                 ' ✅ ตรวจ network ก่อน insert supplier defect
                                 Await WaitForNetworkWithPopup()
-                                Dim insData = md.minsertDefectTrascetionSupplier(lastId, item("dt_supplier_code").ToString(), item("total_nc").ToString(), dtLineno)
+                                Dim insData = Await md.minsertDefectTrascetionSupplier(lastId, item("dt_supplier_code").ToString(), item("total_nc").ToString(), dtLineno)
                             End If
                         Next
                     End If

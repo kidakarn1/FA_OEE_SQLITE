@@ -5,6 +5,8 @@ Imports System.Data
 Imports System.Web.Script.Serialization
 Imports System.IO.Ports
 Imports Newtonsoft.Json.Linq
+Imports System.Threading
+
 Public Class Backoffice_model
     Public Shared total_nc As Integer = 0
     Public Shared statusTransfer As Integer = 0
@@ -54,6 +56,9 @@ Public Class Backoffice_model
     Public Shared WithEvents serialPort As New SerialPort
     Public Shared printedTags As New List(Of String)
     Public Shared checkSqliteTrasnfer As Boolean = False
+    Public Shared isRunningupdated_data_to_dbsvr As Boolean = False
+    Private Shared semTransfer As New SemaphoreSlim(1, 1)
+
     Public Shared Function sqlite_conn_dbsv()
         Dim sqliteConn As New SQLiteConnection(sqliteConnect)
         Check_connect_sqlite()
@@ -115,7 +120,7 @@ Public Class Backoffice_model
             End If
         Catch ex As Exception
             ' Handle exceptions
-           ' MsgBox("MSSQL Database connect failed. Please contact PC System [Function GetTimeAutoBreakTime]" & ex.Message)
+            ' MsgBox("MSSQL Database connect failed. Please contact PC System [Function GetTimeAutoBreakTime]" & ex.Message)
         End Try
         Return result
     End Function
@@ -905,16 +910,16 @@ re_insert_rework_act:
             'Application.Exit()
         End Try
     End Function
-    Public Shared Function Check_detail_actual_insert_act(parentForm As Form)
-        updated_data_to_dbsvr(parentForm, "2")
+    Public Shared Async Function Check_detail_actual_insert_act(parentForm As Form) As Task(Of String)
+        Await updated_data_to_dbsvr(parentForm, "2")
         Dim api = New api()
         Dim result_update_count_pro = api.Load_data("http://" & svApi & "/API_NEW_FA/index.php/TESTAPITRANFER/Get_detail_act?line_cd=" & MainFrm.Label4.Text)
         'Console.WriteLine(result_update_count_pro)
         Return result_update_count_pro
     End Function
-    Public Shared Sub Check_detail_actual_insert_act_no_api(parentForm As Form)
-        updated_data_to_dbsvr(parentForm, "2")
-    End Sub
+    Public Shared Async Function Check_detail_actual_insert_act_no_api(parentForm As Form) As Task(Of String)
+        Await updated_data_to_dbsvr(parentForm, "2")
+    End Function
     Public Shared Function update_qty_seq(WI, SEQ, result_qty)
         Dim reader As SqlDataReader
         Dim SQLConn As New SqlConnection() 'The SQL Connection
@@ -3037,7 +3042,7 @@ re_insert_data:
             'Application.Exit()
         End Try
     End Function
-    Public Shared Async Function updated_data_to_dbsvr(parentForm As Form, statusCheckData As String) As Task
+    Public Shared Async Function updated_data_to_dbsvrOld(parentForm As Form, statusCheckData As String) As Task
         Dim formName As String = parentForm.Name
         Dim objTranferData
         Try
@@ -3234,63 +3239,64 @@ re_insert_data:
     End Function
 
 
+    Public Shared Async Function updated_data_to_dbsvr(parentForm As Form, statusCheckData As String) As Task
+        If Not Await semTransfer.WaitAsync(0) Then Exit Function ' ป้องกันเรียกซ้ำ
 
+        Try
+            Await updated_data_to_dbsvr_main(parentForm, statusCheckData)
+        Finally
+            semTransfer.Release()
+        End Try
+    End Function
     Public Shared Async Function updated_data_to_dbsvr_main(parentForm As Form, statusCheckData As String) As Task
-        Dim formName As String = parentForm.Name
-        Dim objTranferData
+        ' Dim formName As String = parentForm.Name
+        Dim objTransferData As Form = Nothing
 
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                Dim currdated As String = DateTime.Now.ToString("yyyy/MM/dd")
-                Dim api = New api
+                Dim api = New api()
                 api.InitSQLiteWAL()
                 Dim LoadSQL = Backoffice_model.get_trdata_sqlite()
                 Dim LoadSQLcl = Backoffice_model.get_tr_closelot_flg_sqlite()
                 Dim LoadSQL_tag_print_detail = Backoffice_model.get_tr_tag_print_detail()
                 Dim LoadSQLcl_tag_print_detail_main = Backoffice_model.get_tr_tag_print_detail_main()
                 Dim LoadSQLcl_tag_print_detail_sub = Backoffice_model.get_tr_tag_print_detail_sub()
-
-                If LoadSQL.HasRows Or LoadSQLcl.HasRows Or LoadSQL_tag_print_detail.HasRows Or LoadSQLcl_tag_print_detail_main.HasRows Or LoadSQLcl_tag_print_detail_sub.HasRows Then
-                    If objTranferData Is Nothing OrElse objTranferData.IsDisposed Then
-                        objTranferData = New TrasnferData()
+                Dim hasData = LoadSQL.HasRows Or LoadSQLcl.HasRows Or LoadSQL_tag_print_detail.HasRows Or LoadSQLcl_tag_print_detail_main.HasRows Or LoadSQLcl_tag_print_detail_sub.HasRows
+                If hasData Then
+                    If objTransferData Is Nothing OrElse objTransferData.IsDisposed Then
+                        objTransferData = New TrasnferData()
                     End If
-                    If Not objTranferData.Visible AndAlso statusTransfer = 0 Then
-                        objTranferData.Show()
+                    If Not objTransferData.Visible AndAlso statusTransfer = 0 Then
+                        If parentForm.InvokeRequired Then
+                            parentForm.Invoke(Sub() objTransferData.Show())
+                        Else
+                            objTransferData.Show()
+                        End If
                     End If
-
                     statusTransfer = 1
-                    If formName = "MainFrm" Then parentForm.Enabled = False
-                    Await DoTransferWork(parentForm, objTranferData, LoadSQL, LoadSQLcl)
-                Else
-                    If objTranferData IsNot Nothing AndAlso objTranferData.IsHandleCreated Then
-                        objTranferData.Invoke(Sub()
-                                                  statusTransfer = 0
-                                                  parentForm.Enabled = True
-                                                  objTranferData.Close()
-                                              End Sub)
-                    End If
-                End If
-            Else
-                If objTranferData IsNot Nothing AndAlso objTranferData.IsHandleCreated Then
-                    objTranferData.Invoke(Sub()
-                                              statusTransfer = 0
-                                              parentForm.Enabled = True
-                                              objTranferData.Close()
-                                          End Sub)
+                    'If formName = "MainFrm" Then
+                    'If parentForm.InvokeRequired Then
+                    '  parentForm.Invoke(Sub() parentForm.Enabled = False)
+                    'Else
+                    ' parentForm.Enabled = False
+                    'End If
+                    ' End If
+                    Await DoTransferWork(parentForm, objTransferData, LoadSQL, LoadSQLcl)
                 End If
             End If
         Catch ex As Exception
-            If objTranferData IsNot Nothing AndAlso objTranferData.IsHandleCreated Then
-                objTranferData.Invoke(Sub()
-                                          statusTransfer = 0
-                                          parentForm.Enabled = True
-                                          objTranferData.Close()
-                                      End Sub)
+            ' Optional: log
+        Finally
+            If objTransferData IsNot Nothing AndAlso objTransferData.IsHandleCreated Then
+                objTransferData.Invoke(Sub()
+                                           statusTransfer = 0
+                                           ' parentForm.Enabled = True
+                                           objTransferData.Close()
+                                       End Sub)
             End If
         End Try
     End Function
-
-    Private Shared Async Function DoTransferWork(parentForm As Form, objTranferData As Form, LoadSQL As Object, LoadSQLcl As Object) As Task
+    Private Shared Async Function DoTransferWork(parentForm As Form, objTransferData As Form, LoadSQL As Object, LoadSQLcl As Object) As Task
         Dim tmp_wi As String = ""
         Dim i As Integer = 0
 
@@ -3314,12 +3320,10 @@ re_insert_data:
                 Dim pwi_id = Integer.Parse(LoadSQL("pwi_id").ToString())
                 Dim status_sqlite = "0"
 
-                ' ✅ รอ Network กลับมาก่อนเริ่ม Insert (ครั้งเดียวต่อ record)
                 While Not My.Computer.Network.Ping(Backoffice_model.svp_ping)
                     Await Task.Delay(1000)
                 End While
 
-                ' ✅ ทำ Insert ทันที ไม่ใช้ retry loop เพื่อลดเวลาหน่วงรวม
                 Dim rsInsertid = Await Insert_prd_detail_main(pd, line_cd, wi_plan, item_cd, item_name, staff_no, seq_no, qty, st_time, end_time, use_time, number_qty, pwi_id, status_sqlite, id)
             End While
         End If
@@ -3369,12 +3373,12 @@ re_insert_data:
         If check_loss_actual() > 0 Then Get_data_loss_actual()
         If check_data_defact_detail() > 0 Then Get_data_defact_actual()
 
-        If objTranferData IsNot Nothing AndAlso objTranferData.IsHandleCreated Then
-            objTranferData.Invoke(Sub()
-                                      statusTransfer = 0
-                                      parentForm.Enabled = True
-                                      objTranferData.Close()
-                                  End Sub)
+        If objTransferData IsNot Nothing AndAlso objTransferData.IsHandleCreated Then
+            objTransferData.Invoke(Sub()
+                                       statusTransfer = 0
+                                       '  parentForm.Enabled = True
+                                       objTransferData.Close()
+                                   End Sub)
         End If
     End Function
     Public Shared Function check_rework_actual()
@@ -3819,8 +3823,8 @@ recheck:
             Return True
         Catch ex As Exception
             MsgBox("MSSQL Database connect failed. Please contact PC System [Function Insert_prd_close_lot]", ex.Message)
-        SQLConn.Close()
-        GoTo recheck
+            SQLConn.Close()
+            GoTo recheck
         End Try
         '  Try
         '   Dim api = New api()

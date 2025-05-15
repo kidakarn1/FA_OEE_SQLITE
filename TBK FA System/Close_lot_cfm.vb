@@ -3,7 +3,7 @@ Public Class Close_lot_cfm
 	Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
 		con_close_lot()
 	End Sub
-    Public Sub con_close_lot()
+    Public Async Function con_close_lot() As Task(Of String)
         If CDbl(Val(Working_Pro.LB_COUNTER_SEQ.Text)) = "0" Then
             Working_Pro.close_lot_seq()
         End If
@@ -209,7 +209,7 @@ Public Class Close_lot_cfm
                 'List_Emp.ListBox2.Items.Clear()
                 Try
                     If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                        Backoffice_model.updated_data_to_dbsvr(Me, "2")
+                        Await Backoffice_model.updated_data_to_dbsvr(Me, "2")
                     End If
                 Catch ex As Exception
 
@@ -266,7 +266,7 @@ Public Class Close_lot_cfm
         MainFrm.Show()
         Auto_close_lot.Close()
         Me.Close()
-    End Sub
+    End Function
 
     Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
 		Working_Pro.Enabled = True

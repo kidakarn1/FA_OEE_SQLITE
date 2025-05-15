@@ -1121,7 +1121,7 @@ Public Class Working_Pro
     Private Sub btn_stop_Click(sender As Object, e As EventArgs) Handles btn_stop.Click
         check_network_frist = 1
         Try
-            If s_mecg_name = "RS232" Then '
+            If s_mecg_name = "RS232" Then
                 serialPort.Close()
                 serialPort.Close()
             End If
@@ -2355,7 +2355,7 @@ outNet:
     Public Async Function counter_contect_DIO() As Task
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                Backoffice_model.updated_data_to_dbsvr(Me, "2")
+                Await Backoffice_model.updated_data_to_dbsvr(Me, "2")
                 insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
             End If
         Catch ex As Exception
@@ -2735,7 +2735,7 @@ outNet:
     Public Async Function counter_contect_DIO_RS232() As Task
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                Backoffice_model.updated_data_to_dbsvr(Me, "2")
+                Await Backoffice_model.updated_data_to_dbsvr(Me, "2")
                 insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
             End If
         Catch ex As Exception
@@ -4307,7 +4307,7 @@ outNet:
         End If
         Return lb_use_time.Text
     End Function
-    Public Function ins_qty_fn()
+    Public Async Function ins_qty_fn() As Task
         Dim yearNow As Integer = DateTime.Now.ToString("yyyy")
         Dim monthNow As Integer = DateTime.Now.ToString("MM")
         Dim dayNow As Integer = DateTime.Now.ToString("dd")
@@ -4323,7 +4323,7 @@ outNet:
         Dim secSt As Integer = st_time.Text.Substring(17, 2)
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                Backoffice_model.updated_data_to_dbsvr(Me, "2")
+                Await Backoffice_model.updated_data_to_dbsvr(Me, "2")
             End If
         Catch ex As Exception
         End Try
@@ -4554,7 +4554,7 @@ outNet:
         select_int_qty.Show()
         'ins_qty.Show()
     End Sub
-    Private Sub btn_desc_act_Click(sender As Object, e As EventArgs) Handles btn_desc_act.Click
+    Private Async Sub btn_desc_act_Click(sender As Object, e As EventArgs) Handles btn_desc_act.Click
         Dim snp As Integer = Convert.ToInt32(Label27.Text)
         Try
             Desc_act.Label1.Text = Label6.Text 'LB_COUNTER_SHIP.Text '_Edit_Up_0.Text Mod snp
@@ -4574,7 +4574,7 @@ outNet:
         Desc_act.Label1.Text = CDbl(Val(LB_COUNTER_SEQ.Text)) 'result
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                Backoffice_model.updated_data_to_dbsvr(Me, "2")
+                Await Backoffice_model.updated_data_to_dbsvr(Me, "2")
                 Desc_act.Show()
                 Me.Enabled = False
             Else
@@ -4644,7 +4644,7 @@ outNet:
         ''Console.WriteLine("READY NI MAX")
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                Backoffice_model.updated_data_to_dbsvr(Me, "2")
+                Await Backoffice_model.updated_data_to_dbsvr(Me, "2")
                 insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
             Else
                 ' MsgBox("NO NET")

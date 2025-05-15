@@ -20,15 +20,29 @@ Public Class modelDefect
             Return 0
         End Try
     End Function
-    Public Shared Function minsertDefectTrascetionSupplier(lastId As String, dt_supplier_code As String, dt_qty As String, Line As String)
+    Public Shared Async Function minsertDefectTrascetionSupplier(lastId As String, dt_supplier_code As String, dt_qty As String, Line As String) As Task(Of String)
         Try
             Dim api = New api()
-            Dim rsData = api.Load_data("http://" & Backoffice_model.svApi & "/apiShopfloor/index.php/insertDatadefect/insertDefectTransctionSupplier?lastId=" & lastId & "&dt_supplier_code=" & dt_supplier_code & "&dt_qty=" & dt_qty & "&Line=" & Line)
-            'Console.WriteLine("http://" & Backoffice_model.svApi & "/apiShopfloor/index.php/insertDatadefect/insertDefectTransctionSupplier?lastId=" & lastId & "&dt_supplier_code=" & dt_supplier_code & "&dt_qty=" & dt_qty & "&Line=" & Line)
-            Return rsData
+            ' Dim rsData = api.Load_data("http://" & Backoffice_model.svApi & "/apiShopfloor/index.php/insertDatadefect/insertDefectTransctionSupplier?lastId=" & lastId & "&dt_supplier_code=" & dt_supplier_code & "&dt_qty=" & dt_qty & "&Line=" & Line)
+            ' Console.WriteLine("http://" & Backoffice_model.svApi & "/apiShopfloor/index.php/insertDatadefect/insertDefectTransctionSupplier?lastId=" & lastId & "&dt_supplier_code=" & dt_supplier_code & "&dt_qty=" & dt_qty & "&Line=" & Line)
+            ' Return rsData
+            Try
+                Dim url As String = "http://" & Backoffice_model.svApi & "/apiShopfloor/index.php/insertDatadefect/insertDefectTransctionSupplier" &
+                            "?lastId=" & lastId &
+                            "&dt_supplier_code=" & dt_supplier_code &
+                            "&dt_qty=" & dt_qty &
+                            "&Line=" & Line
+                Console.WriteLine("Calling API URL: " & url)
+                ' ✅ แปลงให้ async โดยรันบน background thread
+                Dim rsData As String = Await Task.Run(Function() api.Load_data(url))
+                Return rsData
+            Catch ex As Exception
+                MsgBox("❗ connect Api Fail in minsertDefectTrascetionSupplier = " & ex.Message)
+                Return "0"
+            End Try
         Catch ex As Exception
             MsgBox("connect Api Faill Please check modelDefect in Function minsertDefectTrascetionSupplier = " & ex.Message)
-            Return 0
+            Return "0"
         End Try
     End Function
     Public Shared Function mGetPwi_id(WI As String, LOT_NO As String, SEQ_NO As String, SHIFT As String)
@@ -245,17 +259,57 @@ Public Class modelDefect
         End Try
     End Function
 
-    Public Shared Function mInsertdefectactual(dtWino As String, dtLineno As String, dtItemcd As String, dtItemtype As String, dtLotno As String, dtSeqno As String, dtType As String, dtCode As String, dtQty As String, dtMenu As String, dtActualdate As String, pwi_id As String)
+    ' Public Shared Function mInsertdefectactual(dtWino As String, dtLineno As String, dtItemcd As String, dtItemtype As String, dtLotno As String, dtSeqno As String, dtType As String, dtCode As String, dtQty As String, dtMenu As String, dtActualdate As String, pwi_id As String)
+    '  Try
+    '   Dim api = New api()
+    '    Dim rsData = api.Load_data("http://" & Backoffice_model.svApi & "/apiShopfloor/index.php/insertDatadefect/insertDefectactual?dtWino=" & dtWino & "&dtLineno=" & dtLineno & "&dtItemcd=" & dtItemcd & "&dtItemtype=" & dtItemtype & "&dtLotNo=" & dtLotno & "&dtSeqno=" & dtSeqno & "&dtType=" & dtType & "&dtCode=" & dtCode & "&dtQty=" & dtQty & "&dtMenu=" & dtMenu & "&dtActualdate=" & dtActualdate & "&pwi_id=" & pwi_id)
+    '            Console.WriteLine("http://" & Backoffice_model.svApi & "/apiShopfloor/index.php/insertDatadefect/insertDefectactual?dtWino=" & dtWino & "&dtLineno=" & dtLineno & "&dtItemcd=" & dtItemcd & "&dtItemtype=" & dtItemtype & "&dtLotNo=" & dtLotno & "&dtSeqno=" & dtSeqno & "&dtType=" & dtType & "&dtCode=" & dtCode & "&dtQty=" & dtQty & "&dtMenu=" & dtMenu & "&dtActualdate=" & dtActualdate & "&pwi_id=" & pwi_id)
+    '            Return rsData
+    '  Catch ex As Exception
+    '         MsgBox("connect Api Faill Please check modelDefect in Function mInsertdefectactual = " & ex.Message)
+    '  Return False
+    '   End Try
+    '   End Function
+    Public Shared Async Function mInsertdefectactual(
+    dtWino As String,
+    dtLineno As String,
+    dtItemcd As String,
+    dtItemtype As String,
+    dtLotno As String,
+    dtSeqno As String,
+    dtType As String,
+    dtCode As String,
+    dtQty As String,
+    dtMenu As String,
+    dtActualdate As String,
+    pwi_id As String
+) As Task(Of String)
         Try
             Dim api = New api()
-            Dim rsData = api.Load_data("http://" & Backoffice_model.svApi & "/apiShopfloor/index.php/insertDatadefect/insertDefectactual?dtWino=" & dtWino & "&dtLineno=" & dtLineno & "&dtItemcd=" & dtItemcd & "&dtItemtype=" & dtItemtype & "&dtLotNo=" & dtLotno & "&dtSeqno=" & dtSeqno & "&dtType=" & dtType & "&dtCode=" & dtCode & "&dtQty=" & dtQty & "&dtMenu=" & dtMenu & "&dtActualdate=" & dtActualdate & "&pwi_id=" & pwi_id)
-            Console.WriteLine("http://" & Backoffice_model.svApi & "/apiShopfloor/index.php/insertDatadefect/insertDefectactual?dtWino=" & dtWino & "&dtLineno=" & dtLineno & "&dtItemcd=" & dtItemcd & "&dtItemtype=" & dtItemtype & "&dtLotNo=" & dtLotno & "&dtSeqno=" & dtSeqno & "&dtType=" & dtType & "&dtCode=" & dtCode & "&dtQty=" & dtQty & "&dtMenu=" & dtMenu & "&dtActualdate=" & dtActualdate & "&pwi_id=" & pwi_id)
+            Dim url As String = "http://" & Backoffice_model.svApi & "/apiShopfloor/index.php/insertDatadefect/insertDefectactual" &
+                            "?dtWino=" & dtWino &
+                            "&dtLineno=" & dtLineno &
+                            "&dtItemcd=" & dtItemcd &
+                            "&dtItemtype=" & dtItemtype &
+                            "&dtLotNo=" & dtLotno &
+                            "&dtSeqno=" & dtSeqno &
+                            "&dtType=" & dtType &
+                            "&dtCode=" & dtCode &
+                            "&dtQty=" & dtQty &
+                            "&dtMenu=" & dtMenu &
+                            "&dtActualdate=" & dtActualdate &
+                            "&pwi_id=" & pwi_id
+
+            Console.WriteLine("Calling API URL: " & url)
+            ' ✅ แปลงให้ async โดยรันบน background thread
+            Dim rsData As String = Await Task.Run(Function() api.Load_data(url))
             Return rsData
         Catch ex As Exception
-            MsgBox("connect Api Faill Please check modelDefect in Function mInsertdefectactual = " & ex.Message)
-            Return False
+            MsgBox("❗ connect Api Fail in mInsertdefectactual = " & ex.Message)
+            Return "0"
         End Try
     End Function
+
     Public Shared Function mUpdateaddjust(dtWino As String, dtLotNo As String, dtSeqno As String, dtType As String, dtCode As String, ItemType As String, PartNo As String)
         Try
             ' MsgBox("dtWino = " & dtWino)
