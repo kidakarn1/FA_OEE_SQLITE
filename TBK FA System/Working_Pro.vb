@@ -20,6 +20,10 @@ Imports Microsoft.Web.WebView2.Core
 Imports Microsoft.Web.WebView2.WinForms
 Imports QRCoder
 Public Class Working_Pro
+    Public Property MinValue As Integer
+    Public Property MaxValue As Integer
+    Public Property ColorRGB As String
+    Dim oeeLevelList As New List(Of Working_Pro)
     Dim tmpActual As Integer = 0
     Private lossPopupCts As CancellationTokenSource
     Private WithEvents WebViewProgressbar As WebView2
@@ -91,7 +95,6 @@ Public Class Working_Pro
     Public Shared carvity As Integer = MainFrm.cavity.Text
     Public Shared ResultPrint As Integer = 0
     Public Shared StatusClickStart = 1
-
     Public Shared statusPrint As String = "Normal"
     Delegate Sub SetTextCallback(ByVal [text] As String)
     Public Shared moe_min_a As Integer = 0
@@ -101,6 +104,7 @@ Public Class Working_Pro
     Public Shared gobal_stTimeModel As String = ""
     Public Shared statusSwitchModel As String = ""
     Public Shared IsOnlyone As String = ""
+    Public Shared Product_type As String = ""
     Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
         'Label44.Text = TimeOfDay.ToString("H:mm:ss")
         Label17.Text = TimeOfDay.ToString("H:mm:ss")
@@ -277,50 +281,30 @@ Public Class Working_Pro
         'CircularProgressBar2.Text = sum_prg2 & "%"
         'CircularProgressBar2.Value = sum_prg2
     End Function
-    Public Sub calProgressOEE(A, Q, P)
-        Dim total = A + Q + P
-        If A > 100 Then
-            A = 100
-        ElseIf A < 0 Then
-            A = 0
-        End If
-        If Q > 100 Then
-            Q = 100
-        ElseIf Q < 0 Then
-            Q = 0
-        End If
-        If P > 100 Then
-            P = 100
-        ElseIf P < 0 Then
-            P = 0
-        End If
-        A = A / 100
-        Q = Q / 100
-        P = P / 100
-        ' Dim totalProgressbar = Int(FormatNumber((A * Q * P), 2) * 100) 'Int((total / 300) * 100)
-        Dim result As Double = A * Q * P
-        ' ปัดเศษให้เป็นทศนิยม 2 ตำแหน่ง
-        Dim roundedResult As Double = Math.Round(result, 2)
-        Dim flooredResult As Double = Math.Floor(result * 100)
-        Dim totalProgressbar As Integer = flooredResult.ToString("F2")
-        If totalProgressbar > 100 Then
-            progressbarOEE.Text = Int(100)
-            progressbarOEE.Value = Int(100)
-        ElseIf totalProgressbar < 0 Then
-            progressbarOEE.Text = Int(0)
-            progressbarOEE.Text = Int(0)
-            progressbarOEE.Value = Int(0)
-        Else
-            progressbarOEE.Text = totalProgressbar
-            progressbarOEE.Value = totalProgressbar
-        End If
-        If totalProgressbar >= moe_min_oee Then
-            progressbarOEE.ProgressColor = Color.FromArgb(20, 255, 0) ' Green color in RGB
-            '   ElseIf totalProgressbar <= 90 And totalProgressbar >= 80 Then
-            '       progressbarOEE.ProgressColor = Color.FromArgb(255, 97, 0) ' Green orange
-        ElseIf totalProgressbar < moe_min_oee Then
-            progressbarOEE.ProgressColor = Color.Red
-        End If
+    Public Sub calProgressOEE(A As Double, Q As Double, P As Double)
+        ' Clamp ค่าไม่เกิน 100%
+        A = Math.Max(0, Math.Min(100, A))
+        Q = Math.Max(0, Math.Min(100, Q))
+        P = Math.Max(0, Math.Min(100, P))
+        ' คำนวณ OEE
+        Dim result As Double = (A / 100) * (Q / 100) * (P / 100)
+        Dim totalProgressbar As Integer = CInt(Math.Floor(result * 100))
+        ' กำหนดค่า ProgressBar
+        progressbarOEE.Text = totalProgressbar.ToString()
+        progressbarOEE.Value = totalProgressbar
+        ' หาสีจากช่วงที่เหมาะสมใน oeeLevelList
+        For Each level As Working_Pro In oeeLevelList
+            If totalProgressbar >= level.MinValue AndAlso totalProgressbar <= level.MaxValue Then
+                Dim rgbParts() As String = level.ColorRGB.Split(","c)
+                If rgbParts.Length = 3 Then
+                    Dim R As Integer = Convert.ToInt32(rgbParts(0).Trim())
+                    Dim G As Integer = Convert.ToInt32(rgbParts(1).Trim())
+                    Dim B As Integer = Convert.ToInt32(rgbParts(2).Trim())
+                    progressbarOEE.ProgressColor = Color.FromArgb(R, G, B)
+                End If
+                Exit For
+            End If
+        Next
     End Sub
     Public Function cal_progressbarA(line_cd As String, st_shift As String, end_shift As String)
         Dim OEE = New OEE_NODE
@@ -487,6 +471,7 @@ Public Class Working_Pro
             progressbarP.Text = Int(totalProgressbar)
             progressbarP.Value = Int(totalProgressbar)
         End If
+        Console.WriteLine("totalProgressbar===>" & totalProgressbar) ' เหมือนว่า เลข 77.7777777777778 จะออก Result แค่ 7 วงกลมข้างล่าง
         If totalProgressbar >= moe_min_p Then
             progressbarP.ProgressColor = Color.FromArgb(20, 255, 0) ' Green color in RGB
             'ElseIf totalProgressbar <= 90 And totalProgressbar >= 80 Then
@@ -585,6 +570,7 @@ Public Class Working_Pro
         End If
         Dim OEE = New OEE_NODE
         showWorkker()
+        lbCT.Text = Label38.Text & "  sec"
         Try
             ' เรียกใช้ฟังก์ชัน loadDataProgressBar แบบ Async
             Await loadDataProgressBar(MainFrm.Label4.Text, Label14.Text)
@@ -593,21 +579,27 @@ Public Class Working_Pro
         End Try
         st_time.Text = DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") ' ไม่งั้น พอ auto close lot ทำงาน close lot ไม่ได้ 
         Await ShowLoadingAndLoadData()
-        Dim mastOEE = OEE.OEE_LOAD_MSTOEE(MainFrm.Label4.Text)
+        Dim mastOEE = OEE.OEE_LOAD_MSTOEEColor(MainFrm.Label4.Text)
         Dim i As Integer = 1
         Try
             For Each item As Object In mastOEE
-                If item("moe_min_oee").ToString Is Nothing Then 'ไม่ได้ Set OEE ใน Database' 
-                    ' MsgBox("IF")
-                Else
-                    moe_min_a = item("moe_min_a").ToString
-                    moe_min_p = item("moe_min_p").ToString
-                    moe_min_q = item("moe_min_q").ToString
-                    moe_min_oee = item("moe_min_oee").ToString
+                If Not IsDBNull(item("moe_min_oee")) Then
+                    ' โหลดค่าที่ต้องการใส่ Working_Pro
+                    Dim level As New Working_Pro With {
+                .MinValue = Convert.ToInt32(item("mocl_min_value")),
+                .MaxValue = Convert.ToInt32(item("mocl_max_value")),
+                .ColorRGB = item("mocl_color_code").ToString()
+            }
+                    oeeLevelList.Add(level)
+                    ' โหลดค่ามาตรฐานขั้นต่ำ
+                    moe_min_a = item("moe_min_a").ToString()
+                    moe_min_p = item("moe_min_p").ToString()
+                    moe_min_q = item("moe_min_q").ToString()
+                    moe_min_oee = item("moe_min_oee").ToString()
                 End If
             Next
         Catch ex As Exception
-
+            MessageBox.Show("โหลดข้อมูล OEE ล้มเหลว: " & ex.Message)
         End Try
         Dim date_now As String = DateTime.Now.ToString("dd-MM-yyyy")
         Dim date_now_date As Date = DateTime.Now.ToString("dd-MM-yyyy")
@@ -671,7 +663,8 @@ Public Class Working_Pro
                 gobal_stTimeModel = DateTimeStartmasterShift.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
             End If
         End If
-        Label7.Text = OEE.OEE_GET_NEW_TARGET(Prd_detail.Label12.Text.Substring(3, 5), Prd_detail.Label12.Text.Substring(11, 5), Label38.Text, Label14.Text)
+        'Label7.Text = OEE.OEE_GET_NEW_TARGET(Prd_detail.Label12.Text.Substring(3, 5), Prd_detail.Label12.Text.Substring(11, 5), Label38.Text, Label14.Text)
+        Label7.Text = OEE_NODE.OEE_GET_NEW_TARGET_PERCEN(Prd_detail.Label12.Text.Substring(3, 5), Prd_detail.Label12.Text.Substring(11, 5), Label38.Text, Label14.Text, MainFrm.Label4.Text)
         Await setlvA(MainFrm.Label4.Text, Label18.Text, Label14.Text, DateTime.Now.ToString("yyyy-MM-dd"), Prd_detail.Label12.Text.Substring(3, 5), gobal_stTimeModel, MainFrm.chk_spec_line)
         Await setlvQ(MainFrm.Label4.Text, Label18.Text, Prd_detail.Label12.Text.ToString.Substring(3, 5), gobal_stTimeModel)
         Await set_AccTarget(Prd_detail.Label12.Text.Substring(3, 5), Label38.Text, gobal_stTimeModel)
@@ -772,6 +765,7 @@ Public Class Working_Pro
             'SetStartTime.Show()
             SetStartTime.ShowDialog()
         End If
+        lbPlanOEE.Text = Await Backoffice_model.GetPercenPlanned_OEE(MainFrm.Label4.Text)
         load_popup_loss_E1()
     End Sub
     Public Sub check_seq_data()
@@ -1097,7 +1091,6 @@ Public Class Working_Pro
         Catch ex As Exception
 
         End Try
-
         'Chang_Loss.Show()
         'Button1.Visible = False
         Panel1.BackColor = Color.Red
@@ -1130,7 +1123,6 @@ Public Class Working_Pro
         End Try
         stop_working()
     End Sub
-
     Private Sub Button3_Click(sender As Object, e As EventArgs)
         Dim dfHome = New defectHome()
         dfHome.Show()
@@ -1940,7 +1932,7 @@ outNet:
                     Me.Enabled = False
                     Sel_prd_setup.loadDataLossCrr()
                     Chang_Loss.btnNextLossCrr()
-                    Loss_reg.Button4.Visible = True
+                    Loss_reg.btnMaintenance.Visible = True
                     Loss_reg.GetDefectMenuMaintenance()
                     Await Loss_reg.LoadMN()
                     'Chang_Loss.Show()
@@ -3293,7 +3285,6 @@ outNet:
     End Sub
     Public Sub CheckMenu()
         Try
-
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
                 statusDefect = Backoffice_model.GetDefectMenu(MainFrm.Label4.Text)
                 If statusDefect = "0" Then
@@ -5322,6 +5313,9 @@ outNet:
         ' WebViewProgressbar.Reload()
     End Sub
     Private Sub btnDefects_Click(sender As Object, e As EventArgs) Handles btnDefects.Click
+        MenuDefect()
+    End Sub
+    Private Sub MenuDefect()
         Dim dfHome = New defectHome()
         dfHome.Show()
         'defectHome.Show()

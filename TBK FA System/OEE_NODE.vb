@@ -34,6 +34,36 @@ Public Class OEE_NODE
             End Try
         End Try
     End Function
+    Public Shared Function OEE_LOAD_MSTOEEColor(line_cd As String)
+        Try
+            Dim api = New api()
+            Console.WriteLine("http://" & Backoffice_model.svOEE & "/api/dataGetOEEColor?line_cd=" & line_cd)
+            Dim jsonString = api.Load_data("http://" & Backoffice_model.svOEE & "/api/dataGetOEEColor?line_cd=" & line_cd)
+            Dim dcResultdata As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(jsonString)
+            Dim i As Integer = 1
+            For Each item As Object In dcResultdata
+                If item("moe_min_oee").ToString Is Nothing Then
+                    ' MsgBox("IF")
+                Else
+                    'MsgBox("ELSE")
+                End If
+            Next
+            load_show_OEE.Close()
+            Return dcResultdata
+        Catch ex As Exception
+            MsgBox("Please Check Function : OEE_LOAD_MSTOEEColor Or Check Master OEE In Table line_mst")
+            Try
+                If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
+                    load_show_OEE.Show()
+                Else
+                    load_show.Show()
+                End If
+            Catch ex2 As Exception
+                load_show_OEE.Close()
+                load_show.Show()
+            End Try
+        End Try
+    End Function
     Public Shared Function OEE_GET_NEW_TARGET(st_shift As String, end_shift As String, std_ct As String, shift As String)
         Try
             Dim api = New api()
@@ -62,6 +92,54 @@ Public Class OEE_NODE
             '   'Console.WriteLine("http://" & Backoffice_model.svApi & "/API_NEW_FA/index.php/GET_OEE/NEW_GET_TARGET?st_shift=" & st_shift & "&end_shift=" & end_shift & "&std_ct=" & std_ct)
             'Console.WriteLine("http://" & Backoffice_model.svOEE & "/api/dataGettarget?st_shift=" & st_shift & "&end_shift=" & end_shift & "&std_ct=" & std_ct & "&date_start=" & convertDateStart & "&date_end=" & date_end)
             Dim jsonString = api.Load_data("http://" & Backoffice_model.svOEE & "/api/dataGettarget?st_shift=" & st_shift & "&end_shift=" & end_shift & "&std_ct=" & std_ct & "&date_start=" & convertDateStart & "&date_end=" & date_end)
+            Dim jsSerializer As New JavaScriptSerializer()
+            ' Deserialize the JSON string to a Dictionary
+            Dim data As Dictionary(Of String, Object) = jsSerializer.Deserialize(Of Dictionary(Of String, Object))(jsonString)
+            ' Access the value
+            Dim TarGet As Integer = data("Target").ToString
+            ''Console.WriteLine("http://" & Backoffice_model.svApi & "/API_NEW_FA/index.php/GET_OEE/NEW_GET_TARGET?st_shift=" & st_shift & "&end_shift=" & end_shift & "&std_ct=" & std_ct)
+            load_show_OEE.Close()
+            Return TarGet
+        Catch ex As Exception
+            Try
+                If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
+                    load_show_OEE.Show()
+                Else
+                    load_show.Show()
+                End If
+            Catch ex2 As Exception
+                load_show_OEE.Close()
+                load_show.Show()
+            End Try
+        End Try
+    End Function
+    Public Shared Function OEE_GET_NEW_TARGET_PERCEN(st_shift As String, end_shift As String, std_ct As String, shift As String, line_cd As String)
+        Try
+            Dim api = New api()
+            Dim date_now_date As Date = DateTime.Now.ToString("yyyy-MM-dd")
+            ' Dim time As Date = TimeOfDay.ToString("HH:mm:ss") 'DateTime.Now.ToString("HH:mm:ss")
+            Dim time As String = DateTime.Now.ToString("HH:mm:ss")
+            Dim date_st = DateTime.Now.ToString("yyyy-MM-dd")
+            Dim date_end = DateTime.Now.ToString("yyyy-MM-dd")
+            Dim time_now As String = DateTime.Now.ToString("HH:mm:ss tt")
+            If time_now >= "00:00:00 AM" And time_now <= "08:00:00 AM" Then
+                date_st = date_now_date.AddDays(-1)
+            Else
+                If shift = "S" Or shift = "Q" Or shift = "B" Then
+                    date_end = date_now_date.AddDays(1)
+                    date_end = Convert.ToDateTime(date_end).ToString("yyyy-MM-dd")
+                End If
+                '   If shift = "S" Or shift = "Q" Then
+                ' date_end = date_now_date.AddDays(1)
+                ' date_end = Convert.ToDateTime(date_end).ToString("yyyy-MM-dd")
+                'End If
+            End If
+            date_st = date_st
+            Dim convertDateStart = Convert.ToDateTime(date_st).ToString("yyyy-MM-dd")
+            ' Dim TarGet = api.Load_data("http://" & Backoffice_model.svApi & "/API_NEW_FA/index.php/GET_OEE/NEW_GET_TARGET?st_shift=" & st_shift & "&end_shift=" & end_shift & "&std_ct=" & std_ct)
+            '   'Console.WriteLine("http://" & Backoffice_model.svApi & "/API_NEW_FA/index.php/GET_OEE/NEW_GET_TARGET?st_shift=" & st_shift & "&end_shift=" & end_shift & "&std_ct=" & std_ct)
+            Console.WriteLine("http://" & Backoffice_model.svOEE & "/api/dataGettargetPercen?st_shift=" & st_shift & "&end_shift=" & end_shift & "&std_ct=" & std_ct & "&date_start=" & convertDateStart & "&date_end=" & date_end & "&line_cd=" & line_cd)
+            Dim jsonString = api.Load_data("http://" & Backoffice_model.svOEE & "/api/dataGettargetPercen?st_shift=" & st_shift & "&end_shift=" & end_shift & "&std_ct=" & std_ct & "&date_start=" & convertDateStart & "&date_end=" & date_end & "&line_cd=" & line_cd)
             Dim jsSerializer As New JavaScriptSerializer()
             ' Deserialize the JSON string to a Dictionary
             Dim data As Dictionary(Of String, Object) = jsSerializer.Deserialize(Of Dictionary(Of String, Object))(jsonString)

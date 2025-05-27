@@ -315,7 +315,6 @@ Public Class closeLotsummary
                     For Each itemchild As Object In dcResultdatafg
                         Dim date_now = DateTime.Now.ToString("yyyy-MM-dd H:m:s")
                         Await WaitForNetworkWithPopup()
-
                         ClickOk(sWi, lbLine.Text, itemchild("dt_item_cd").ToString(), "1", sLot, sSeq, itemchild("dt_type").ToString(), itemchild("dt_code").ToString(), itemchild("total_nc").ToString(), date_now, Working_Pro.pwi_id)
                     Next
                 End If
@@ -349,7 +348,6 @@ Public Class closeLotsummary
                 For Each itemPlanData As DataPlan In Confrime_work_production.ArrayDataPlan
                     Dim special_wi As String = itemPlanData.wi
                     Await WaitForNetworkWithPopup()
-
                     If cFlg = 1 Then
                         Backoffice_model.work_complete(special_wi)
                     Else
@@ -407,6 +405,7 @@ Public Class closeLotsummary
                 If StopMenu.Visible Then
                     StopMenu.SatrtWork()
                 End If
+                Await Backoffice_model.updated_data_to_dbsvr(Me, "2") ' check ก่อน Close Lot อีกครั้ง
                 If Working_Pro.s_mecg_name = "RS232" Then '
                     Working_Pro.serialPort.Close()
                 End If
@@ -416,6 +415,7 @@ Public Class closeLotsummary
                     ScanQRprod.Show()
                     Me.Enabled = False
                 Else
+
                     Await Manage_closelot()
                 End If
             Else
@@ -454,7 +454,7 @@ Public Class closeLotsummary
             End If
             For Each itemdf As Object In dcResultdatafg
                 itemType = "1"
-                Dim rsApi = md.mGetdatepartdetail(itemdf("dt_item_cd").ToString, "1")
+                Dim rsApi = Await md.mGetdatepartdetail(itemdf("dt_item_cd").ToString, "1")
                 Dim dFg As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(rsApi)
                 For Each detailItemfg As Object In dFg
                     Dim objTagprintdefect = New printDefect()
@@ -510,7 +510,7 @@ Public Class closeLotsummary
             For Each itemdf As Object In dcResultdatafg
                 itemType = "1"
                 Await WaitForNetworkWithPopup()
-                Dim rsApi = md.mGetdatepartdetail(itemdf("dt_item_cd").ToString, "1")
+                Dim rsApi = Await md.mGetdatepartdetail(itemdf("dt_item_cd").ToString, "1")
                 Dim dFg As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(rsApi)
                 For Each detailItemfg As Object In dFg
                     Dim objTagprintdefect = New printDefect()
@@ -535,7 +535,7 @@ Public Class closeLotsummary
             For Each itemd As Object In dcResultdatachild
                 itemType = "2"
                 Await WaitForNetworkWithPopup()
-                Dim rsApi = md.mGetdatepartdetail(itemd("dt_item_cd").ToString, "2")
+                Dim rsApi = Await md.mGetdatepartdetail(itemd("dt_item_cd").ToString, "2")
                 Dim dChild As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(rsApi)
                 For Each detailItemchild As Object In dChild
                     Dim objTagprintdefect = New printDefect()
@@ -703,7 +703,7 @@ recheck_defect:
             ' ✅ ถ้าเป็นประเภท itemtype = 2 ต้อง Insert Supplier ด้วย
             If dtItemtype = "2" Then
                 Try
-                    Dim getData = mdSQLite.mSqliteGetdefectdetail(dtWino, dtSeqno, dtLotno, dtType, dtItemcd, dtCode)
+                    Dim getData = Await mdSQLite.mSqliteGetdefectdetail(dtWino, dtSeqno, dtLotno, dtType, dtItemcd, dtCode)
                     If getData <> "0" Then
                         Dim rsData2 As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(getData)
                         For Each item As Object In rsData2
@@ -713,6 +713,17 @@ recheck_defect:
                                 Dim insData = Await md.minsertDefectTrascetionSupplier(lastId, item("dt_supplier_code").ToString(), item("total_nc").ToString(), dtLineno)
                             End If
                         Next
+                        Dim getDataLeader = Await mdSQLite.mSqliteGetdefectdetailLeaderConFirm(dtWino, dtSeqno, dtLotno, dtType, dtItemcd, dtCode)
+                        If getDataLeader <> "0" Then
+                            Dim rsDataLeaderCon As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(getDataLeader)
+                            For Each itemLeader As Object In rsDataLeaderCon
+                                If dtLineno <> itemLeader("dt_created_by").ToString() Then
+                                    ' ✅ ตรวจ network ก่อน insert supplier defect
+                                    Await WaitForNetworkWithPopup()
+                                    Dim insData = Await md.minsertDefectLeaderConFirm(lastId, itemLeader("dt_created_by").ToString(), itemLeader("total_nc").ToString())
+                                End If
+                            Next
+                        End If
                     End If
                 Catch ex As Exception
                     ' ❗ ถ้า error ก็รอ Network แล้วปล่อย error ไปเพื่อไม่ให้ระบบ crash

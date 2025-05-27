@@ -88,9 +88,9 @@ Public Class Loss_reg
                     Dim LoadSQL = Backoffice_model.get_loss_mst()
                     While LoadSQL.Read()
                         If LoadSQL("loss_type").ToString() = "1" Then
-                            Button4.Visible = True
+                            btnMaintenance.Visible = True
                         Else
-                            Button4.Visible = False
+                            btnMaintenance.Visible = False
                         End If
                         Chang_Loss.ListView2.ForeColor = Color.Blue
                         Chang_Loss.ListView2.Items.Add(LoadSQL("id_mst").ToString()).SubItems.AddRange(New String() {LoadSQL("loss_cd").ToString(), LoadSQL("description_th").ToString()})
@@ -294,9 +294,9 @@ Public Class Loss_reg
     Public Sub GetDefectMenuMaintenance()
         statusDefect = Backoffice_model.GetDefectMenuMaintenance(MainFrm.Label4.Text)
         If statusDefect = "0" Then
-            Button4.Enabled = False
+            btnMaintenance.Enabled = False
         Else
-            Button4.Enabled = True
+            btnMaintenance.Enabled = True
         End If
     End Sub
     Private Sub Label6_Click(sender As Object, e As EventArgs)
@@ -313,7 +313,7 @@ Public Class Loss_reg
     Private Sub Label1_Click(sender As Object, e As EventArgs)
 
     End Sub
-    Private Async Sub Button4_Click(sender As Object, e As EventArgs) Handles Button4.Click
+    Private Async Sub Button4_Click(sender As Object, e As EventArgs) Handles btnMaintenance.Click
         LoadMN()
     End Sub
     Public Async Function LoadMN() As Task

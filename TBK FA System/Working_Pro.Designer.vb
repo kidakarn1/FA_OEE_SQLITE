@@ -167,7 +167,6 @@ Partial Class Working_Pro
         Me.lbOverTimeQuality = New System.Windows.Forms.Label()
         Me.lbOverTimeAvailability = New System.Windows.Forms.Label()
         Me.progressbarOEE = New CircularProgressBar.CircularProgressBar()
-        Me.progressbarP = New CircularProgressBar.CircularProgressBar()
         Me.progressbarQ = New CircularProgressBar.CircularProgressBar()
         Me.progressbarA = New CircularProgressBar.CircularProgressBar()
         Me.lbNG = New System.Windows.Forms.Label()
@@ -234,6 +233,12 @@ Partial Class Working_Pro
         Me.TextBox3 = New System.Windows.Forms.TextBox()
         Me.TextBox4 = New System.Windows.Forms.TextBox()
         Me.PictureBox12 = New System.Windows.Forms.PictureBox()
+        Me.Label51 = New System.Windows.Forms.Label()
+        Me.lbPlanOEE = New System.Windows.Forms.Label()
+        Me.TextBox5 = New System.Windows.Forms.TextBox()
+        Me.progressbarP = New CircularProgressBar.CircularProgressBar()
+        Me.Label52 = New System.Windows.Forms.Label()
+        Me.lbCT = New System.Windows.Forms.Label()
         Me.Panel1.SuspendLayout()
         Me.Panel7.SuspendLayout()
         CType(Me.PictureBox9, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -1345,7 +1350,7 @@ Partial Class Working_Pro
         Me.btn_stop.FlatStyle = System.Windows.Forms.FlatStyle.Flat
         Me.btn_stop.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.25!, System.Drawing.FontStyle.Bold)
         Me.btn_stop.ForeColor = System.Drawing.Color.FromArgb(CType(CType(0, Byte), Integer), CType(CType(27, Byte), Integer), CType(CType(70, Byte), Integer))
-        Me.btn_stop.Location = New System.Drawing.Point(719, 2)
+        Me.btn_stop.Location = New System.Drawing.Point(720, 2)
         Me.btn_stop.Name = "btn_stop"
         Me.btn_stop.Size = New System.Drawing.Size(80, 94)
         Me.btn_stop.TabIndex = 32
@@ -2016,42 +2021,6 @@ Partial Class Working_Pro
         Me.progressbarOEE.Text = "100"
         Me.progressbarOEE.TextMargin = New System.Windows.Forms.Padding(8, 5, 35, 0)
         Me.progressbarOEE.Value = 85
-        '
-        'progressbarP
-        '
-        Me.progressbarP.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
-            Or System.Windows.Forms.AnchorStyles.Left) _
-            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.progressbarP.AnimationFunction = WinFormAnimation.KnownAnimationFunctions.Liner
-        Me.progressbarP.AnimationSpeed = 500
-        Me.progressbarP.BackColor = System.Drawing.Color.White
-        Me.progressbarP.Font = New System.Drawing.Font("Panton-Trial Black", 17.75!, System.Drawing.FontStyle.Bold)
-        Me.progressbarP.ForeColor = System.Drawing.Color.Black
-        Me.progressbarP.InnerColor = System.Drawing.Color.Transparent
-        Me.progressbarP.InnerMargin = 2
-        Me.progressbarP.InnerWidth = -1
-        Me.progressbarP.Location = New System.Drawing.Point(379, 290)
-        Me.progressbarP.MarqueeAnimationSpeed = 2000
-        Me.progressbarP.Name = "progressbarP"
-        Me.progressbarP.OuterColor = System.Drawing.Color.Gainsboro
-        Me.progressbarP.OuterMargin = -26
-        Me.progressbarP.OuterWidth = 29
-        Me.progressbarP.ProgressColor = System.Drawing.Color.FromArgb(CType(CType(255, Byte), Integer), CType(CType(97, Byte), Integer), CType(CType(0, Byte), Integer))
-        Me.progressbarP.ProgressWidth = 22
-        Me.progressbarP.RightToLeft = System.Windows.Forms.RightToLeft.Yes
-        Me.progressbarP.SecondaryFont = New System.Drawing.Font("Panton-Trial Black", 24.75!, System.Drawing.FontStyle.Bold)
-        Me.progressbarP.Size = New System.Drawing.Size(124, 124)
-        Me.progressbarP.StartAngle = 270
-        Me.progressbarP.SubscriptColor = System.Drawing.Color.White
-        Me.progressbarP.SubscriptMargin = New System.Windows.Forms.Padding(10, -35, 0, 0)
-        Me.progressbarP.SubscriptText = ""
-        Me.progressbarP.SuperscriptColor = System.Drawing.Color.White
-        Me.progressbarP.SuperscriptMargin = New System.Windows.Forms.Padding(10, 35, 0, 0)
-        Me.progressbarP.SuperscriptText = ""
-        Me.progressbarP.TabIndex = 4672
-        Me.progressbarP.Text = "100"
-        Me.progressbarP.TextMargin = New System.Windows.Forms.Padding(8, 5, 35, 0)
-        Me.progressbarP.Value = 85
         '
         'progressbarQ
         '
@@ -2785,6 +2754,102 @@ Partial Class Working_Pro
         Me.PictureBox12.TabIndex = 4645
         Me.PictureBox12.TabStop = False
         '
+        'Label51
+        '
+        Me.Label51.AutoSize = True
+        Me.Label51.BackColor = System.Drawing.Color.White
+        Me.Label51.Font = New System.Drawing.Font("Panton-Trial ExtraBold", 10.0!, System.Drawing.FontStyle.Bold)
+        Me.Label51.ForeColor = System.Drawing.Color.Black
+        Me.Label51.Location = New System.Drawing.Point(532, 393)
+        Me.Label51.Name = "Label51"
+        Me.Label51.Size = New System.Drawing.Size(99, 18)
+        Me.Label51.TabIndex = 4720
+        Me.Label51.Text = "Planned OEE : "
+        '
+        'lbPlanOEE
+        '
+        Me.lbPlanOEE.AutoSize = True
+        Me.lbPlanOEE.BackColor = System.Drawing.Color.White
+        Me.lbPlanOEE.Font = New System.Drawing.Font("Panton-Trial ExtraBold", 10.0!, System.Drawing.FontStyle.Bold)
+        Me.lbPlanOEE.ForeColor = System.Drawing.Color.Black
+        Me.lbPlanOEE.Location = New System.Drawing.Point(625, 393)
+        Me.lbPlanOEE.Name = "lbPlanOEE"
+        Me.lbPlanOEE.Size = New System.Drawing.Size(26, 18)
+        Me.lbPlanOEE.TabIndex = 4721
+        Me.lbPlanOEE.Text = "XX"
+        '
+        'TextBox5
+        '
+        Me.TextBox5.BackColor = System.Drawing.Color.White
+        Me.TextBox5.BorderStyle = System.Windows.Forms.BorderStyle.None
+        Me.TextBox5.Enabled = False
+        Me.TextBox5.Font = New System.Drawing.Font("Broadway", 12.0!, System.Drawing.FontStyle.Bold)
+        Me.TextBox5.Location = New System.Drawing.Point(648, 392)
+        Me.TextBox5.Name = "TextBox5"
+        Me.TextBox5.Size = New System.Drawing.Size(20, 19)
+        Me.TextBox5.TabIndex = 4722
+        Me.TextBox5.Text = "%"
+        '
+        'progressbarP
+        '
+        Me.progressbarP.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.progressbarP.AnimationFunction = WinFormAnimation.KnownAnimationFunctions.Liner
+        Me.progressbarP.AnimationSpeed = 500
+        Me.progressbarP.BackColor = System.Drawing.Color.White
+        Me.progressbarP.Font = New System.Drawing.Font("Panton-Trial Black", 17.75!, System.Drawing.FontStyle.Bold)
+        Me.progressbarP.ForeColor = System.Drawing.Color.Black
+        Me.progressbarP.InnerColor = System.Drawing.Color.Transparent
+        Me.progressbarP.InnerMargin = 2
+        Me.progressbarP.InnerWidth = -1
+        Me.progressbarP.Location = New System.Drawing.Point(379, 290)
+        Me.progressbarP.MarqueeAnimationSpeed = 2000
+        Me.progressbarP.Name = "progressbarP"
+        Me.progressbarP.OuterColor = System.Drawing.Color.Gainsboro
+        Me.progressbarP.OuterMargin = -26
+        Me.progressbarP.OuterWidth = 29
+        Me.progressbarP.ProgressColor = System.Drawing.Color.FromArgb(CType(CType(255, Byte), Integer), CType(CType(97, Byte), Integer), CType(CType(0, Byte), Integer))
+        Me.progressbarP.ProgressWidth = 22
+        Me.progressbarP.RightToLeft = System.Windows.Forms.RightToLeft.Yes
+        Me.progressbarP.SecondaryFont = New System.Drawing.Font("Panton-Trial Black", 24.75!, System.Drawing.FontStyle.Bold)
+        Me.progressbarP.Size = New System.Drawing.Size(124, 124)
+        Me.progressbarP.StartAngle = 270
+        Me.progressbarP.SubscriptColor = System.Drawing.Color.White
+        Me.progressbarP.SubscriptMargin = New System.Windows.Forms.Padding(10, -35, 0, 0)
+        Me.progressbarP.SubscriptText = ""
+        Me.progressbarP.SuperscriptColor = System.Drawing.Color.White
+        Me.progressbarP.SuperscriptMargin = New System.Windows.Forms.Padding(10, 35, 0, 0)
+        Me.progressbarP.SuperscriptText = ""
+        Me.progressbarP.TabIndex = 4672
+        Me.progressbarP.Text = "100"
+        Me.progressbarP.TextMargin = New System.Windows.Forms.Padding(8, 5, 35, 0)
+        Me.progressbarP.Value = 85
+        '
+        'Label52
+        '
+        Me.Label52.AutoSize = True
+        Me.Label52.BackColor = System.Drawing.Color.White
+        Me.Label52.Font = New System.Drawing.Font("Panton-Trial ExtraBold", 10.0!, System.Drawing.FontStyle.Bold)
+        Me.Label52.ForeColor = System.Drawing.Color.Black
+        Me.Label52.Location = New System.Drawing.Point(532, 370)
+        Me.Label52.Name = "Label52"
+        Me.Label52.Size = New System.Drawing.Size(35, 18)
+        Me.Label52.TabIndex = 4723
+        Me.Label52.Text = "CT : "
+        '
+        'lbCT
+        '
+        Me.lbCT.AutoSize = True
+        Me.lbCT.BackColor = System.Drawing.Color.White
+        Me.lbCT.Font = New System.Drawing.Font("Panton-Trial ExtraBold", 10.0!, System.Drawing.FontStyle.Bold)
+        Me.lbCT.ForeColor = System.Drawing.Color.Black
+        Me.lbCT.Location = New System.Drawing.Point(564, 370)
+        Me.lbCT.Name = "lbCT"
+        Me.lbCT.Size = New System.Drawing.Size(62, 18)
+        Me.lbCT.TabIndex = 4724
+        Me.lbCT.Text = "XXXXXX"
+        '
         'Working_Pro
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -2792,6 +2857,11 @@ Partial Class Working_Pro
         Me.BackColor = System.Drawing.Color.White
         Me.BackgroundImage = CType(resources.GetObject("$this.BackgroundImage"), System.Drawing.Image)
         Me.ClientSize = New System.Drawing.Size(800, 600)
+        Me.Controls.Add(Me.lbCT)
+        Me.Controls.Add(Me.Label52)
+        Me.Controls.Add(Me.TextBox5)
+        Me.Controls.Add(Me.lbPlanOEE)
+        Me.Controls.Add(Me.Label51)
         Me.Controls.Add(Me.TextBox4)
         Me.Controls.Add(Me.TextBox3)
         Me.Controls.Add(Me.TextBox2)
@@ -3151,7 +3221,6 @@ Partial Class Working_Pro
     Friend WithEvents lbOverTimeQuality As Label
     Friend WithEvents lbOverTimeAvailability As Label
     Friend WithEvents progressbarOEE As CircularProgressBar.CircularProgressBar
-    Friend WithEvents progressbarP As CircularProgressBar.CircularProgressBar
     Friend WithEvents progressbarQ As CircularProgressBar.CircularProgressBar
     Friend WithEvents lbNG As Label
     Friend WithEvents panelpcWorker2 As PictureBox
@@ -3219,4 +3288,10 @@ Partial Class Working_Pro
     Friend WithEvents TextBox3 As TextBox
     Friend WithEvents TextBox4 As TextBox
     Friend WithEvents PictureBox12 As PictureBox
+    Friend WithEvents Label51 As Label
+    Friend WithEvents lbPlanOEE As Label
+    Friend WithEvents TextBox5 As TextBox
+    Friend WithEvents progressbarP As CircularProgressBar.CircularProgressBar
+    Friend WithEvents Label52 As Label
+    Friend WithEvents lbCT As Label
 End Class

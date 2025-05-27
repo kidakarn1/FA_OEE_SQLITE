@@ -24,7 +24,7 @@ Partial Class TestForm
     Private Sub InitializeComponent()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(TestForm))
         Me.WebView21 = New Microsoft.Web.WebView2.WinForms.WebView2()
-        Me.Button1 = New System.Windows.Forms.Button()
+        Me.ReButton = New System.Windows.Forms.Button()
         CType(Me.WebView21, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
@@ -34,20 +34,21 @@ Partial Class TestForm
         Me.WebView21.BackColor = System.Drawing.Color.White
         Me.WebView21.CreationProperties = Nothing
         Me.WebView21.DefaultBackgroundColor = System.Drawing.Color.White
-        Me.WebView21.Location = New System.Drawing.Point(12, 177)
+        Me.WebView21.Location = New System.Drawing.Point(722, 12)
         Me.WebView21.Name = "WebView21"
-        Me.WebView21.Size = New System.Drawing.Size(418, 411)
+        Me.WebView21.Size = New System.Drawing.Size(66, 51)
         Me.WebView21.TabIndex = 4640
         Me.WebView21.ZoomFactor = 1.0R
         '
-        'Button1
+        'ReButton
         '
-        Me.Button1.Location = New System.Drawing.Point(548, 75)
-        Me.Button1.Name = "Button1"
-        Me.Button1.Size = New System.Drawing.Size(198, 109)
-        Me.Button1.TabIndex = 4641
-        Me.Button1.Text = "Button1"
-        Me.Button1.UseVisualStyleBackColor = True
+        Me.ReButton.Font = New System.Drawing.Font("Microsoft Sans Serif", 36.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(222, Byte))
+        Me.ReButton.Location = New System.Drawing.Point(640, 521)
+        Me.ReButton.Name = "ReButton"
+        Me.ReButton.Size = New System.Drawing.Size(137, 67)
+        Me.ReButton.TabIndex = 4641
+        Me.ReButton.Text = "Re"
+        Me.ReButton.UseVisualStyleBackColor = True
         '
         'TestForm
         '
@@ -56,7 +57,7 @@ Partial Class TestForm
         Me.BackgroundImage = CType(resources.GetObject("$this.BackgroundImage"), System.Drawing.Image)
         Me.ClientSize = New System.Drawing.Size(800, 600)
         Me.ControlBox = False
-        Me.Controls.Add(Me.Button1)
+        Me.Controls.Add(Me.ReButton)
         Me.Controls.Add(Me.WebView21)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None
         Me.Name = "TestForm"
@@ -67,5 +68,5 @@ Partial Class TestForm
     End Sub
 
     Friend WithEvents WebView21 As Microsoft.Web.WebView2.WinForms.WebView2
-    Friend WithEvents Button1 As Button
+    Friend WithEvents ReButton As Button
 End Class

@@ -558,10 +558,10 @@
             Else
                 pwi_id = Working_Pro.pwi_id
             End If
-            dfRegister.insertDefectregister(dtWino, MainFrm.Label4.Text, dtItemcd, itemType, dtLotNo, dtSeqno, dtType, dtCode, tbAddjust.Text, dtMenu, dtActualdate, pwi_id, dfName, mainCP, source_code_supplier)
+            dfRegister.insertDefectregister(dtWino, MainFrm.Label4.Text, dtItemcd, itemType, dtLotNo, dtSeqno, dtType, dtCode, tbAddjust.Text, dtMenu, dtActualdate, pwi_id, dfName, mainCP, source_code_supplier, defectHome.leaderConfrime)
         Else
             MsgBox("Update Status Fiall Function updateAddjustqty in defectNumpadadjust.vb")
-            MsgBox("mUpdateaddjust rs===>" & rs)
+            ' MsgBox("mUpdateaddjust rs===>" & rs)
         End If
         Return 0
     End Function

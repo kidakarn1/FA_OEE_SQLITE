@@ -81,7 +81,6 @@ Public Class MainFrm
                                dbClass.GetLocalServerOEE()
                                dbClass.sqlite_conn_dbsv()
                            End Sub)
-
             Await dbClass.updated_data_to_dbsvr(Me, "1")
             Timer1.Start()
             Timer2.Start()
@@ -329,10 +328,10 @@ Public Class MainFrm
             Prd_detail.Label3.Text = Backoffice_model.GET_LINE_PRODUCTION()
             'Sel_prod_start.Show()
             rsCheckCriticalFlg = Check_critical_flg()
-            load_page()
+            Await load_page()
         End If
     End Sub
-    Public Function load_page()
+    Public Async Function load_page() As Task(Of String)
         Working_Pro.lb_nc_qty.Text = "0"
         Working_Pro.lb_ng_qty.Text = "0"
         'MsgBox(line_id.Text)
@@ -349,6 +348,7 @@ Public Class MainFrm
                             ArrayDataPlan.Add(New DataPlan With {.IND_ROW = item("IND_ROW").ToString(), .PS_UNIT_NUMERATOR = "PS_UNIT_NUMERATOR", .CT = item("CT").ToString(), .seq_no = item("seq_no").ToString(), .WORK_ODR_DLV_DATE = item("WORK_ODR_DLV_DATE").ToString(), .LOCATION_PART = item("LOCATION_PART").ToString(), .MODEL = item("MODEL").ToString(), .PRODUCT_TYP = item("PRODUCT_TYP").ToString(), .wi = item("WI").ToString(), .item_cd = item("ITEM_CD").ToString(), .item_name = item("ITEM_NAME").ToString()})
                             chk_spec_line = item("chk_spec_line").ToString()
                             Working_Pro.Label27.Text = item("PS_UNIT_NUMERATOR").ToString()
+                            Working_Pro.Product_type = item("PRODUCT_TYP").ToString()
                             Prd_detail.lb_snp.Text = item("PS_UNIT_NUMERATOR").ToString()
                             Prd_detail.lb_item_cd.Text = item("ITEM_CD").ToString()
                             Prd_detail.lb_item_name.Text = CStr(item("ITEM_NAME").ToString())

@@ -36,7 +36,7 @@ Partial Class Loss_reg
         Me.loss_cd = New System.Windows.Forms.Label()
         Me.date_time_commit_data = New System.Windows.Forms.Label()
         Me.test_time_loss_time = New System.Windows.Forms.Label()
-        Me.Button4 = New System.Windows.Forms.Button()
+        Me.btnMaintenance = New System.Windows.Forms.Button()
         Me.Label9 = New System.Windows.Forms.Label()
         Me.SuspendLayout()
         '
@@ -170,23 +170,23 @@ Partial Class Loss_reg
         Me.test_time_loss_time.TabIndex = 44
         Me.test_time_loss_time.Text = "XXXXXXXXXXXXXX"
         '
-        'Button4
+        'btnMaintenance
         '
-        Me.Button4.BackColor = System.Drawing.Color.Transparent
-        Me.Button4.BackgroundImage = CType(resources.GetObject("Button4.BackgroundImage"), System.Drawing.Image)
-        Me.Button4.FlatAppearance.BorderSize = 0
-        Me.Button4.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent
-        Me.Button4.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent
-        Me.Button4.FlatStyle = System.Windows.Forms.FlatStyle.Flat
-        Me.Button4.Font = New System.Drawing.Font("Microsoft Sans Serif", 19.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(222, Byte))
-        Me.Button4.ForeColor = System.Drawing.SystemColors.Control
-        Me.Button4.Location = New System.Drawing.Point(320, 492)
-        Me.Button4.Name = "Button4"
-        Me.Button4.Size = New System.Drawing.Size(268, 90)
-        Me.Button4.TabIndex = 55
-        Me.Button4.TabStop = False
-        Me.Button4.UseVisualStyleBackColor = False
-        Me.Button4.Visible = False
+        Me.btnMaintenance.BackColor = System.Drawing.Color.Transparent
+        Me.btnMaintenance.BackgroundImage = CType(resources.GetObject("btnMaintenance.BackgroundImage"), System.Drawing.Image)
+        Me.btnMaintenance.FlatAppearance.BorderSize = 0
+        Me.btnMaintenance.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Transparent
+        Me.btnMaintenance.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Transparent
+        Me.btnMaintenance.FlatStyle = System.Windows.Forms.FlatStyle.Flat
+        Me.btnMaintenance.Font = New System.Drawing.Font("Microsoft Sans Serif", 19.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(222, Byte))
+        Me.btnMaintenance.ForeColor = System.Drawing.SystemColors.Control
+        Me.btnMaintenance.Location = New System.Drawing.Point(320, 492)
+        Me.btnMaintenance.Name = "btnMaintenance"
+        Me.btnMaintenance.Size = New System.Drawing.Size(268, 90)
+        Me.btnMaintenance.TabIndex = 55
+        Me.btnMaintenance.TabStop = False
+        Me.btnMaintenance.UseVisualStyleBackColor = False
+        Me.btnMaintenance.Visible = False
         '
         'Label9
         '
@@ -207,7 +207,7 @@ Partial Class Loss_reg
         Me.BackColor = System.Drawing.Color.Firebrick
         Me.BackgroundImage = CType(resources.GetObject("$this.BackgroundImage"), System.Drawing.Image)
         Me.ClientSize = New System.Drawing.Size(800, 600)
-        Me.Controls.Add(Me.Button4)
+        Me.Controls.Add(Me.btnMaintenance)
         Me.Controls.Add(Me.test_time_loss_time)
         Me.Controls.Add(Me.date_time_commit_data)
         Me.Controls.Add(Me.loss_cd)
@@ -240,6 +240,6 @@ Partial Class Loss_reg
     Friend WithEvents loss_cd As Label
     Friend WithEvents date_time_commit_data As Label
     Friend WithEvents test_time_loss_time As Label
-    Friend WithEvents Button4 As Button
+    Friend WithEvents btnMaintenance As Button
     Friend WithEvents Label9 As Label
 End Class

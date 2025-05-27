@@ -45,6 +45,30 @@ Public Class modelDefect
             Return "0"
         End Try
     End Function
+    Public Shared Async Function minsertDefectLeaderConFirm(lastId As String, dpl_emp_cd As String, dpl_qty As String) As Task(Of String)
+        Try
+            Dim api = New api()
+            ' Dim rsData = api.Load_data("http://" & Backoffice_model.svApi & "/apiShopfloor/index.php/insertDatadefect/insertDefectTransctionSupplier?lastId=" & lastId & "&dt_supplier_code=" & dt_supplier_code & "&dt_qty=" & dt_qty & "&Line=" & Line)
+            ' Console.WriteLine("http://" & Backoffice_mssodel.svApi & "/apiShopfloor/index.php/insertDatadefect/insertDefectTransctionSupplier?lastId=" & lastId & "&dt_supplier_code=" & dt_supplier_code & "&dt_qty=" & dt_qty & "&Line=" & Line)
+            ' Return rsData
+            Try
+                Dim url As String = "http://" & Backoffice_model.svApi & "/apiShopfloor/index.php/insertDatadefect/insertDefectLeaderConFirm" &
+                            "?lastId=" & lastId &
+                            "&dpl_emp_cd=" & dpl_emp_cd &
+                            "&dpl_qty=" & dpl_qty
+                Console.WriteLine("Calling API URL: " & url)
+                ' ✅ แปลงให้ async โดยรันบน background thread
+                Dim rsData As String = Await Task.Run(Function() api.Load_data(url))
+                Return rsData
+            Catch ex As Exception
+                MsgBox("❗ connect Api Fail in minsertDefectLeaderConFirm = " & ex.Message)
+                Return "0"
+            End Try
+        Catch ex As Exception
+            MsgBox("connect Api Faill Please check modelDefect in Function minsertDefectLeaderConFirm = " & ex.Message)
+            Return "0"
+        End Try
+    End Function
     Public Shared Function mGetPwi_id(WI As String, LOT_NO As String, SEQ_NO As String, SHIFT As String)
         Try
             Dim api = New api()
@@ -181,20 +205,32 @@ Public Class modelDefect
             Return 0
         End Try
     End Function
-    Public Function mGetdatepartdetail(pNo As String, flg As String)
+    Public Async Function mGetdatepartdetail(pNo As String, flg As String) As Task(Of String)
         Try
             Dim api = New api()
-            Dim rsData = api.Load_data("http://" & Backoffice_model.svApi & "/apiShopfloor/index.php/getDatadefect/getDataplan?itemCd=" & pNo & "&flg=" & flg)
-            'Console.WriteLine("http://" & Backoffice_model.svApi & "/apiShopfloor/index.php/getDatadefect/getDataplan?itemCd=" & pNo & "&flg=" & flg)
-            If rsData <> "0" Then
-                Return rsData
-            Else
-                MsgBox("connect Api Faill Please check modelDefect in Function mGetdatepartdetail Data = 0 ")
-                Return 0
-            End If
+            ' Dim rsData = api.Load_data("http://" & Backoffice_model.svApi & "/apiShopfloor/index.php/insertDatadefect/insertDefectTransctionSupplier?lastId=" & lastId & "&dt_supplier_code=" & dt_supplier_code & "&dt_qty=" & dt_qty & "&Line=" & Line)
+            ' Console.WriteLine("http://" & Backoffice_model.svApi & "/apiShopfloor/index.php/insertDatadefect/insertDefectTransctionSupplier?lastId=" & lastId & "&dt_supplier_code=" & dt_supplier_code & "&dt_qty=" & dt_qty & "&Line=" & Line)
+            ' Return rsData
+            Try
+                Dim url As String = "http://" & Backoffice_model.svApi & "/apiShopfloor/index.php/getDatadefect/getDataplan" &
+                            "?itemCd=" & pNo &
+                            "&flg=" & flg
+                Console.WriteLine("Calling API URL: " & url)
+                ' ✅ แปลงให้ async โดยรันบน background thread
+                Dim rsData As String = Await Task.Run(Function() api.Load_data(url))
+                If rsData <> "0" Then
+                    Return rsData
+                Else
+                    MsgBox("connect Api Faill Please check modelDefect in Function mGetdatepartdetail Data = 0 ")
+                    Return 0
+                End If
+            Catch ex As Exception
+                MsgBox("❗ connect Api Fail in minsertDefectTrascetionSupplier = " & ex.Message)
+                Return "0"
+            End Try
         Catch ex As Exception
             MsgBox("connect Api Faill Please check modelDefect in Function mGetdatepartdetail = " & ex.Message)
-            Return 0
+            Return "0"
         End Try
     End Function
 

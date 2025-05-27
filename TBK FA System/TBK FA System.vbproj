@@ -658,10 +658,22 @@
     <Compile Include="KeyboardAdmin.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="keyboardDefect.Designer.vb">
+      <DependentUpon>keyboardDefect.vb</DependentUpon>
+    </Compile>
+    <Compile Include="keyboardDefect.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="keyboardScanMold.Designer.vb">
       <DependentUpon>keyboardScanMold.vb</DependentUpon>
     </Compile>
     <Compile Include="keyboardScanMold.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="LeaderConfirmDefect.Designer.vb">
+      <DependentUpon>LeaderConfirmDefect.vb</DependentUpon>
+    </Compile>
+    <Compile Include="LeaderConfirmDefect.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="loadData.Designer.vb">
@@ -1307,8 +1319,14 @@
     <EmbeddedResource Include="KeyboardAdmin.resx">
       <DependentUpon>KeyboardAdmin.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="keyboardDefect.resx">
+      <DependentUpon>keyboardDefect.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="keyboardScanMold.resx">
       <DependentUpon>keyboardScanMold.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="LeaderConfirmDefect.resx">
+      <DependentUpon>LeaderConfirmDefect.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="loadData.resx">
       <DependentUpon>loadData.vb</DependentUpon>

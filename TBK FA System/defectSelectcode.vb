@@ -18,7 +18,7 @@ Friend Class defectSelectcode
     Public Sub defectSelectcode_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Dim dfHome As New defectHome
         If dfHome.dtType = "NC" Then
-            lvDefectcode.BackColor = Color.Peru
+            '  lvDefectcode.BackColor = Color.Peru
         ElseIf dfHome.dtType = "NG" Then
             'lvDefectcode.BackColor = Color.Tomato
         End If
@@ -45,25 +45,32 @@ Friend Class defectSelectcode
         End If
     End Sub
     Public Sub getDefectcode()
-        Dim md = New modelDefect()
-        Dim rsData = md.mGetdefectcode(MainFrm.Label4.Text)
-        If rsData <> "0" Then
-            Dim dcResultdata As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(rsData)
-            Dim i As Integer = 1
-            For Each item As Object In dcResultdata
-                'MsgBox("==============>" & item("defect_cd").ToString())
-                datlvDefectcode = New ListViewItem(item("defect_cd").ToString())
-                datlvDefectcode.SubItems.Add(item("defect_name").ToString())
-                lvDefectcode.Items.Add(datlvDefectcode)
-                i += 1
-            Next
-            lvDefectcode.Items(0).Selected = True
-        Else
-            Button1.Enabled = False
-            Button1.Visible = False
-        End If
+        Try
+            If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
+                Dim md = New modelDefect()
+                Dim rsData = md.mGetdefectcode(MainFrm.Label4.Text)
+                If rsData <> "0" Then
+                    Dim dcResultdata As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(rsData)
+                    Dim i As Integer = 1
+                    For Each item As Object In dcResultdata
+                        'MsgBox("==============>" & item("defect_cd").ToString())
+                        datlvDefectcode = New ListViewItem(item("defect_cd").ToString())
+                        datlvDefectcode.SubItems.Add(item("defect_name").ToString())
+                        lvDefectcode.Items.Add(datlvDefectcode)
+                        i += 1
+                    Next
+                    lvDefectcode.Items(0).Selected = True
+                Else
+                    Button1.Enabled = False
+                    Button1.Visible = False
+                End If
+            Else
+                load_show.Show()
+            End If
+        Catch ex As Exception
+            load_show.Show()
+        End Try
     End Sub
-
     Private Sub btnUp_Click(sender As Object, e As EventArgs) Handles btnUp.Click
         tbnUp()
     End Sub

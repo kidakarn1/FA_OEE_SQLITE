@@ -1,9 +1,9 @@
-﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
+﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
 Partial Class defectAdminhome
     Inherits System.Windows.Forms.Form
 
     'Form overrides dispose to clean up the component list.
-    <System.Diagnostics.DebuggerNonUserCode()> _
+    <System.Diagnostics.DebuggerNonUserCode()>
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
         Try
             If disposing AndAlso components IsNot Nothing Then
@@ -20,7 +20,7 @@ Partial Class defectAdminhome
     'NOTE: The following procedure is required by the Windows Form Designer
     'It can be modified using the Windows Form Designer.  
     'Do not modify it using the code editor.
-    <System.Diagnostics.DebuggerStepThrough()> _
+    <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(defectAdminhome))
         Me.btn_back = New System.Windows.Forms.PictureBox()
@@ -46,20 +46,20 @@ Partial Class defectAdminhome
         '
         'btnRegisternc
         '
-        Me.btnRegisternc.BackColor = System.Drawing.Color.Transparent
+        Me.btnRegisternc.BackColor = System.Drawing.Color.Gold
         Me.btnRegisternc.Location = New System.Drawing.Point(136, 21)
         Me.btnRegisternc.Name = "btnRegisternc"
-        Me.btnRegisternc.Size = New System.Drawing.Size(154, 78)
+        Me.btnRegisternc.Size = New System.Drawing.Size(180, 144)
         Me.btnRegisternc.TabIndex = 4574
         Me.btnRegisternc.TabStop = False
         Me.btnRegisternc.Visible = False
         '
         'btnAdjustnc
         '
-        Me.btnAdjustnc.BackColor = System.Drawing.Color.Transparent
-        Me.btnAdjustnc.Location = New System.Drawing.Point(574, 37)
+        Me.btnAdjustnc.BackColor = System.Drawing.Color.Red
+        Me.btnAdjustnc.Location = New System.Drawing.Point(469, 37)
         Me.btnAdjustnc.Name = "btnAdjustnc"
-        Me.btnAdjustnc.Size = New System.Drawing.Size(106, 62)
+        Me.btnAdjustnc.Size = New System.Drawing.Size(214, 128)
         Me.btnAdjustnc.TabIndex = 4575
         Me.btnAdjustnc.TabStop = False
         Me.btnAdjustnc.Visible = False
@@ -107,8 +107,8 @@ Partial Class defectAdminhome
 
     End Sub
     Friend WithEvents btn_back As PictureBox
-	Friend WithEvents btnRegisternc As PictureBox
-	Friend WithEvents btnAdjustnc As PictureBox
-	Friend WithEvents btnRegisterng As PictureBox
-	Friend WithEvents btnAdjustng As PictureBox
+    Friend WithEvents btnRegisternc As PictureBox
+    Friend WithEvents btnAdjustnc As PictureBox
+    Friend WithEvents btnRegisterng As PictureBox
+    Friend WithEvents btnAdjustng As PictureBox
 End Class

@@ -58,7 +58,6 @@ Public Class Backoffice_model
     Public Shared checkSqliteTrasnfer As Boolean = False
     Public Shared isRunningupdated_data_to_dbsvr As Boolean = False
     Private Shared semTransfer As New SemaphoreSlim(1, 1)
-
     Public Shared Function sqlite_conn_dbsv()
         Dim sqliteConn As New SQLiteConnection(sqliteConnect)
         Check_connect_sqlite()
@@ -1519,10 +1518,14 @@ where
             sqliteConn.Close()
         End Try
     End Function
-
     Public Shared Function GetDefectMenu(line_cd As String)
         Dim api = New api()
         Dim rs = api.Load_data("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/GetDefectMenu?line_cd=" & line_cd)
+        Return rs
+    End Function
+    Public Shared Function GetManageDefectMenu(line_cd As String)
+        Dim api = New api()
+        Dim rs = api.Load_data("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/GetManageDefectMenu?line_cd=" & line_cd)
         Return rs
     End Function
     Public Shared Function GetDefectMenuMaintenance(line_cd As String)
@@ -1624,6 +1627,22 @@ where
             'Application.Exit()
         End Try
     End Function
+    Public Shared Async Function GetPermissionLeader(emp_cd As String, line_cd As String) As Task(Of String)
+        Try
+            Dim url As String = "http://" & Backoffice_model.svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/Get_permission_worker" &
+                            "?emp_code=" & emp_cd &
+                            "&line_cd=" & line_cd
+            Console.WriteLine("Calling API GetPermissionLeader URL: " & url)
+            ' ✅ แปลงให้ async โดยรันบน background thread
+            Dim api = New api()
+            Dim rsData As String = Await Task.Run(Function() api.Load_data(url))
+            Return rsData
+        Catch ex As Exception
+            MsgBox("❗ connect Api Fail in GetPermissionLeader = " & ex.Message)
+            Return "0"
+        End Try
+    End Function
+
     Public Shared Function chk_user_skill_line(emp_cd As String, line_cd As String)
         ' Dim reader As SqlDataReader
         ' Dim SQLConn As New SqlConnection() 'The SQL Connection
@@ -1631,7 +1650,7 @@ where
         Try
             Dim api = New api()
             Dim result_worker = api.Load_data("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/Get_permission_worker?emp_code=" & emp_cd & "&line_cd=" & line_cd)
-            'Console.WriteLine(result_worker)
+            Console.WriteLine("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/Get_permission_worker?emp_code=" & emp_cd & "&line_cd=" & line_cd)
             Return result_worker
             ' SQLConn.ConnectionString = sqlConnect 'Set the Connection String
             ' SQLConn.Open()
@@ -3299,7 +3318,6 @@ re_insert_data:
     Private Shared Async Function DoTransferWork(parentForm As Form, objTransferData As Form, LoadSQL As Object, LoadSQLcl As Object) As Task
         Dim tmp_wi As String = ""
         Dim i As Integer = 0
-
         If LoadSQL.HasRows Then
             While LoadSQL.Read()
                 i += 1
@@ -3319,11 +3337,10 @@ re_insert_data:
                 Dim use_time = Integer.Parse(LoadSQL("use_time").ToString())
                 Dim pwi_id = Integer.Parse(LoadSQL("pwi_id").ToString())
                 Dim status_sqlite = "0"
-
+                'MsgBox("load data.")
                 While Not My.Computer.Network.Ping(Backoffice_model.svp_ping)
                     Await Task.Delay(1000)
                 End While
-
                 Dim rsInsertid = Await Insert_prd_detail_main(pd, line_cd, wi_plan, item_cd, item_name, staff_no, seq_no, qty, st_time, end_time, use_time, number_qty, pwi_id, status_sqlite, id)
             End While
         End If
@@ -3349,11 +3366,9 @@ re_insert_data:
                 Dim close_lot_flg = "1"
                 Dim avarage_eff = Double.Parse(LoadSQLcl("avarage_eff").ToString())
                 Dim avarage_act_prd_time = Double.Parse(LoadSQLcl("avarage_act_prd_time").ToString())
-
                 While Not My.Computer.Network.Ping(Backoffice_model.svp_ping)
                     Await Task.Delay(1000)
                 End While
-
                 If check_data(wi_plan, seq_no) = 0 Then
                     Check_connect_sqlite()
                     Backoffice_model.Insert_prd_close_lot(wi_plan, line_cd, item_cd, plan_qty, act_qty, seq_no, shift_prd, staff_no, prd_st_date, prd_end_date, lot_no, comp_flg, transfer_flg, del_flg, prd_flg, close_lot_flg, avarage_eff, avarage_act_prd_time)
@@ -3363,7 +3378,6 @@ re_insert_data:
                 End If
                 arr_list_id2.Add(LoadSQLcl("id").ToString())
             End While
-
             For Each element_id2 In arr_list_id2.ToArray()
                 Backoffice_model.update_tr_close_lot_status(element_id2.ToString())
             Next
@@ -4440,6 +4454,20 @@ re_insert_rework_act:
             Return result
         Catch ex As Exception
             MsgBox("Error Function GetDataLoss In Backoffice_model")
+        End Try
+    End Function
+    Public Shared Async Function GetPercenPlanned_OEE(line_cd As String) As Task(Of String)
+        Try
+            Dim url As String = "http://" & Backoffice_model.svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/GetPercenPlanned_OEE" &
+                            "?line_cd=" & line_cd
+            Console.WriteLine("Calling API GetPercenPlanned_OEE URL: " & url)
+            ' ✅ แปลงให้ async โดยรันบน background thread
+            Dim api = New api()
+            Dim rsData As String = Await Task.Run(Function() api.Load_data(url))
+            Return rsData
+        Catch ex As Exception
+            MsgBox("❗ connect Api Fail in GetPercenPlanned_OEE = " & ex.Message)
+            Return "0"
         End Try
     End Function
 End Class
