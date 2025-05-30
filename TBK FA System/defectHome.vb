@@ -70,7 +70,6 @@ Public Class defectHome
         '  Me.Close()
         'MsgBox("ไม่สามารถ ปรับ NC ได้ เนื่องจาก เมนูปิดแล้ว")
     End Sub
-
     Public Sub CreateCenteredPictureBoxes()
         ' ===== ลบ PictureBox และ Control อื่น ๆ ที่ไม่จำเป็น (Reset) =====
         Try

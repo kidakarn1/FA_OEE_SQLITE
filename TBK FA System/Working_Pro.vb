@@ -138,7 +138,7 @@ Public Class Working_Pro
         End Try
         Return status_emergency
     End Function
-    Public Sub RunCmd(line_cd As String)
+    Public Async Sub RunCmd(line_cd As String)
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
                 Try
@@ -4254,7 +4254,7 @@ outNet:
                 'No Net
             End Try
             ' MsgBox("ready run 3 ")
-            RunCmd(MainFrm.Label4.Text)
+            MainFrm.RunCmd(MainFrm.Label4.Text)
             'MsgBox("ready run 4 ")
             '
             ''Console.WriteLine("READY LOAD OEE cal_eff ")
@@ -4749,7 +4749,6 @@ outNet:
                 End If
             End If
             '  MsgBox("F2")
-
             '  Dim sum_prg As Integer = (Label6.Text * 100) / Label8.Text
             'MsgBox(sum_prg)
             ' If sum_prg > 100 Then

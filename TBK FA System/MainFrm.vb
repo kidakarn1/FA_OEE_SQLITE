@@ -81,7 +81,8 @@ Public Class MainFrm
                                dbClass.GetLocalServerOEE()
                                dbClass.sqlite_conn_dbsv()
                            End Sub)
-            Await dbClass.updated_data_to_dbsvr(Me, "1")
+            Await WaitForSQLiteEmptyAsync()
+            ' Await dbClass.updated_data_to_dbsvr(Me, "1")
             Timer1.Start()
             Timer2.Start()
             Dim sqlss = Backoffice_model.ConnectDBSQLite()
@@ -304,8 +305,10 @@ Public Class MainFrm
             Me.Enabled = True
         End Try
     End Sub
-    Public Function Check_critical_flg() '
+    Public Async Function Check_critical_flg() As Task(Of String)
         Dim rs = Backoffice_model.load_config_master_database()
+        ' Try
+        '     If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
         Dim critical_flg As String = ""
         If rs <> " " Then
             Dim dict As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(rs)
@@ -314,23 +317,78 @@ Public Class MainFrm
             Next
         End If
         Return critical_flg
+        '      Else
+        '   load_show.Show()
+        '      End If
+        '   Catch ex As Exception
+        '       load_show.Show()
+        '   End Try
     End Function
+
     Private Async Sub menu1_Click_1(sender As Object, e As EventArgs) Handles menu1.Click
-        Backoffice_model.gobal_Flg_autoTranferProductions = Await Backoffice_model.Check_detail_actual_insert_act(Me) 'กรณีเครื่องดับ'
-        check_lot()
-        'Prd_detail.Label2.Text = ListView1.Items.Count
-        Working_Pro.Label24.Text = Label4.Text
-        Dim i = List_Emp.ListView1.Items.Count
-        If i > 0 Then
-            Prd_detail.Timer3.Enabled = True
-            Backoffice_model.SET_LINE_PRODUCTION(Label4.Text)
-            Insert_list.Label3.Text = Backoffice_model.GET_LINE_PRODUCTION()
-            Prd_detail.Label3.Text = Backoffice_model.GET_LINE_PRODUCTION()
-            'Sel_prod_start.Show()
-            rsCheckCriticalFlg = Check_critical_flg()
-            Await load_page()
-        End If
+        Try
+            If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
+                Await WaitForSQLiteEmptyAsync()
+                Backoffice_model.gobal_Flg_autoTranferProductions = Await Backoffice_model.Check_detail_actual_insert_act(Me) 'กรณีเครื่องดับ'
+                check_lot()
+                'Prd_detail.Label2.Text = ListView1.Items.Count
+                Working_Pro.Label24.Text = Label4.Text
+                Dim i = List_Emp.ListView1.Items.Count
+                If i > 0 Then
+                    Prd_detail.Timer3.Enabled = True
+                    Backoffice_model.SET_LINE_PRODUCTION(Label4.Text)
+                    Insert_list.Label3.Text = Backoffice_model.GET_LINE_PRODUCTION()
+                    Prd_detail.Label3.Text = Backoffice_model.GET_LINE_PRODUCTION()
+                    'Sel_prod_start.Show()
+                    rsCheckCriticalFlg = Await Check_critical_flg()
+                    Await load_page()
+                End If
+            Else
+                load_show.Show()
+            End If
+        Catch ex As Exception
+            load_show.Show()
+            ' MsgBox("Please Wait Trasnfer Data.")
+        End Try
     End Sub
+    Private Async Function WaitForSQLiteEmptyAsync() As Task
+        Dim hasData As Boolean = True
+
+        ' ฟังก์ชันช่วย ping แบบปลอดภัย ป้องกัน exception
+        Dim SafePing As Func(Of String, Boolean) = Function(host As String) As Boolean
+                                                       Try
+                                                           Return My.Computer.Network.Ping(host)
+                                                       Catch ex As InvalidOperationException
+                                                           ' ไม่มี network connection
+                                                           Return False
+                                                       Catch ex As Exception
+                                                           ' error อื่น ๆ
+                                                           Return False
+                                                       End Try
+                                                   End Function
+        Do
+            If Not SafePing(Backoffice_model.svp_ping) Then
+                Me.Enabled = False
+                load_show.Show()
+                Await Task.Delay(3000) ' รอ 3 วินาที ก่อนเช็คใหม่
+                Continue Do
+            Else
+                If load_show.Visible Then load_show.Hide()
+                Me.Enabled = True
+            End If
+            Dim LoadSQL = Backoffice_model.get_trdata_sqlite()
+            Dim LoadSQL_tag_print_detail = Backoffice_model.get_tr_tag_print_detail()
+            hasData = LoadSQL.HasRows OrElse LoadSQL_tag_print_detail.HasRows
+            If hasData Then
+                Me.Enabled = False
+                Await dbClass.updated_data_to_dbsvr(Me, "1")
+                Await Task.Delay(2000) ' รอ 2 วินาที ก่อนเช็คใหม่
+            Else
+                Me.Enabled = True
+            End If
+        Loop While hasData
+    End Function
+
     Public Async Function load_page() As Task(Of String)
         Working_Pro.lb_nc_qty.Text = "0"
         Working_Pro.lb_ng_qty.Text = "0"
@@ -482,6 +540,7 @@ Public Class MainFrm
         Me.Enabled = False
     End Sub
     Private Async Sub Timer2_Elapsed(sender As Object, e As Timers.ElapsedEventArgs) Handles Timer2.Elapsed
+        Await RunCmd(Label4.Text)
         If isRunning Then Exit Sub
         isRunning = True
         Try
@@ -574,23 +633,27 @@ Public Class MainFrm
         ' Call the Main() method asynchronously
         Await Main()
     End Function
-    Public Sub RunCmd(line_cd As String)
+    Public Async Function RunCmd(line_cd As String) As Task
         Try
-            Dim api = New api()
-            Dim Command As String = ""
-            Dim parameters As String = ""
-            Dim result_data As String = api.Load_data("http://" & Backoffice_model.svApi & "/API_NEW_FA/GET_DATA_NEW_FA/RunCmd?line_cd=" & line_cd)
-            'Console.WriteLine("http://" & Backoffice_model.svApi & "/API_NEW_FA/GET_DATA_NEW_FA/RunCmd?line_cd=" & line_cd)
-            If result_data <> "0" Then
-                Dim dict2 As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(result_data)
-                For Each item As Object In dict2
-                    Command = item("command").ToString()
-                    parameters = item("parameters").ToString()
-                    System.Diagnostics.Process.Start(Command, parameters)
-                Next
+            If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
+                Dim api = New api()
+                Dim Command As String = ""
+                Dim parameters As String = ""
+                Dim url = "http://" & Backoffice_model.svApi & "/API_NEW_FA/GET_DATA_NEW_FA/RunCmd?line_cd=" & line_cd
+                Dim result_data As String = Await api.Load_data(url)
+                If result_data <> "0" Then
+                    Dim dict2 As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(result_data)
+                    For Each item As Object In dict2
+                        Command = item("command").ToString()
+                        parameters = item("parameters").ToString()
+                        System.Diagnostics.Process.Start(Command, parameters)
+                    Next
+                End If
+            Else
+                status_emergency = "0"
             End If
         Catch ex As Exception
             status_emergency = "0"
         End Try
-    End Sub
+    End Function
 End Class

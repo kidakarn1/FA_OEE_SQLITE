@@ -51,7 +51,29 @@ Public Class api
             Console.WriteLine("Failed to enable WAL mode: " & ex.Message)
         End Try
     End Sub
+    Public Async Function Load_dataSQLiteAsyncLoaddata(ByVal Sql As String) As Task(Of String)
+        Return Await Task.Run(Function()
+                                  Return Load_dataSQLite(Sql)
+                              End Function).ConfigureAwait(False)
+    End Function
+    Public Async Function Load_dataSQLiteAsync(ByVal sql As String) As Task(Of String)
+        Try
+            Using conn As New SQLiteConnection(Backoffice_model.sqliteConnect)
+                Await conn.OpenAsync()
 
+                Using cmd As New SQLiteCommand(sql, conn)
+                    Dim affected As Integer = Await cmd.ExecuteNonQueryAsync()
+                    Console.WriteLine($"✅ SQLite Executed: {sql} => {affected} row(s) affected")
+                    Return affected.ToString()
+                End Using
+            End Using
+
+        Catch ex As Exception
+            Dim functionName = New StackTrace().GetFrame(0).GetMethod().Name
+            Console.WriteLine($"❌ Error in {functionName}: {ex.Message}")
+            Return "0"
+        End Try
+    End Function
     Public Function Load_dataSQLite(ByVal Sql As String) As String
         SyncLock sqliteLock
             Try

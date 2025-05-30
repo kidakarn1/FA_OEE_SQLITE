@@ -6,9 +6,9 @@ Public Class print_back
 		print()
 	End Sub
 	Public Function print()
-		Dim api = New api()
-		PrintDocument1.Print()
-	End Function
+        Dim api = New api()
+        PrintDocument1.Print()
+    End Function
     Public Function check_tagprint_main()
         Dim result_snp As Integer = CDbl(Val(Working_Pro.Label6.Text)) Mod CDbl(Val(Working_Pro.Label27.Text))
         Dim flg_control As Integer = 0
@@ -248,14 +248,13 @@ Public Class print_back
             Next
         End Try
     End Sub
-    Public Sub newM83_batch(e)
+    Public Async Function newM83_batch(e) As Task
+        Dim hasError As Boolean = False
         Dim aPen = New Pen(Color.Black)
         aPen.Width = 2.0F
         'vertical ตรง
         e.Graphics.DrawLine(aPen, 10, 10, 10, 290)
-
         e.Graphics.DrawLine(aPen, 280, 58, 280, 116) ' model
-
         e.Graphics.DrawLine(aPen, 460, 10, 460, 58) ' line qr
         e.Graphics.DrawLine(aPen, 420, 58, 420, 116) ' nextprocess
         e.Graphics.DrawLine(aPen, 490, 116, 490, 214) ' QTY Title
@@ -478,31 +477,34 @@ Public Class print_back
         '  e.Graphics.DrawImage(bitmap_qr_box, 600, 205, 75, 75) 'Right top
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                Backoffice_model.Insert_tag_print_main(Working_Pro.wi_no.Text, qr_code, the_Label_bach, 1, plan_seq, Working_Pro.Label14.Text, check_tagprint_main(), Working_Pro.Label3.Text, Working_Pro.pwi_id, Working_Pro.tag_group_no)
-                model_api_sqlite.mas_Insert_tag_print_main(Working_Pro.wi_no.Text, qr_code, the_Label_bach, 1, plan_seq, Working_Pro.Label14.Text, check_tagprint_main(), Working_Pro.Label3.Text, Working_Pro.pwi_id, Working_Pro.tag_group_no, Working_Pro.Gobal_NEXT_PROCESS, "1", Working_Pro.Label18.Text)
-                Dim id_tag = api.Load_data("http://" & Backoffice_model.svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/GET_ID_PRINT_DETAIL_MAIN?qr_code=" & qr_code)
+                Dim rs = Backoffice_model.Insert_tag_print_main(Working_Pro.wi_no.Text, qr_code, the_Label_bach, 1, plan_seq, Working_Pro.Label14.Text, check_tagprint_main(), Working_Pro.Label3.Text, Working_Pro.pwi_id, Working_Pro.tag_group_no)
+                Dim rs1 = Await model_api_sqlite.mas_Insert_tag_print_main(Working_Pro.wi_no.Text, qr_code, the_Label_bach, 1, plan_seq, Working_Pro.Label14.Text, check_tagprint_main(), Working_Pro.Label3.Text, Working_Pro.pwi_id, Working_Pro.tag_group_no, Working_Pro.Gobal_NEXT_PROCESS, "1", Working_Pro.Label18.Text)
+                Dim id_tag = Await api.Load_data("http://" & Backoffice_model.svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/GET_ID_PRINT_DETAIL_MAIN?qr_code=" & qr_code)
                 For K = 1 To MainFrm.ArrayDataPlan.ToArray.Length Step 1
-                    Backoffice_model.Insert_tag_print_sub(id_tag, MainFrm.Label4.Text, arr_qr_code_sub(K - 1), Working_Pro.wi_no.Text, Working_Pro.tag_group_no)
-                    model_api_sqlite.mas_Insert_tag_print_sub(id_tag, MainFrm.Label4.Text, arr_qr_code_sub(K - 1), Working_Pro.wi_no.Text, Working_Pro.tag_group_no, Working_Pro.Gobal_NEXT_PROCESS, "1", Working_Pro.Label18.Text)
+                    Dim rs3 = Backoffice_model.Insert_tag_print_sub(id_tag, MainFrm.Label4.Text, arr_qr_code_sub(K - 1), Working_Pro.wi_no.Text, Working_Pro.tag_group_no)
+                    Dim rs4 = Await model_api_sqlite.mas_Insert_tag_print_sub(id_tag, MainFrm.Label4.Text, arr_qr_code_sub(K - 1), Working_Pro.wi_no.Text, Working_Pro.tag_group_no, Working_Pro.Gobal_NEXT_PROCESS, "1", Working_Pro.Label18.Text)
                 Next
             Else
-                model_api_sqlite.mas_Insert_tag_print_main(Working_Pro.wi_no.Text, qr_code, the_Label_bach, 1, plan_seq, Working_Pro.Label14.Text, check_tagprint_main(), Working_Pro.Label3.Text, Working_Pro.pwi_id, Working_Pro.tag_group_no, Working_Pro.Gobal_NEXT_PROCESS, "0", Working_Pro.Label18.Text)
-                Dim id_tag = model_api_sqlite.mas_get_tag_print_detail_main(qr_code)
+                Dim rs5 = Await model_api_sqlite.mas_Insert_tag_print_main(Working_Pro.wi_no.Text, qr_code, the_Label_bach, 1, plan_seq, Working_Pro.Label14.Text, check_tagprint_main(), Working_Pro.Label3.Text, Working_Pro.pwi_id, Working_Pro.tag_group_no, Working_Pro.Gobal_NEXT_PROCESS, "0", Working_Pro.Label18.Text)
+                Dim id_tag = Await model_api_sqlite.mas_get_tag_print_detail_main(qr_code)
                 For K = 1 To 5 Step 1
-                    model_api_sqlite.mas_Insert_tag_print_sub(id_tag, MainFrm.Label4.Text, arr_qr_code_sub(K - 1), Working_Pro.wi_no.Text, Working_Pro.tag_group_no, Working_Pro.Gobal_NEXT_PROCESS, "0", Working_Pro.Label18.Text)
+                    Dim rs6 = Await model_api_sqlite.mas_Insert_tag_print_sub(id_tag, MainFrm.Label4.Text, arr_qr_code_sub(K - 1), Working_Pro.wi_no.Text, Working_Pro.tag_group_no, Working_Pro.Gobal_NEXT_PROCESS, "0", Working_Pro.Label18.Text)
                 Next
             End If
         Catch ex As Exception
-            model_api_sqlite.mas_Insert_tag_print_main(Working_Pro.wi_no.Text, qr_code, the_Label_bach, 1, plan_seq, Working_Pro.Label14.Text, check_tagprint_main(), Working_Pro.Label3.Text, Working_Pro.pwi_id, Working_Pro.tag_group_no, Working_Pro.Gobal_NEXT_PROCESS, "0", Working_Pro.Label18.Text)
-            Dim id_tag = model_api_sqlite.mas_get_tag_print_detail_main(qr_code)
-            For K = 1 To 5 Step 1
-                model_api_sqlite.mas_Insert_tag_print_sub(id_tag, MainFrm.Label4.Text, arr_qr_code_sub(K - 1), Working_Pro.wi_no.Text, Working_Pro.tag_group_no, Working_Pro.Gobal_NEXT_PROCESS, "0", Working_Pro.Label18.Text)
-            Next
+            hasError = True
         End Try
-    End Sub
-    Private Sub PrintDocument1_PrintPage(sender As Object, e As Printing.PrintPageEventArgs) Handles PrintDocument1.PrintPage
+        If hasError = True Then
+            Dim rs7 = Await model_api_sqlite.mas_Insert_tag_print_main(Working_Pro.wi_no.Text, qr_code, the_Label_bach, 1, plan_seq, Working_Pro.Label14.Text, check_tagprint_main(), Working_Pro.Label3.Text, Working_Pro.pwi_id, Working_Pro.tag_group_no, Working_Pro.Gobal_NEXT_PROCESS, "0", Working_Pro.Label18.Text)
+            Dim id_tag = Await model_api_sqlite.mas_get_tag_print_detail_main(qr_code)
+            For K = 1 To 5 Step 1
+                Dim rs8 = Await model_api_sqlite.mas_Insert_tag_print_sub(id_tag, MainFrm.Label4.Text, arr_qr_code_sub(K - 1), Working_Pro.wi_no.Text, Working_Pro.tag_group_no, Working_Pro.Gobal_NEXT_PROCESS, "0", Working_Pro.Label18.Text)
+            Next
+        End If
+    End Function
+    Private Async Sub PrintDocument1_PrintPage(sender As Object, e As Printing.PrintPageEventArgs) Handles PrintDocument1.PrintPage
         'oldM83_batch(e)
-        newM83_batch(e)
+        Await newM83_batch(e) 'return data ต้องเอา result มาเก็บไม่งั้น ERROR
     End Sub
     Public Sub oldM83_single(e)
         Dim aPen = New Pen(Color.Black)
@@ -719,13 +721,15 @@ Public Class print_back
         End If
     End Sub
 
-    Private Sub PrintDocument2_PrintPage(sender As Object, e As Printing.PrintPageEventArgs) Handles PrintDocument2.PrintPage
+    Private Async Sub PrintDocument2_PrintPage(sender As Object, e As Printing.PrintPageEventArgs) Handles PrintDocument2.PrintPage
         ' MsgBox("single")
         ' oldM83_single(e)
-        newM83_single(e)
+        Await newM83_single(e)
     End Sub
-    Public Sub newM83_single(e)
+    Public Async Function newM83_single(e) As Task
         Dim aPen = New Pen(Color.Black)
+        Dim hasError As Boolean = False
+
         aPen.Width = 2.0F
         'MsgBox(Label10.Text)
         'vertical ตรง
@@ -940,11 +944,15 @@ Public Class print_back
                 '   model_api_sqlite.mas_Insert_tag_print(Working_Pro.wi_no.Text, qr_code, box_no, 1, plan_seq, Working_Pro.Label14.Text, Working_Pro.check_tagprint(), Working_Pro.Label3.Text, Working_Pro.pwi_id, tag_grop_no, Working_Pro.GoodQty, Working_Pro.Gobal_NEXT_PROCESS, tr_status)
             Else
                 tr_status = 0
-                model_api_sqlite.mas_Insert_tag_print(Working_Pro.wi_no.Text, qr_code, box_no, 1, plan_seq, Working_Pro.Label14.Text, Working_Pro.check_tagprint(), Working_Pro.Label3.Text, Working_Pro.pwi_id, tag_grop_no, Working_Pro.GoodQty, Working_Pro.Gobal_NEXT_PROCESS, tr_status)
+                Await model_api_sqlite.mas_Insert_tag_print(Working_Pro.wi_no.Text, qr_code, box_no, 1, plan_seq, Working_Pro.Label14.Text, Working_Pro.check_tagprint(), Working_Pro.Label3.Text, Working_Pro.pwi_id, tag_grop_no, Working_Pro.GoodQty, Working_Pro.Gobal_NEXT_PROCESS, tr_status)
             End If
         Catch ex As Exception
+            hasError = True
             tr_status = 0
-            model_api_sqlite.mas_Insert_tag_print(Working_Pro.wi_no.Text, qr_code, box_no, 1, plan_seq, Working_Pro.Label14.Text, Working_Pro.check_tagprint(), Working_Pro.Label3.Text, Working_Pro.pwi_id, tag_grop_no, Working_Pro.GoodQty, Working_Pro.Gobal_NEXT_PROCESS, tr_status)
         End Try
-    End Sub
+        If hasError Then
+            tr_status = 0
+            Await model_api_sqlite.mas_Insert_tag_print(Working_Pro.wi_no.Text, qr_code, box_no, 1, plan_seq, Working_Pro.Label14.Text, Working_Pro.check_tagprint(), Working_Pro.Label3.Text, Working_Pro.pwi_id, tag_grop_no, Working_Pro.GoodQty, Working_Pro.Gobal_NEXT_PROCESS, tr_status)
+        End If
+    End Function
 End Class

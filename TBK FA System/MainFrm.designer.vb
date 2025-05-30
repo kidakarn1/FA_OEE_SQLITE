@@ -356,7 +356,7 @@ Partial Class MainFrm
         'Timer2
         '
         Me.Timer2.Enabled = True
-        Me.Timer2.Interval = 1800000.0R
+        Me.Timer2.Interval = 300000.0R
         Me.Timer2.SynchronizingObject = Me
         '
         'menu3
@@ -622,7 +622,7 @@ Partial Class MainFrm
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None
         Me.Name = "MainFrm"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
-        Me.Text = "eeeeeeeee"
+        Me.Text = "MainFrm"
         Me.TransparencyKey = System.Drawing.Color.Red
         Me.Panel1.ResumeLayout(False)
         Me.Panel1.PerformLayout()
