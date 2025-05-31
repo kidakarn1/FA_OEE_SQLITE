@@ -1994,7 +1994,7 @@ Partial Class Working_Pro
         Me.progressbarOEE.AnimationFunction = WinFormAnimation.KnownAnimationFunctions.Liner
         Me.progressbarOEE.AnimationSpeed = 300
         Me.progressbarOEE.BackColor = System.Drawing.Color.White
-        Me.progressbarOEE.Font = New System.Drawing.Font("Panton-Trial Black", 17.75!, System.Drawing.FontStyle.Bold)
+        Me.progressbarOEE.Font = New System.Drawing.Font("Arial", 18.0!, System.Drawing.FontStyle.Bold)
         Me.progressbarOEE.ForeColor = System.Drawing.Color.Black
         Me.progressbarOEE.InnerColor = System.Drawing.Color.White
         Me.progressbarOEE.InnerMargin = 2
@@ -2027,7 +2027,7 @@ Partial Class Working_Pro
         Me.progressbarQ.AnimationFunction = WinFormAnimation.KnownAnimationFunctions.Liner
         Me.progressbarQ.AnimationSpeed = 500
         Me.progressbarQ.BackColor = System.Drawing.Color.White
-        Me.progressbarQ.Font = New System.Drawing.Font("Panton-Trial Black", 17.75!, System.Drawing.FontStyle.Bold)
+        Me.progressbarQ.Font = New System.Drawing.Font("Arial", 18.0!, System.Drawing.FontStyle.Bold)
         Me.progressbarQ.ForeColor = System.Drawing.Color.Black
         Me.progressbarQ.InnerColor = System.Drawing.Color.Transparent
         Me.progressbarQ.InnerMargin = 2
@@ -2059,7 +2059,7 @@ Partial Class Working_Pro
         Me.progressbarA.AnimationFunction = WinFormAnimation.KnownAnimationFunctions.Liner
         Me.progressbarA.AnimationSpeed = 500
         Me.progressbarA.BackColor = System.Drawing.Color.White
-        Me.progressbarA.Font = New System.Drawing.Font("Panton-Trial Black", 17.75!, System.Drawing.FontStyle.Bold)
+        Me.progressbarA.Font = New System.Drawing.Font("Arial", 18.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.progressbarA.ForeColor = System.Drawing.Color.Black
         Me.progressbarA.InnerColor = System.Drawing.Color.Transparent
         Me.progressbarA.InnerMargin = 2
@@ -2798,7 +2798,7 @@ Partial Class Working_Pro
         Me.progressbarP.AnimationFunction = WinFormAnimation.KnownAnimationFunctions.Liner
         Me.progressbarP.AnimationSpeed = 500
         Me.progressbarP.BackColor = System.Drawing.Color.White
-        Me.progressbarP.Font = New System.Drawing.Font("Panton-Trial Black", 17.75!, System.Drawing.FontStyle.Bold)
+        Me.progressbarP.Font = New System.Drawing.Font("Arial", 18.0!, System.Drawing.FontStyle.Bold)
         Me.progressbarP.ForeColor = System.Drawing.Color.Black
         Me.progressbarP.InnerColor = System.Drawing.Color.Transparent
         Me.progressbarP.InnerMargin = 2

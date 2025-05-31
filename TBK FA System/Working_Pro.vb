@@ -601,6 +601,7 @@ Public Class Working_Pro
         Catch ex As Exception
             MessageBox.Show("โหลดข้อมูล OEE ล้มเหลว: " & ex.Message)
         End Try
+        check_format_tag = Backoffice_model.B_check_format_tag()
         Dim date_now As String = DateTime.Now.ToString("dd-MM-yyyy")
         Dim date_now_date As Date = DateTime.Now.ToString("dd-MM-yyyy")
         Gdate_now_date = DateTime.Now.ToString("yyyy/MM/dd H:m:s")

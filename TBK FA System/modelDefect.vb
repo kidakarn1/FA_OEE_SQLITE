@@ -45,7 +45,7 @@ Public Class modelDefect
             Return "0"
         End Try
     End Function
-    Public Shared Async Function minsertDefectLeaderConFirm(lastId As String, dpl_emp_cd As String, dpl_qty As String) As Task(Of String)
+    Public Shared Async Function minsertDefectLeaderConFirm(lastId As String, dpl_emp_cd As String, dpl_qty As String, line_cd As String) As Task(Of String)
         Try
             Dim api = New api()
             ' Dim rsData = api.Load_data("http://" & Backoffice_model.svApi & "/apiShopfloor/index.php/insertDatadefect/insertDefectTransctionSupplier?lastId=" & lastId & "&dt_supplier_code=" & dt_supplier_code & "&dt_qty=" & dt_qty & "&Line=" & Line)
@@ -55,7 +55,8 @@ Public Class modelDefect
                 Dim url As String = "http://" & Backoffice_model.svApi & "/apiShopfloor/index.php/insertDatadefect/insertDefectLeaderConFirm" &
                             "?lastId=" & lastId &
                             "&dpl_emp_cd=" & dpl_emp_cd &
-                            "&dpl_qty=" & dpl_qty
+                            "&dpl_qty=" & dpl_qty &
+                            "&line_cd=" & line_cd
                 Console.WriteLine("Calling API URL: " & url)
                 ' ✅ แปลงให้ async โดยรันบน background thread
                 Dim rsData As String = Await Task.Run(Function() api.Load_data(url))
@@ -233,7 +234,6 @@ Public Class modelDefect
             Return "0"
         End Try
     End Function
-
     Public Shared Function mGetdefectcode(LineCd As String)
         Try
             Dim api = New api()
@@ -294,7 +294,6 @@ Public Class modelDefect
             Return False
         End Try
     End Function
-
     ' Public Shared Function mInsertdefectactual(dtWino As String, dtLineno As String, dtItemcd As String, dtItemtype As String, dtLotno As String, dtSeqno As String, dtType As String, dtCode As String, dtQty As String, dtMenu As String, dtActualdate As String, pwi_id As String)
     '  Try
     '   Dim api = New api()

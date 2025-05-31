@@ -720,7 +720,7 @@ recheck_defect:
                                 If dtLineno <> itemLeader("dt_created_by").ToString() Then
                                     ' ✅ ตรวจ network ก่อน insert supplier defect
                                     Await WaitForNetworkWithPopup()
-                                    Dim insData = Await md.minsertDefectLeaderConFirm(lastId, itemLeader("dt_created_by").ToString(), itemLeader("total_nc").ToString())
+                                    Dim insData = Await md.minsertDefectLeaderConFirm(lastId, itemLeader("dt_created_by").ToString(), itemLeader("total_nc").ToString(), dtLineno)
                                 End If
                             Next
                         End If

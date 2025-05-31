@@ -173,7 +173,6 @@ Public Class model_api_sqlite
     End Function
     Public Shared Async Function mas_Insert_tag_print_sub(ref_id As String, line As String, qr_code As String, wi As String, tag_group_no As String, next_process As String, tr_status As Integer, lot_no As String) As Task(Of String)
         Try
-            MsgBox("ready insert sub")
             Dim currdated As String = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
             Await mas_update_tagprint_sub(wi, "2", "0", tr_status)
             Dim tmp_tag_group_no As Integer = 1

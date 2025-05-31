@@ -3387,7 +3387,6 @@ re_insert_data:
                 Dim use_time = Integer.Parse(LoadSQL("use_time").ToString())
                 Dim pwi_id = Integer.Parse(LoadSQL("pwi_id").ToString())
                 Dim status_sqlite = "0"
-
                 While Not My.Computer.Network.Ping(Backoffice_model.svp_ping)
                     Await Task.Delay(1000)
                 End While
