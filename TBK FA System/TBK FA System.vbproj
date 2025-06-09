@@ -664,6 +664,12 @@
     <Compile Include="keyboardDefect.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="keyboardRm_Scan.Designer.vb">
+      <DependentUpon>keyboardRm_Scan.vb</DependentUpon>
+    </Compile>
+    <Compile Include="keyboardRm_Scan.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="keyboardScanMold.Designer.vb">
       <DependentUpon>keyboardScanMold.vb</DependentUpon>
     </Compile>
@@ -1321,6 +1327,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="keyboardDefect.resx">
       <DependentUpon>keyboardDefect.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="keyboardRm_Scan.resx">
+      <DependentUpon>keyboardRm_Scan.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="keyboardScanMold.resx">
       <DependentUpon>keyboardScanMold.vb</DependentUpon>

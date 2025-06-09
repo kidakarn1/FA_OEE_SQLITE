@@ -7,7 +7,6 @@ Imports System.IO.Ports
 Imports Newtonsoft.Json.Linq
 Imports System.Threading
 Imports System.IO
-
 Public Class Backoffice_model
     Public Shared total_nc As Integer = 0
     Public Shared statusTransfer As Integer = 0
@@ -354,7 +353,6 @@ Public Class Backoffice_model
             'Application.Exit()
         End Try
     End Function
-
     Public Shared Function check_time(SEQ_NO, WI_PLAN, ST_TIME, END_TIME)
         Dim reader As SqlDataReader
         Dim SQLConn As New SqlConnection() 'The SQL Connection
@@ -383,7 +381,6 @@ Public Class Backoffice_model
             'Application.Exit()
         End Try
     End Function
-
     Public Shared Function get_new_information()
         Dim reader As SqlDataReader
         Dim SQLConn As New SqlConnection() 'The SQL Connection
@@ -3328,9 +3325,10 @@ re_insert_data:
                 Dim LoadSQL = Backoffice_model.get_trdata_sqlite()
                 Dim LoadSQLcl = Backoffice_model.get_tr_closelot_flg_sqlite()
                 Dim LoadSQL_tag_print_detail = Backoffice_model.get_tr_tag_print_detail()
+                Dim LoadSQL_check_loss_actual = Backoffice_model.check_loss_actual()
                 '  Dim LoadSQL_tag_print_detail_main = Backoffice_model.get_tr_tag_print_detail_main()
                 '  Dim LoadSQL_tag_print_detail_sub = Backoffice_model.get_tr_tag_print_detail_sub()
-                Dim hasData = LoadSQL.HasRows Or LoadSQLcl.HasRows Or LoadSQL_tag_print_detail.HasRows
+                Dim hasData = LoadSQL.HasRows Or LoadSQLcl.HasRows Or LoadSQL_tag_print_detail.HasRows Or LoadSQL_check_loss_actual > 0
                 If hasData Then
                     ' ✅ อัปเดตข้อมูล tag_print ทั้งหมด
                     Await model_api_sqlite.UpdateStatus_tag_print_detail()
@@ -3414,12 +3412,10 @@ re_insert_data:
                     retryMap(id) += 1
                     Continue While
                 End Try
-
                 Await Insert_prd_detail_main(pd, line_cd, wi_plan, item_cd, item_name, staff_no, seq_no,
                                      qty, st_time, end_time, use_time, number_qty, pwi_id, status_sqlite, id)
             End While
         End If
-
         ' ========== Transfer close lot ==========
         If LoadSQLcl.HasRows Then
             Dim arr_list_id2 As New ArrayList()
@@ -4062,11 +4058,17 @@ re_insert_rework_act:
             SQLConn.ConnectionString = sqlConnect
             SQLConn.Open()
             SQLCmd.Connection = SQLConn
-            If Working_Pro.pwi_id = "0" Then
-                SQLCmd.CommandText = "INSERT INTO loss_actual (wi,line_cd,item_cd,seq_no,shift_prd,start_loss,end_loss,loss_time,updated_date,loss_type,loss_cd_id,line_op_id,pd,transfer_flg , flg_control , pwi_id) VALUES ('" & wi_plan & "','" & line_cd & "','" & item_cd & "','" & seq_no & "','" & shift_prd & "','" & st_datetime2 & "','" & end_datetime2 & "','" & loss_time & "','" & currdated & "','" & loss_type & "','" & loss_id & "','" & op_id & "','" & pd & "','" & transfer_flg & "','" & flg_control & "', '" & DBNull.Value & "')"
-            Else
+            Try
+                If Working_Pro.pwi_id = "0" Then
+                    SQLCmd.CommandText = "INSERT INTO loss_actual (wi,line_cd,item_cd,seq_no,shift_prd,start_loss,end_loss,loss_time,updated_date,loss_type,loss_cd_id,line_op_id,pd,transfer_flg , flg_control , pwi_id) VALUES ('" & wi_plan & "','" & line_cd & "','" & item_cd & "','" & seq_no & "','" & shift_prd & "','" & st_datetime2 & "','" & end_datetime2 & "','" & loss_time & "','" & currdated & "','" & loss_type & "','" & loss_id & "','" & op_id & "','" & pd & "','" & transfer_flg & "','" & flg_control & "', '" & DBNull.Value & "')"
+                Else
+                    SQLCmd.CommandText = "INSERT INTO loss_actual (wi,line_cd,item_cd,seq_no,shift_prd,start_loss,end_loss,loss_time,updated_date,loss_type,loss_cd_id,line_op_id,pd,transfer_flg , flg_control , pwi_id) VALUES ('" & wi_plan & "','" & line_cd & "','" & item_cd & "','" & seq_no & "','" & shift_prd & "','" & st_datetime2 & "','" & end_datetime2 & "','" & loss_time & "','" & currdated & "','" & loss_type & "','" & loss_id & "','" & op_id & "','" & pd & "','" & transfer_flg & "','" & flg_control & "','" & pwi_id & "')"
+                End If
+            Catch ex As Exception
+                'case Load โปรแกรม ครั้ง แรก
                 SQLCmd.CommandText = "INSERT INTO loss_actual (wi,line_cd,item_cd,seq_no,shift_prd,start_loss,end_loss,loss_time,updated_date,loss_type,loss_cd_id,line_op_id,pd,transfer_flg , flg_control , pwi_id) VALUES ('" & wi_plan & "','" & line_cd & "','" & item_cd & "','" & seq_no & "','" & shift_prd & "','" & st_datetime2 & "','" & end_datetime2 & "','" & loss_time & "','" & currdated & "','" & loss_type & "','" & loss_id & "','" & op_id & "','" & pd & "','" & transfer_flg & "','" & flg_control & "','" & pwi_id & "')"
-            End If
+            End Try
+            Console.WriteLine(SQLCmd.CommandText)
             reader = SQLCmd.ExecuteReader()
             'SQLConn.Dispose()
             SQLConn.Close()
@@ -4075,7 +4077,7 @@ re_insert_rework_act:
             Loss_reg.date_time_commit_data.Text = st_datetime2
             'SQLConn = Nothing
         Catch ex As Exception
-            'MsgBox("MSSQL Database connect failed. Please contact PC System [Function ins_loss_act]")
+            MsgBox("MSSQL Database connect failed. Please contact PC System [Function ins_loss_act]")
             SQLConn.Close()
             load_show.Show()
             'Application.Exit()

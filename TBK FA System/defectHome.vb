@@ -94,7 +94,6 @@ Public Class defectHome
                 Dim offsetY As Integer = 40
                 Dim startX As Integer = (Me.ClientSize.Width - totalWidth) \ 2
                 Dim startY As Integer = ((Me.ClientSize.Height - totalHeight) \ 2) + offsetY
-
                 ' ===== ดึงข้อมูลจาก API =====
                 Dim rsLoadMenuDefect = Backoffice_model.GetManageDefectMenu(MainFrm.Label4.Text)
                 Dim imagePaths As New List(Of String)

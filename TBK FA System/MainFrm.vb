@@ -378,7 +378,8 @@ Public Class MainFrm
             End If
             Dim LoadSQL = Backoffice_model.get_trdata_sqlite()
             Dim LoadSQL_tag_print_detail = Backoffice_model.get_tr_tag_print_detail()
-            hasData = LoadSQL.HasRows OrElse LoadSQL_tag_print_detail.HasRows
+            Dim LoadSQL_check_loss_actual = Backoffice_model.check_loss_actual()
+            hasData = LoadSQL.HasRows OrElse LoadSQL_tag_print_detail.HasRows OrElse LoadSQL_check_loss_actual > 0
             If hasData Then
                 Me.Enabled = False
                 Await dbClass.updated_data_to_dbsvr(Me, "1")

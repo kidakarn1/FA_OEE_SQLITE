@@ -73,6 +73,7 @@ Partial Class closeLotsummary
         Me.PictureBox3 = New System.Windows.Forms.PictureBox()
         Me.btnOk = New System.Windows.Forms.PictureBox()
         Me.loadNet = New System.Windows.Forms.PictureBox()
+        Me.lbDefectAll = New System.Windows.Forms.Label()
         CType(Me.Button1, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.btnUp, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.btnDown, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -148,12 +149,13 @@ Partial Class closeLotsummary
         Me.lbNg.BackColor = System.Drawing.Color.Transparent
         Me.lbNg.Font = New System.Drawing.Font("Panton-Trial ExtraBold", 24.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.lbNg.ForeColor = System.Drawing.Color.FromArgb(CType(CType(254, Byte), Integer), CType(CType(0, Byte), Integer), CType(CType(102, Byte), Integer))
-        Me.lbNg.Location = New System.Drawing.Point(37, -3)
+        Me.lbNg.Location = New System.Drawing.Point(418, 504)
         Me.lbNg.Name = "lbNg"
         Me.lbNg.Size = New System.Drawing.Size(39, 41)
         Me.lbNg.TabIndex = 14
         Me.lbNg.Text = "0"
         Me.lbNg.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
+        Me.lbNg.Visible = False
         '
         'lbLine
         '
@@ -443,7 +445,7 @@ Partial Class closeLotsummary
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.Panel4.BackColor = System.Drawing.Color.Transparent
-        Me.Panel4.Controls.Add(Me.lbNg)
+        Me.Panel4.Controls.Add(Me.lbDefectAll)
         Me.Panel4.Location = New System.Drawing.Point(450, 544)
         Me.Panel4.Name = "Panel4"
         Me.Panel4.Size = New System.Drawing.Size(113, 36)
@@ -555,6 +557,19 @@ Partial Class closeLotsummary
         Me.loadNet.TabStop = False
         Me.loadNet.Visible = False
         '
+        'lbDefectAll
+        '
+        Me.lbDefectAll.AutoSize = True
+        Me.lbDefectAll.BackColor = System.Drawing.Color.Transparent
+        Me.lbDefectAll.Font = New System.Drawing.Font("Panton-Trial ExtraBold", 24.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.lbDefectAll.ForeColor = System.Drawing.Color.FromArgb(CType(CType(254, Byte), Integer), CType(CType(0, Byte), Integer), CType(CType(102, Byte), Integer))
+        Me.lbDefectAll.Location = New System.Drawing.Point(37, -3)
+        Me.lbDefectAll.Name = "lbDefectAll"
+        Me.lbDefectAll.Size = New System.Drawing.Size(39, 41)
+        Me.lbDefectAll.TabIndex = 15
+        Me.lbDefectAll.Text = "0"
+        Me.lbDefectAll.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
+        '
         'closeLotsummary
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -562,6 +577,7 @@ Partial Class closeLotsummary
         Me.BackgroundImage = Global.TBK_FA_System.My.Resources.Resources.closeLotsummaryNew23
         Me.ClientSize = New System.Drawing.Size(801, 600)
         Me.Controls.Add(Me.loadNet)
+        Me.Controls.Add(Me.lbNg)
         Me.Controls.Add(Me.btnOk)
         Me.Controls.Add(Me.PictureBox3)
         Me.Controls.Add(Me.lbLine)
@@ -661,4 +677,5 @@ Partial Class closeLotsummary
     Friend WithEvents NG As ColumnHeader
     Friend WithEvents btnOk As PictureBox
     Friend WithEvents loadNet As PictureBox
+    Friend WithEvents lbDefectAll As Label
 End Class

@@ -367,7 +367,7 @@ Public Class Prd_detail
         Rm_scan.Panel_scan_picking.Visible = True
         Rm_scan.scan_item_cd.Select()
         Rm_scan.scan_item_cd.Focus()
-        Rm_scan.Show()
+        Rm_scan.ShowDialog()
     End Sub
 
     Private Sub Panel4_Paint(sender As Object, e As PaintEventArgs)

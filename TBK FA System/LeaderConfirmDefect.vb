@@ -2,7 +2,7 @@
 
 Public Class LeaderConfirmDefect
     Private Sub btnBack_Click(sender As Object, e As EventArgs) Handles btnBack.Click
-        Me.DialogResult = DialogResult.Cancel
+        'Me.DialogResult = DialogResult.Cancel
         Me.Close()
     End Sub
     Private Sub tbEmpCodeleader_Enter(sender As Object, e As EventArgs) Handles tbEmpCodeleader.Enter
@@ -24,7 +24,7 @@ Public Class LeaderConfirmDefect
                         defectHome.leaderConfrime = ""
                         tbEmpCodeleader.Select()
                     Else
-                        MsgBox("Password Incorrect.")
+                        MsgBox("Not Permission.")
                         tbEmpCodeleader.Text = ""
                         defectHome.leaderConfrime = ""
                         tbEmpCodeleader.Select()

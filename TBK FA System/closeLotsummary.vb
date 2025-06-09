@@ -185,6 +185,7 @@ Public Class closeLotsummary
         lbAct.Text = Working_Pro.LB_COUNTER_SEQ.Text 'Working_Pro.Label6.Text
         lbNc.Text = Working_Pro.lb_nc_qty.Text
         lbNg.Text = Working_Pro.lb_ng_qty.Text
+        lbDefectAll.Text = CDbl(Val(lbNg.Text)) + CDbl(Val(lbNc.Text))
         sWi = lbWi.Text
         sAct = Working_Pro.Label6.Text 'Working_Pro.LB_COUNTER_SEQ.Text 
         sSeq = Working_Pro.Label22.Text
@@ -373,10 +374,10 @@ Public Class closeLotsummary
                 For Each itemPlanData As DataPlan In Confrime_work_production.ArrayDataPlan
                     Iseq = Iseq + 1
                     Dim special_wi As String = itemPlanData.wi
-                    checkPrintdefect(special_wi, Iseq, sLot)
+                    Await checkPrintdefect(special_wi, Iseq, sLot)
                 Next
             Else
-                checkPrintdefect(sWi, sSeq, sLot)
+                Await checkPrintdefect(sWi, sSeq, sLot)
             End If
 
             If statusPage.Text = "MAN" Then
@@ -415,7 +416,6 @@ Public Class closeLotsummary
                     ScanQRprod.Show()
                     Me.Enabled = False
                 Else
-
                     Await Manage_closelot()
                 End If
             Else
@@ -431,7 +431,7 @@ Public Class closeLotsummary
             checkNetColselot()
         End Try
     End Sub
-    Public Async Sub checkPrintdefect(wi As String, seq As String, lot As String)
+    Public Async Function checkPrintdefect(wi As String, seq As String, lot As String) As Task
         Dim md = New modelDefect()
         Dim mdSqlite = New ModelSqliteDefect()
         Dim dfType As String = "2" 'NC
@@ -545,7 +545,7 @@ Public Class closeLotsummary
                 Next
             Next
         End If
-    End Sub
+    End Function
     Public Sub checkPrintnormal()
         Dim defectAll = CDbl(Val(Working_Pro.lb_ng_qty.Text)) + CDbl(Val(Working_Pro.lb_nc_qty.Text))
         Dim result_mod As Double = (Integer.Parse(Working_Pro.lb_good.Text)) Mod Integer.Parse(Working_Pro.Label27.Text) 'Integer.Parse(_Edit_Up_0.Text) Mod Integer.Parse(Label27.Text)
@@ -713,17 +713,6 @@ recheck_defect:
                                 Dim insData = Await md.minsertDefectTrascetionSupplier(lastId, item("dt_supplier_code").ToString(), item("total_nc").ToString(), dtLineno)
                             End If
                         Next
-                        Dim getDataLeader = Await mdSQLite.mSqliteGetdefectdetailLeaderConFirm(dtWino, dtSeqno, dtLotno, dtType, dtItemcd, dtCode)
-                        If getDataLeader <> "0" Then
-                            Dim rsDataLeaderCon As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(getDataLeader)
-                            For Each itemLeader As Object In rsDataLeaderCon
-                                If dtLineno <> itemLeader("dt_created_by").ToString() Then
-                                    ' ✅ ตรวจ network ก่อน insert supplier defect
-                                    Await WaitForNetworkWithPopup()
-                                    Dim insData = Await md.minsertDefectLeaderConFirm(lastId, itemLeader("dt_created_by").ToString(), itemLeader("total_nc").ToString(), dtLineno)
-                                End If
-                            Next
-                        End If
                     End If
                 Catch ex As Exception
                     ' ❗ ถ้า error ก็รอ Network แล้วปล่อย error ไปเพื่อไม่ให้ระบบ crash
@@ -731,6 +720,17 @@ recheck_defect:
                                  Await WaitForNetworkWithPopup()
                              End Function)
                 End Try
+            End If
+            Dim getDataLeader = Await mdSQLite.mSqliteGetdefectdetailLeaderConFirm(dtWino, dtSeqno, dtLotno, dtType, dtItemcd, dtCode)
+            If getDataLeader <> "0" Then
+                Dim rsDataLeaderCon As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(getDataLeader)
+                For Each itemLeader As Object In rsDataLeaderCon
+                    If dtLineno <> itemLeader("dt_created_by").ToString() Then
+                        ' ✅ ตรวจ network ก่อน insert supplier defect
+                        Await WaitForNetworkWithPopup()
+                        Dim insData = Await md.minsertDefectLeaderConFirm(lastId, itemLeader("dt_created_by").ToString(), itemLeader("total_nc").ToString(), dtLineno)
+                    End If
+                Next
             End If
         Catch ex As Exception
             ' ❗ ถ้าเกิด exception ทั้งหมดในขั้นตอนหลักก็แสดง popup network และหยุดที่นี่

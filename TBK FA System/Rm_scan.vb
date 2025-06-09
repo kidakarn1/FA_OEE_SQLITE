@@ -71,6 +71,7 @@ Public Class Rm_scan
             'MsgBox("arr_ITEM_CD(21) = " & arr_ITEM_CD(21))
             Backoffice_model.Insert_Rm_Scan(WI, ITEM_CD2, LOT_PO, SEQ, SHIFT, Rm_created_date, Rm_created_by, Rm_Updated_date, Rm_updated_by, Rm_line_cd, Rm_QR_code, "-")
             MsgBox("OK")
+            keyboardRm_Scan.Close()
         Else
             MsgBox("Plase Check Tag.")
         End If
@@ -212,5 +213,9 @@ Public Class Rm_scan
     End Sub
     Private Sub Button3_Click(sender As Object, e As EventArgs) Handles Button3.Click
         Me.Close()
+    End Sub
+
+    Private Sub PictureBox1_Click(sender As Object, e As EventArgs) Handles PictureBox1.Click
+        keyboardRm_Scan.showDialog
     End Sub
 End Class

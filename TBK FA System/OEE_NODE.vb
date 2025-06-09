@@ -11,13 +11,6 @@ Public Class OEE_NODE
             Dim jsonString = api.Load_data("http://" & Backoffice_model.svOEE & "/api/dataGetmstOEE?line_cd=" & line_cd)
             Dim dcResultdata As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(jsonString)
             Dim i As Integer = 1
-            For Each item As Object In dcResultdata
-                If item("moe_min_oee").ToString Is Nothing Then
-                    ' MsgBox("IF")
-                Else
-                    'MsgBox("ELSE")
-                End If
-            Next
             load_show_OEE.Close()
             Return dcResultdata
         Catch ex As Exception
@@ -41,13 +34,6 @@ Public Class OEE_NODE
             Dim jsonString = api.Load_data("http://" & Backoffice_model.svOEE & "/api/dataGetOEEColor?line_cd=" & line_cd)
             Dim dcResultdata As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(jsonString)
             Dim i As Integer = 1
-            For Each item As Object In dcResultdata
-                If item("moe_min_oee").ToString Is Nothing Then
-                    ' MsgBox("IF")
-                Else
-                    'MsgBox("ELSE")
-                End If
-            Next
             load_show_OEE.Close()
             Return dcResultdata
         Catch ex As Exception

@@ -24,6 +24,9 @@ Public Class Working_Pro
     Public Property MaxValue As Integer
     Public Property ColorRGB As String
     Dim oeeLevelList As New List(Of Working_Pro)
+    Dim ALevelList As New List(Of Working_Pro)
+    Dim PLevelList As New List(Of Working_Pro)
+    Dim QLevelList As New List(Of Working_Pro)
     Dim tmpActual As Integer = 0
     Private lossPopupCts As CancellationTokenSource
     Private WithEvents WebViewProgressbar As WebView2
@@ -252,34 +255,37 @@ Public Class Working_Pro
             Label48.Text = "2"
         End If
     End Sub
-    Public Function cal_progressbarQ(NGAll As String, Good As String)
-        Dim rs = CInt(NGAll) + CInt(Good)
-        Dim totalProgressbar = (Good / rs) * 100
-        If Good = "0" And rs = "0" Then
-            totalProgressbar = Int(100)
+    Public Function cal_progressbarQ(NGAll As String, Good As String) As Integer
+        Dim ngCount As Integer = 0
+        Dim goodCount As Integer = 0
+        ' ป้องกัน error กรณีค่าที่ไม่ใช่ตัวเลข
+        Integer.TryParse(NGAll, ngCount)
+        Integer.TryParse(Good, goodCount)
+        Dim totalCount As Integer = ngCount + goodCount
+        Dim totalProgressbar As Double = 100
+        If totalCount > 0 Then
+            totalProgressbar = (goodCount / totalCount) * 100
         End If
-        If rs = "0" Then
-            totalProgressbar = Int(100)
-        End If
-        If Math.Ceiling(totalProgressbar) > 100 Then
-            progressbarQ.Text = Int(100)
-            progressbarQ.Value = Int(100)
-        ElseIf Math.Ceiling(totalProgressbar) < 0 Then
-            progressbarQ.Text = Int(0)
-            progressbarQ.Value = Int(0)
-        Else
-            progressbarQ.Text = Int(totalProgressbar)
-            progressbarQ.Value = Int(totalProgressbar)
-        End If
-
-        If totalProgressbar >= moe_min_q Then
-            progressbarQ.ProgressColor = Color.FromArgb(20, 255, 0) ' Green color in RGB
-        ElseIf totalProgressbar < moe_min_q Then
-            progressbarQ.ProgressColor = Color.Red
-        End If
-        Return totalProgressbar
-        'CircularProgressBar2.Text = sum_prg2 & "%"
-        'CircularProgressBar2.Value = sum_prg2
+        ' Clamp ค่าให้อยู่ในช่วง 0–100
+        totalProgressbar = Math.Max(0, Math.Min(100, totalProgressbar))
+        Dim intProgress As Integer = CInt(Math.Floor(totalProgressbar))
+        ' กำหนดค่า ProgressBar
+        progressbarQ.Text = intProgress.ToString()
+        progressbarQ.Value = intProgress
+        ' หาสีจากช่วงที่เหมาะสมใน oeeLevelList
+        For Each level As Working_Pro In QLevelList
+            If intProgress >= level.MinValue AndAlso intProgress <= level.MaxValue Then
+                Dim rgbParts() As String = level.ColorRGB.Split(","c)
+                If rgbParts.Length = 3 Then
+                    Dim R As Integer = Convert.ToInt32(rgbParts(0).Trim())
+                    Dim G As Integer = Convert.ToInt32(rgbParts(1).Trim())
+                    Dim B As Integer = Convert.ToInt32(rgbParts(2).Trim())
+                    progressbarQ.ProgressColor = Color.FromArgb(R, G, B)
+                End If
+                Exit For
+            End If
+        Next
+        Return intProgress
     End Function
     Public Sub calProgressOEE(A As Double, Q As Double, P As Double)
         ' Clamp ค่าไม่เกิน 100%
@@ -306,29 +312,33 @@ Public Class Working_Pro
             End If
         Next
     End Sub
-    Public Function cal_progressbarA(line_cd As String, st_shift As String, end_shift As String)
-        Dim OEE = New OEE_NODE
+    Public Function cal_progressbarA(line_cd As String, st_shift As String, end_shift As String) As Integer
         Dim OEE_LOCAL = New OEE_SQLITE
-        'stTimeModel = OEE.OEE_getDataGetWorkingTimeModel(Prd_detail.Label12.Text.Substring(3, 5), line_cd, Label3.Text)
-        'Dim totalProgressbar = OEE.GetDataProgressbarA(st_shift, end_shift, line_cd, gobal_stTimeModel, statusSwitchModel, IsOnlyone)
-        Dim totalProgressbar = OEE_LOCAL.mas_GetDataProgressbarA(st_shift, end_shift, line_cd, gobal_stTimeModel, statusSwitchModel, IsOnlyone, MainFrm.chk_spec_line)
-        If totalProgressbar > 100 Then
-            progressbarA.Text = Int(100)
-            progressbarA.Value = Int(100)
-        ElseIf totalProgressbar < 0 Then
-            progressbarA.Text = Int(0)
-            progressbarA.Value = Int(0)
-        Else
-            progressbarA.Text = totalProgressbar
-            progressbarA.Value = totalProgressbar
-        End If
-        If totalProgressbar >= moe_min_a Then
-            progressbarA.ProgressColor = Color.FromArgb(20, 255, 0) ' Green color in RGB
-            ' ElseIf totalProgressbar <= 90 And totalProgressbar >= 80 Then
-            '     progressbarA.ProgressColor = Color.FromArgb(255, 97, 0) ' Green orange
-        ElseIf totalProgressbar < moe_min_a Then
-            progressbarA.ProgressColor = Color.Red
-        End If
+        Dim totalProgressbar As Integer = OEE_LOCAL.mas_GetDataProgressbarA(
+        st_shift, end_shift, line_cd,
+        gobal_stTimeModel, statusSwitchModel,
+        IsOnlyone, MainFrm.chk_spec_line)
+
+        ' Clamp ค่าให้อยู่ระหว่าง 0-100
+        totalProgressbar = Math.Max(0, Math.Min(100, totalProgressbar))
+
+        ' กำหนดค่า ProgressBar
+        progressbarA.Text = totalProgressbar.ToString()
+        progressbarA.Value = totalProgressbar
+        ' หาสีจากช่วงที่เหมาะสมใน oeeLevelList
+        For Each level As Working_Pro In ALevelList
+            If totalProgressbar >= level.MinValue AndAlso totalProgressbar <= level.MaxValue Then
+                Dim rgbParts() As String = level.ColorRGB.Split(","c)
+                If rgbParts.Length = 3 Then
+                    Dim R As Integer = Convert.ToInt32(rgbParts(0).Trim())
+                    Dim G As Integer = Convert.ToInt32(rgbParts(1).Trim())
+                    Dim B As Integer = Convert.ToInt32(rgbParts(2).Trim())
+                    progressbarA.ProgressColor = Color.FromArgb(R, G, B)
+                End If
+                Exit For
+            End If
+        Next
+        ' แสดงค่า % แบบ RichText
         Dim rtb As New RichTextBox()
         rtb.SelectionFont = New Font("Panton-Trial", 18, FontStyle.Bold)
         rtb.AppendText(totalProgressbar.ToString())
@@ -336,150 +346,65 @@ Public Class Working_Pro
         rtb.AppendText("%")
         Return totalProgressbar
     End Function
+
+
+
     Public Function setgetSpeedLoss(NG As String, Good As String, timeShift As String, std_cd As String, line_cd As String, stTimeModel As String)
-        'MsgBox("DateTimeStartofShift.Text======>" & DateTimeStartofShift.Text)
-        Dim OEE = New OEE_NODE
-        Dim OEE_LOCAL = New OEE_SQLITE
-        'Dim per = "%"
-        'per.Font = New Font("Arial", 20, FontStyle.Bold)
-        'Dim rs = OEE.OEE_getSpeedLoss(NG, Good, timeShift, std_cd)
-        Dim startDate As Date
-        ' MsgBox("DateTimeStartofShift.Text====>" & DateTimeStartofShift.Text)
-        If statusSwitchModel = 0 Then
-            'startDate = DateTime.Parse(DateTimeStartofShift.Text.ToString.Substring(0, 10)) & " " & timeShift
-            startDate = DateTime.Parse(DateTimeStartofShift.Text.ToString)
-            Dim time_now As String = DateTime.Now.ToString("HH:mm:ss tt")
-            Dim date_now_date As Date = DateTime.Now.ToString("yyyy-MM-dd")
-            ' Dim time As Date = TimeOfDay.ToString("HH:mm:ss") 'DateTime.Now.ToString("HH:mm:ss")
-            Dim time As String = DateTime.Now.ToString("HH:mm:ss")
-            Dim date_st = DateTime.Now.ToString("yyyy-MM-dd")
-            Dim date_end = DateTime.Now.ToString("yyyy-MM-dd")
-            '   If time_now >= "00:00:00 AM" And time_now <= "08:00:00 AM" Then
-            '   startDate = startDate.AddDays(-1)
-            'End If
-            startDate = Convert.ToDateTime(startDate).ToString("yyyy-MM-dd HH:mm:ss")
-            ' ''Console.WriteLine("IFFFFFFFFFFFF0001")
-        ElseIf statusSwitchModel = 1 Or statusSwitchModel = 2 Then
-            If IsOnlyone = "1" Then
-                ' startDate = DateTime.Parse(DateTimeStartofShift.Text.ToString.Substring(0, 10)) & " " & timeShift
-                startDate = DateTime.Parse(DateTimeStartofShift.Text.ToString)
-                Dim time_now As String = DateTime.Now.ToString("HH:mm:ss tt")
-                Dim date_now_date As Date = DateTime.Now.ToString("yyyy-MM-dd")
-                ' Dim time As Date = TimeOfDay.ToString("HH:mm:ss") 'DateTime.Now.ToString("HH:mm:ss")
-                Dim time As String = DateTime.Now.ToString("HH:mm:ss")
-                Dim date_st = DateTime.Now.ToString("yyyy-MM-dd")
-                Dim date_end = DateTime.Now.ToString("yyyy-MM-dd")
-                ' If time_now >= "00:00:00 AM" And time_now <= "08:00:00 AM" Then
-                ' startDate = startDate.AddDays(-1)
-                'End If
-                '     ''Console.WriteLine("IFFFFFFFFFFFF0002")
-                startDate = Convert.ToDateTime(startDate).ToString("yyyy-MM-dd HH:mm:ss")
-            Else
-                '   ''Console.WriteLine("ELSE")
-                startDate = Convert.ToDateTime(stTimeModel).ToString("yyyy-MM-dd HH:mm:ss")
-            End If
+        Dim OEE_LOCAL As New OEE_SQLITE()
+        Dim startDate As DateTime
+
+        ' 1. คำนวณเวลาเริ่มต้น (startDate)
+        If MainFrm.chk_spec_line = "2" OrElse Backoffice_model.S_chk_spec_line <> "0" Then
+            startDate = Backoffice_model.date_time_start_master_shift
+            If TimeOfDay < TimeValue("08:00:00") Then startDate = startDate.AddDays(-1)
+        ElseIf statusSwitchModel = 0 OrElse (statusSwitchModel <= 2 AndAlso IsOnlyone = "1") Then
+            startDate = DateTime.Parse(DateTimeStartofShift.Text)
+        Else
+            startDate = DateTime.Parse(stTimeModel)
         End If
-        If MainFrm.chk_spec_line = "2" Then ' for M083
-            startDate = DateTime.Parse(Backoffice_model.date_time_start_master_shift)
-            startDate = Convert.ToDateTime(startDate).ToString("yyyy-MM-dd HH:mm:ss")
-            If DateTime.Now.ToString("HH:mm:ss") >= "00:00:00 AM" And DateTime.Now.ToString("HH:mm:ss") <= "08:00:00 AM" Then
-                startDate = Backoffice_model.date_time_start_master_shift.AddDays(-1)
-            End If
+
+        ' 2. เวลาที่ผ่านไป (sec/min)
+        Dim secDiff As Long = DateDiff("s", startDate, Now())
+        Dim minSwitchModel As Integer = CInt(secDiff / 60)
+
+        ' 3. actualP (จำนวนที่ผลิตจริงในช่วงเวลา)
+        Dim actualP_val As Integer = CInt(OEE_LOCAL.mas_getProduction_actual_detailByHour(line_cd, minSwitchModel, startDate, Label3.Text, MainFrm.chk_spec_line))
+        actualP.Text = actualP_val.ToString()
+
+        ' 4. stdJobP (คำนวณจากเวลาทำงาน / std_cd)
+        Dim stdJobP_val As Integer
+        If secDiff < 3600 Then
+            stdJobP_val = CInt(Math.Ceiling(secDiff / Val(std_cd)))
+        Else
+            Dim lossTime = CInt(OEE_LOCAL.mas_OEE_GetLossByHouseP1(line_cd))
+            Dim usableTime = If(lossTime > 0, secDiff - lossTime, secDiff)
+            stdJobP_val = CInt(Math.Ceiling(usableTime / Val(std_cd)))
         End If
-        If Backoffice_model.S_chk_spec_line = "0" Then 'normal
-        Else ' For K1M025
-            startDate = DateTime.Parse(Backoffice_model.date_time_start_master_shift)
-            startDate = Convert.ToDateTime(startDate).ToString("yyyy-MM-dd HH:mm:ss")
-            'MsgBox("IF ")
-            If DateTime.Now.ToString("HH:mm:ss") >= "00:00:00 AM" And DateTime.Now.ToString("HH:mm:ss") <= "08:00:00 AM" Then
-                If Backoffice_model.S_chk_spec_line = "0" Then ' Normal 
-                Else 'for line M025
-                    startDate = Backoffice_model.date_time_start_master_shift.AddDays(-1)
+        stdJobP.Text = stdJobP_val.ToString()
+
+        ' 5. คำนวณ P% และ Clamp ค่า
+        Dim totalProgressbar As Double = If(actualP_val = 0 Or stdJobP_val = 0, 0, (actualP_val / stdJobP_val) * 100)
+        totalProgressbar = Math.Max(0, Math.Min(100, totalProgressbar))
+        Dim intProgress As Integer = CInt(Math.Floor(totalProgressbar))
+
+        ' 6. ตั้งค่า ProgressBar
+        progressbarP.Text = intProgress.ToString()
+        progressbarP.Value = intProgress
+
+        ' 7. ตั้งสีตามช่วงที่กำหนดใน oeeLevelList
+        For Each level As Working_Pro In PLevelList
+            If intProgress >= level.MinValue AndAlso intProgress <= level.MaxValue Then
+                Dim rgbParts() As String = level.ColorRGB.Split(","c)
+                If rgbParts.Length = 3 Then
+                    progressbarP.ProgressColor = Color.FromArgb(
+                    CInt(rgbParts(0).Trim()),
+                    CInt(rgbParts(1).Trim()),
+                    CInt(rgbParts(2).Trim()))
                 End If
+                Exit For
             End If
-        End If
-        Dim secSwitchmodel = DateDiff("s", startDate, Now())
-        ' MsgBox("secSwitchmodel====>" & secSwitchmodel)
-        Dim MinSwitchmodel As Integer = secSwitchmodel / 60
-        ' MsgBox("MinSwitchmodel ====>" & MinSwitchmodel)
-        ' Dim OEE_actual_detailByHour = OEE.OEE_getProduction_actual_detailByHour(line_cd, MinSwitchmodel, startDate, Label3.Text)
-        ' MsgBox("READY CAL BY Hr")
-        Dim OEE_actual_detailByHour = OEE_LOCAL.mas_getProduction_actual_detailByHour(line_cd, MinSwitchmodel, startDate, Label3.Text, MainFrm.chk_spec_line)
-        ' MsgBox("OEE_actual_detailByHour=====>" & OEE_actual_detailByHour)
-        actualP.Text = OEE_actual_detailByHour
-        ' Try
-        ' หาความแตกต่างในหน่วยนาที
-        ' startDate = Convert.ToDateTime(startDate).ToString("yyyy-MM-dd HH:mm:ss") wait test 
-        '   MsgBox("startDate ===>" & startDate)
-        ' MsgBox("Now ===>" & Now())
-        rsDateDiff = DateDiff("s", startDate, Now())
-        'MsgBox("startDate====>" & startDate)
-        'MsgBox("rsDateDiff===>> + ==>" & rsDateDiff)
-        Dim minrsDateDiff = rsDateDiff / 60
-        If rsDateDiff < 3600 Then
-            stdJobP.Text = Math.Ceiling(rsDateDiff / std_cd)
-            Label25.Text = Math.Ceiling(minrsDateDiff)
-            minACTUAL_P.Text = Math.Ceiling(minrsDateDiff)
-            ' PanelSTDJOBP.Visible = True
-            ' PanelACTP.Visible = True
-            Try
-                lbOverTimePerformance.Text = Math.Ceiling(rsDateDiff / actualP.Text)
-            Catch ex As Exception
-                lbOverTimePerformance.Text = 1
-            End Try
-        Else
-            ' Dim GetLossByHouseP1 = OEE.OEE_GetLossByHouseP1(line_cd)
-            Dim GetLossByHouseP1 = OEE_LOCAL.mas_OEE_GetLossByHouseP1(line_cd)
-            Dim calHour = 0
-            Dim rsmanage = 0
-            If GetLossByHouseP1 <> "0" Then
-                rsmanage = secSwitchmodel - GetLossByHouseP1
-            Else
-                rsmanage = secSwitchmodel
-            End If
-            'PanelSTDJOBP.Visible = False
-            'PanelACTP.Visible = False
-            stdJobP.Text = Math.Ceiling(rsmanage / std_cd)
-            lbOverTimePerformance.Text = Math.Ceiling(rsmanage / actualP.Text)
-        End If
-        ' Catch ex As Exception
-        '
-        ' End Try
-        ' stdJobP.Text = Math.Ceiling(3600 / std_cd) ' CInt((CDbl(Val(Label7.Text)) / CDbl(Val(HourOverAllShift.Text))))
-        ' Dim workingTime = OEE.OEE_getWorkingTime(line_cd, timeShift)
-        Dim workingTime = OEE_LOCAL.mas_GetWorkingTime(line_cd, timeShift)
-        Dim workingTimemin = workingTime * 60
-        Dim workingTimesec = workingTimemin * 60
-        Dim rscalwork_std = workingTimesec / std_cd
-        Dim totalProgressbar
-        If actualP.Text = "0" And stdJobP.Text = "0" Then
-            totalProgressbar = 0
-        Else
-            totalProgressbar = (actualP.Text / stdJobP.Text) * 100  '((Good + NG) / rscalwork_std)
-        End If
-        ' MsgBox("actualP.Text===>" & actualP.Text)
-        'MsgBox("stdJobP.Text===>" & stdJobP.Text)
-        ' MsgBox("totalProgressbar===>" & totalProgressbar)
-        '   ''Console.WriteLine(totalProgressbar)
-        If Math.Ceiling(totalProgressbar) > 100 Then
-            progressbarP.Text = Int(100)
-            progressbarP.Value = Int(100)
-        ElseIf Math.Ceiling(totalProgressbar) < 0 Then
-            progressbarP.Text = Int(0)
-            progressbarP.Value = Int(0)
-        Else
-            progressbarP.Text = Int(totalProgressbar)
-            progressbarP.Value = Int(totalProgressbar)
-        End If
-        Console.WriteLine("totalProgressbar===>" & totalProgressbar) ' เหมือนว่า เลข 77.7777777777778 จะออก Result แค่ 7 วงกลมข้างล่าง
-        If totalProgressbar >= moe_min_p Then
-            progressbarP.ProgressColor = Color.FromArgb(20, 255, 0) ' Green color in RGB
-            'ElseIf totalProgressbar <= 90 And totalProgressbar >= 80 Then
-            '    progressbarP.ProgressColor = Color.FromArgb(255, 97, 0) ' Green orange
-        ElseIf totalProgressbar < moe_min_p Then
-            progressbarP.ProgressColor = Color.Red
-        End If
-        Return totalProgressbar
+        Next
+        Return intProgress
     End Function
     Public Sub setNgByHour(line_cd As String, lot_no As String)
         'Dim sqlite = New ModelSqliteDefect
@@ -583,19 +508,44 @@ Public Class Working_Pro
         Dim i As Integer = 1
         Try
             For Each item As Object In mastOEE
-                If Not IsDBNull(item("moe_min_oee")) Then
+                If Not IsDBNull(item("mcc_min")) Then
+                    If item("mch_name").ToString = "A" Then
+                        Dim Alevel As New Working_Pro With {
+                            .MinValue = Convert.ToInt32(item("mcc_min")),
+                            .MaxValue = Convert.ToInt32(item("mcc_max")),
+                            .ColorRGB = item("mc_code").ToString()
+                            }
+                        moe_min_a = item("mcc_min").ToString()
+                        ALevelList.Add(Alevel)
+                    ElseIf item("mch_name").ToString = "P" Then
+                        Dim Plevel As New Working_Pro With {
+                            .MinValue = Convert.ToInt32(item("mcc_min")),
+                            .MaxValue = Convert.ToInt32(item("mcc_max")),
+                            .ColorRGB = item("mc_code").ToString()
+                            }
+                        moe_min_p = item("mcc_min").ToString()
+                        PLevelList.Add(Plevel)
+                    ElseIf item("mch_name").ToString = "Q" Then
+                        Dim Qlevel As New Working_Pro With {
+                        .MinValue = Convert.ToInt32(item("mcc_min")),
+                        .MaxValue = Convert.ToInt32(item("mcc_max")),
+                        .ColorRGB = item("mc_code").ToString()
+                        }
+                        moe_min_q = item("mcc_min").ToString()
+                        QLevelList.Add(Qlevel)
+                    ElseIf item("mch_name").ToString = "OEE" Then
+                        Dim OEElevel As New Working_Pro With {
+                        .MinValue = Convert.ToInt32(item("mcc_min")),
+                        .MaxValue = Convert.ToInt32(item("mcc_max")),
+                        .ColorRGB = item("mc_code").ToString()
+                        }
+                        moe_min_oee = item("mcc_min").ToString()
+                        oeeLevelList.Add(OEElevel)
+                    End If
                     ' โหลดค่าที่ต้องการใส่ Working_Pro
-                    Dim level As New Working_Pro With {
-                .MinValue = Convert.ToInt32(item("mocl_min_value")),
-                .MaxValue = Convert.ToInt32(item("mocl_max_value")),
-                .ColorRGB = item("mocl_color_code").ToString()
-            }
-                    oeeLevelList.Add(level)
+
                     ' โหลดค่ามาตรฐานขั้นต่ำ
-                    moe_min_a = item("moe_min_a").ToString()
-                    moe_min_p = item("moe_min_p").ToString()
-                    moe_min_q = item("moe_min_q").ToString()
-                    moe_min_oee = item("moe_min_oee").ToString()
+
                 End If
             Next
         Catch ex As Exception
@@ -1395,6 +1345,22 @@ Public Class Working_Pro
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
                 Dim bf = New Backoffice_model
                 ' Dim RsCheckProduction_Plan = bf.Get_Plan_All_By_Line(Backoffice_model.GET_LINE_PRODUCTION(), Label14.Text, DateTime.Now.ToString("yyyy-MM-dd"))
+                ' Dim Data_pwi_id As String = ""
+                ' If MainFrm.chk_spec_line = "2" Then
+                ' Dim GenSEQ As Integer = CInt(Label22.Text) - MainFrm.ArrayDataPlan.ToArray().Length
+                ' Dim Iseq = GenSEQ
+                ' Dim j As Integer = 0
+                ' For Each itemPlanData As DataPlan In Confrime_work_production.ArrayDataPlan
+                ' Iseq += 1
+                ' Data_pwi_id = Data_pwi_id & Spwi_id(j)
+                ' If j < Confrime_work_production.ArrayDataPlan.Count - 1 Then
+                ' Data_pwi_id = Data_pwi_id & ","
+                'End If
+                '    j = j + 1
+                '    Next
+                'Else
+                '    Data_pwi_id = pwi_id
+                'End If
                 Dim RsCheckProduction_Plan = bf.Get_Plan_All_By_Line_Loss_A(Backoffice_model.GET_LINE_PRODUCTION(), Label14.Text, dateNow, timeNow, Backoffice_model.S_chk_spec_line, Label3.Text)
                 ''Console.WriteLine(RsCheckProduction_Plan)
                 If RsCheckProduction_Plan <> "0" Then
@@ -1440,53 +1406,67 @@ Public Class Working_Pro
             'MsgBox("catch ====>" & ex.Message)
         End Try
     End Sub
-    Public Sub insLossClickStart_Loss_E1(dateNow As String, timeNow As String)
+    Public Async Function insLossClickStart_Loss_E1(dateNow As String, timeNow As String) As Task
+        Dim RsCheckProduction_Plan = ""
+        Dim exMessage As String = ""
+        Dim hasError As Boolean = False
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
                 Dim bf = New Backoffice_model
                 ' Dim RsCheckProduction_Plan = bf.Get_Plan_All_By_Line(Backoffice_model.GET_LINE_PRODUCTION(), Label14.Text, DateTime.Now.ToString("yyyy-MM-dd"))
-                Dim RsCheckProduction_Plan = bf.Get_Plan_All_By_Line_Loss_E1(Backoffice_model.GET_LINE_PRODUCTION(), Label14.Text, dateNow, timeNow, Backoffice_model.S_chk_spec_line, Label3.Text)
-                If RsCheckProduction_Plan <> "0" Then
-                    Dim loss_type As String = "0"
-                    Dim op_id As String = "0"
-                    Dim dict3 As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(RsCheckProduction_Plan)
-                    Dim start_loss As String = ""
-                    Dim end_loss_codex As String = ""
-                    Dim start_loss_codex As String = ""
-                    Dim Loss_Time_codex As String = ""
-                    Dim Loss_Code As String = ""
-                    Try
-                        For Each item As Object In dict3
-                            start_loss_codex = item("Start_Loss").ToString()
-                            end_loss_codex = item("End_Loss").ToString()
-                            Loss_Time_codex = item("Loss_Time").ToString()
-                            Loss_Code = item("Loss_Code").ToString()
-                            If CDbl(Val(Loss_Time_codex)) > 0 Then
-                                If MainFrm.chk_spec_line = "2" Then
-                                    Dim GenSEQ As Integer = CInt(Label22.Text) - MainFrm.ArrayDataPlan.ToArray().Length
-                                    Dim Iseq = GenSEQ
-                                    Dim j As Integer = 0
-                                    For Each itemPlanData As DataPlan In Confrime_work_production.ArrayDataPlan
-                                        Iseq += 1
-                                        Dim indRow As String = itemPlanData.IND_ROW
-                                        Dim wi As String = itemPlanData.wi
-                                        Dim item_cd As String = itemPlanData.item_cd
-                                        ins_loss_code(MainFrm.Label6.Text, MainFrm.Label4.Text, wi, item_cd, Iseq, Label14.Text, start_loss_codex, end_loss_codex, Loss_Time_codex, loss_type, Loss_Code, "0", Spwi_id(j))
-                                        j = j + 1
-                                    Next
-                                Else
-                                    ins_loss_code(MainFrm.Label6.Text, MainFrm.Label4.Text, wi_no.Text, Label3.Text, CDbl(Val(Label22.Text)), Label14.Text, start_loss_codex, end_loss_codex, Loss_Time_codex, loss_type, Loss_Code, "0", pwi_id)
-                                End If
-                            End If
-                        Next
-                    Catch ex As Exception
-                        MsgBox("error ===>" & ex.Message)
-                    End Try
-                End If
+                RsCheckProduction_Plan = bf.Get_Plan_All_By_Line_Loss_E1(Backoffice_model.GET_LINE_PRODUCTION(), Label14.Text, dateNow, timeNow, Backoffice_model.S_chk_spec_line, Label3.Text)
+            Else
+                Dim mdsqlite = New model_api_sqlite
+                Dim Timestart = Prd_detail.Label12.Text.Substring(3, 5) & ":00"
+                RsCheckProduction_Plan = Await model_api_sqlite.mas_Get_Plan_All_By_Line_Loss_E1(Backoffice_model.GET_LINE_PRODUCTION(), Label14.Text, dateNow, timeNow, Backoffice_model.S_chk_spec_line, Label3.Text, Timestart)
             End If
         Catch ex As Exception
+            exMessage = ex.Message
+            hasError = True
         End Try
-    End Sub
+        If hasError Then
+            Dim mdsqlite = New model_api_sqlite
+            Dim Timestart = Prd_detail.Label12.Text.Substring(3, 5) & ":00"
+            RsCheckProduction_Plan = Await model_api_sqlite.mas_Get_Plan_All_By_Line_Loss_E1(Backoffice_model.GET_LINE_PRODUCTION(), Label14.Text, dateNow, timeNow, Backoffice_model.S_chk_spec_line, Label3.Text, Timestart)
+        End If
+        If RsCheckProduction_Plan <> "0" Then
+            Dim loss_type As String = "0"
+            Dim op_id As String = "0"
+            Dim dict3 As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(RsCheckProduction_Plan)
+            Dim start_loss As String = ""
+            Dim end_loss_codex As String = ""
+            Dim start_loss_codex As String = ""
+            Dim Loss_Time_codex As String = ""
+            Dim Loss_Code As String = ""
+            Try
+                For Each item As Object In dict3
+                    start_loss_codex = item("Start_Loss").ToString()
+                    end_loss_codex = item("End_Loss").ToString()
+                    Loss_Time_codex = item("Loss_Time").ToString()
+                    Loss_Code = item("Loss_Code").ToString()
+                    If CDbl(Val(Loss_Time_codex)) > 0 Then
+                        If MainFrm.chk_spec_line = "2" Then
+                            Dim GenSEQ As Integer = CInt(Label22.Text) - MainFrm.ArrayDataPlan.ToArray().Length
+                            Dim Iseq = GenSEQ
+                            Dim j As Integer = 0
+                            For Each itemPlanData As DataPlan In Confrime_work_production.ArrayDataPlan
+                                Iseq += 1
+                                Dim indRow As String = itemPlanData.IND_ROW
+                                Dim wi As String = itemPlanData.wi
+                                Dim item_cd As String = itemPlanData.item_cd
+                                ins_loss_code(MainFrm.Label6.Text, MainFrm.Label4.Text, wi, item_cd, Iseq, Label14.Text, start_loss_codex, end_loss_codex, Loss_Time_codex, loss_type, Loss_Code, "0", Spwi_id(j))
+                                j = j + 1
+                            Next
+                        Else
+                            ins_loss_code(MainFrm.Label6.Text, MainFrm.Label4.Text, wi_no.Text, Label3.Text, CDbl(Val(Label22.Text)), Label14.Text, start_loss_codex, end_loss_codex, Loss_Time_codex, loss_type, Loss_Code, "0", pwi_id)
+                        End If
+                    End If
+                Next
+            Catch ex As Exception
+                MsgBox("error ===>" & ex.Message)
+            End Try
+        End If
+    End Function
     Public Function CheckPermissionScanQrProduct(line_cd As String)
         Try
             Dim bm = New Backoffice_model
@@ -2350,9 +2330,11 @@ outNet:
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
                 Await Backoffice_model.updated_data_to_dbsvr(Me, "2")
                 insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
+            Else
+                insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
             End If
         Catch ex As Exception
-
+            insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
         End Try
         Dim yearNow As Integer = DateTime.Now.ToString("yyyy")
         Dim monthNow As Integer = DateTime.Now.ToString("MM")
@@ -2730,9 +2712,11 @@ outNet:
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
                 Await Backoffice_model.updated_data_to_dbsvr(Me, "2")
                 insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
+            Else
+                insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
             End If
         Catch ex As Exception
-
+            insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
         End Try
         Dim yearNow As Integer = DateTime.Now.ToString("yyyy")
         Dim monthNow As Integer = DateTime.Now.ToString("MM")
@@ -4639,9 +4623,11 @@ outNet:
                 Await Backoffice_model.updated_data_to_dbsvr(Me, "2")
                 insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
             Else
+                insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
                 ' MsgBox("NO NET")
             End If
         Catch ex As Exception
+            insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
         End Try
         Dim yearNow As Integer = DateTime.Now.ToString("yyyy")
         Dim monthNow As Integer = DateTime.Now.ToString("MM")

@@ -2,7 +2,6 @@
 Imports System.Net
 Imports System.Net.NetworkInformation
 Imports System.Web.Script.Serialization
-
 Public Class printDefect
     Dim lPartno As String = "NO DATA"
     Dim lPartname As String = "NO DATA"
@@ -46,7 +45,17 @@ Public Class printDefect
         lPhase = Phase
         pCd = getPlant(lPhase)
         lLot = lot
-        lSeq = seqQty
+        Dim plan_seq As String
+        Dim num_char_seq As Integer
+        num_char_seq = seqQty.Length
+        If num_char_seq = 1 Then
+            plan_seq = "00" & seqQty
+        ElseIf num_char_seq = 2 Then
+            plan_seq = "0" & seqQty
+        Else
+            plan_seq = seqQty
+        End If
+        lSeq = plan_seq
         lwi = wi
         sDefect = Trim(dfType) '"2" 'da_type
         lItemtype = itemType

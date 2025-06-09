@@ -124,7 +124,7 @@ Public Class Sel_prd_setup
         Rm_scan.Panel_scan_picking.Visible = True
         Rm_scan.scan_item_cd.Select()
         Rm_scan.scan_item_cd.Focus()
-        Rm_scan.Show()
+        Rm_scan.ShowDialog()
     End Sub
     Private Sub Button1_Click(sender As Object, e As EventArgs)
 

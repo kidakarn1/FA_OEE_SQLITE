@@ -1,5 +1,6 @@
 ﻿Imports System.Globalization
 Imports System.Web.Script.Serialization
+Imports Newtonsoft.Json
 
 Public Class model_api_sqlite
     Public Shared Async Function UpdateStatus_tag_print_detail() As Task(Of String)
@@ -9,7 +10,7 @@ Public Class model_api_sqlite
             Dim Sql = "Select * from tag_print_detail where tr_status = '0'"
             Dim api = New api
             Dim jsonData As String = Await api.Load_dataSQLiteAsyncLoaddata(Sql)
-             Try
+            Try
                 Dim i As Integer = 0
                 Dim dcResultdata As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(jsonData)
                 For Each items As Object In dcResultdata
@@ -366,5 +367,114 @@ Public Class model_api_sqlite
         Catch ex As Exception
         End Try
         Return 0
+    End Function
+    Public Shared Async Function Get_time_start_shift(shift As String) As Task(Of DataTable)
+        Try
+            Dim api = New api()
+            Dim sql As String = "EXEC [dbo].[GET_DATA_SHIFT] @shift = '" & shift & "'"
+            Dim jsonData As String = Await api.Load_dataSQLiteAsyncLoaddata(sql)
+            Dim result As DataTable = JsonConvert.DeserializeObject(Of DataTable)(jsonData)
+            Return result
+        Catch ex As Exception
+            Return Nothing
+        End Try
+    End Function
+
+    Public Shared Async Function mas_Get_Plan_All_By_Line_Loss_E1(line_cd As String, shift As String, dateStart As String, timeStart As String, flg_spec As String, item_cd As String, TimeStartShift As String) As Task(Of String)
+        Try
+            Dim defaultTime As String = dateStart & " " & timeStart
+            Dim dateTimeStartShift As String = ""
+            Dim start_date As String = ""
+
+            ' คำนวณเวลาเริ่มตามเงื่อนไข shift
+            If String.Compare(timeStart, "00:00:00") >= 0 AndAlso String.Compare(timeStart, "07:59:59") <= 0 Then
+                Dim delDate As String = DateTime.Parse(dateStart).AddDays(-1).ToString("yyyy-MM-dd")
+                start_date = delDate & " " & TimeStartShift
+            Else
+                start_date = dateStart & " " & TimeStartShift
+                If DateTime.Parse(start_date) > DateTime.Parse(defaultTime) Then
+                    start_date = defaultTime
+                End If
+            End If
+            dateTimeStartShift = start_date
+            Dim dt_start As DateTime = DateTime.Parse(start_date)
+            Dim dt_end As DateTime = DateTime.Parse(defaultTime)
+            Dim diffDateTimeBefore11_min As Integer = CInt((dt_end - dt_start).TotalMinutes)
+            ' หากมากกว่า 10 นาทีให้เพิ่มเวลาอีก 11 นาที
+            If diffDateTimeBefore11_min > 10 Then
+                start_date = dt_start.AddMinutes(11).ToString("yyyy-MM-dd HH:mm:ss")
+            End If
+            Dim api = New api()
+            Dim sql As String
+            Dim sql_check_loss As String
+            ' สร้าง SQL ตาม flg_spec
+            If flg_spec = "1" Then
+                sql = "SELECT * FROM act_ins WHERE " &
+                  "st_time BETWEEN '" & dateTimeStartShift & "' AND '" & defaultTime & "' AND " &
+                  "line_cd = '" & line_cd & "' AND item_cd = '" & item_cd & "' AND qty > 0 " &
+                  "ORDER BY end_time DESC LIMIT 1;"
+                sql_check_loss = "SELECT * FROM loss_actual WHERE " &
+                  "(line_cd = '" & line_cd & "' AND start_loss BETWEEN '" & dateTimeStartShift & "' AND '" & defaultTime & "' AND item_cd = '" & item_cd & "' AND loss_cd_id <> '1' AND flg_control <> '2') OR " &
+                  "(line_cd = '" & line_cd & "' AND end_loss BETWEEN '" & dateTimeStartShift & "' AND '" & defaultTime & "' AND item_cd = '" & item_cd & "' AND loss_cd_id <> '1' AND flg_control <> '2') " &
+                  "ORDER BY id DESC LIMIT 1;"
+            Else
+                sql = "SELECT * FROM act_ins WHERE " &
+                  "st_time BETWEEN '" & dateTimeStartShift & "' AND '" & defaultTime & "' AND " &
+                  "line_cd = '" & line_cd & "' AND qty > 0 " &
+                  "ORDER BY end_time DESC LIMIT 1;"
+                sql_check_loss = "SELECT * FROM loss_actual WHERE " &
+                  "(line_cd = '" & line_cd & "' AND start_loss BETWEEN '" & dateTimeStartShift & "' AND '" & defaultTime & "' AND loss_cd_id <> '1' AND flg_control <> '2') OR " &
+                  "(line_cd = '" & line_cd & "' AND end_loss BETWEEN '" & dateTimeStartShift & "' AND '" & defaultTime & "' AND loss_cd_id <> '1' AND flg_control <> '2') " &
+                  "ORDER BY id DESC LIMIT 1;"
+            End If
+            ' โหลดข้อมูลการผลิต
+            Dim jsonDataProd As String = Await api.Load_dataSQLiteAsyncLoaddata(sql)
+            If String.IsNullOrWhiteSpace(jsonDataProd) OrElse Not jsonDataProd.Trim().StartsWith("[") Then
+                Console.WriteLine("jsonDataProd not valid: " & jsonDataProd)
+                jsonDataProd = "[]"
+            End If
+            Dim getProd As DataTable = Nothing
+            Try
+                getProd = JsonConvert.DeserializeObject(Of DataTable)(jsonDataProd)
+            Catch ex As Exception
+                MsgBox("Error parsing jsonDataProd: " & ex.Message)
+                Return "0"
+            End Try
+            ' โหลดข้อมูล loss
+            Dim jsonDataLoss As String = Await api.Load_dataSQLiteAsyncLoaddata(sql_check_loss)
+            If String.IsNullOrWhiteSpace(jsonDataLoss) OrElse Not jsonDataLoss.Trim().StartsWith("[") Then
+                Console.WriteLine("jsonDataLoss not valid: " & jsonDataLoss)
+                jsonDataLoss = "[]"
+            End If
+            Dim getLoss As DataTable = Nothing
+            Try
+                getLoss = JsonConvert.DeserializeObject(Of DataTable)(jsonDataLoss)
+            Catch ex As Exception
+                MsgBox("Error parsing jsonDataLoss: " & ex.Message)
+                Return "0"
+            End Try
+            ' ตรวจสอบว่าไม่มีทั้ง production และ loss
+            If getProd Is Nothing OrElse getProd.Rows.Count = 0 Then
+                If getLoss Is Nothing OrElse getLoss.Rows.Count = 0 Then
+                    Dim diffMinutes As Integer = CInt((DateTime.Parse(defaultTime) - DateTime.Parse(start_date)).TotalMinutes)
+                    If diffDateTimeBefore11_min > 10 Then
+                        Dim data = New List(Of Dictionary(Of String, Object)) From {
+                        New Dictionary(Of String, Object) From {
+                            {"Time_From", "Current"},
+                            {"Start_Loss", start_date},
+                            {"End_Loss", defaultTime},
+                            {"Loss_Time", diffMinutes},
+                            {"Loss_Code", "37"}
+                        }
+                    }
+                        Dim jsonString As String = JsonConvert.SerializeObject(data)
+                        Return jsonString
+                    End If
+                End If
+            End If
+            Return "0"
+        Catch ex As Exception
+            Return "ERROR: " & ex.Message
+        End Try
     End Function
 End Class
