@@ -175,7 +175,7 @@
         LeaderConfirmDefect.tbEmpCodeleader.Text = TextBoxKeyboard.Text
     End Sub
     Public Async Sub btnenter_Click(sender As Object, e As EventArgs) Handles btnenter.Click
-        Dim rs = Await LeaderConfirmDefect.checkPermissionLeader(TextBoxKeyboard.Text, MainFrm.Label4.Text)
+        Dim rs = Await LeaderConfirmDefect.checkPermissionLeader(TextBoxKeyboard.Text, MainFrm.Label4.Text, MainFrm.Label6.Text)
         If rs = "1" Then
             defectHome.leaderConfrime = LeaderConfirmDefect.tbEmpCodeleader.Text
             LeaderConfirmDefect.tbEmpCodeleader.Text = ""
@@ -188,7 +188,7 @@
             defectHome.leaderConfrime = ""
             TextBoxKeyboard.Text = ""
         Else
-            MsgBox("Password Incorrect.")
+            MsgBox("Not Permission.")
             LeaderConfirmDefect.tbEmpCodeleader.Text = ""
             defectHome.leaderConfrime = ""
             TextBoxKeyboard.Text = ""

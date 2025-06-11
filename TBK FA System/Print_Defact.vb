@@ -111,39 +111,20 @@ Public Class Print_Defact
         e.Graphics.DrawLine(aPen, 540, 200, 540, 295)
 
         e.Graphics.DrawLine(aPen, 670, 5, 670, 295)
-
-
-
-
-
         'Horizontal
-
         e.Graphics.DrawLine(aPen, 80, 5, 670, 5)
         e.Graphics.DrawLine(aPen, 80, 40, 500, 40)
         e.Graphics.DrawLine(aPen, 80, 90, 500, 90)
         e.Graphics.DrawLine(aPen, 80, 140, 400, 140)
-
         e.Graphics.DrawLine(aPen, 500, 140, 670, 140) '
-
         e.Graphics.DrawLine(aPen, 80, 200, 670, 200)
-
-
-
-
         e.Graphics.DrawLine(aPen, 80, 250, 540, 250)
         e.Graphics.DrawLine(aPen, 80, 295, 670, 295)
-
-
-
-
         'TAG LAYOUT
-
         e.Graphics.DrawString("TBKK", Label5.Font, Brushes.Black, 10, 10)
         e.Graphics.DrawString("(Thailand) Co.,Ltd.", Label6.Font, Brushes.Black, 0, 40)
-
         e.Graphics.DrawString("New FA", Label7.Font, Brushes.Black, 10, 100)
         e.Graphics.DrawString("System", Label7.Font, Brushes.Black, 15, 120)
-
         e.Graphics.DrawString("To", Label1.Font, Brushes.Black, 102, 10)
         e.Graphics.DrawString("IHI Turbo (Thailand) Co._LTD", Label1.Font, Brushes.Black, 110, 25)
         e.Graphics.DrawString("PART NO.", Label1.Font, Brushes.Black, 90, 50)
@@ -182,7 +163,6 @@ Public Class Print_Defact
         e.Graphics.DrawImage(bitmap_qr_box, 0, 210, 75, 75) 'left
         e.Graphics.DrawImage(bitmap_qr_box, 570, 220, 70, 70) 'button right
     End Sub
-
     Private Sub Print_Defact_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         PrintDocument1.Print()
     End Sub

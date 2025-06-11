@@ -39,6 +39,8 @@ Public Class Show_reprint_wi
     End Sub
     Private Sub PictureBox1_Click(sender As Object, e As EventArgs) Handles pcOK.Click
         load_data_show_of()
+        ' MenuReprint.Show()
+        ' Me.Hide()
     End Sub
     Public Sub load_data_show_of()
         tag_reprint_new.ListView1.Items.Clear()
@@ -62,7 +64,6 @@ Public Class Show_reprint_wi
             reader = Backoffice_model.get_tag_reprint_detail(hide_wi_select.Text)
         End If
         'Dim reader_sum = Backoffice_model.get_tag_reprint_sum_detail(hide_wi_select.Text)
-
         Dim reader_qr_detail As String = ""
         Dim reader_updated_date As String = ""
         Dim reader_seq_no As String = ""

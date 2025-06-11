@@ -80,14 +80,11 @@ Public Class api
                 Dim connStr As String = Backoffice_model.sqliteConnect & ";Default Timeout=5;"
                 Using connection As New SQLiteConnection(connStr)
                     connection.Open()
-
                     ' ตัด PRAGMA ออก เพราะมันถูกตั้งแล้วตอนเริ่มต้น
-
                     Using cmd As New SQLiteCommand(Sql, connection)
                         Using reader As SQLiteDataReader = cmd.ExecuteReader()
                             Dim dataTable As New DataTable()
                             dataTable.Load(reader)
-
                             If dataTable.Rows.Count = 0 Then
                                 Return "0"
                             Else
@@ -102,7 +99,6 @@ Public Class api
             End Try
         End SyncLock
     End Function
-
 
     Public Function DownloadImage(ByVal _URL As String) As Image
         Dim _tmpImage As Image = Nothing

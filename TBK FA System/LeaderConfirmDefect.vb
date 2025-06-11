@@ -12,7 +12,7 @@ Public Class LeaderConfirmDefect
         If e.KeyCode = Keys.Enter Then
             Try
                 If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                    Dim rs = Await checkPermissionLeader(tbEmpCodeleader.Text, MainFrm.Label4.Text)
+                    Dim rs = Await checkPermissionLeader(tbEmpCodeleader.Text, MainFrm.Label4.Text, MainFrm.Label6.Text)
                     If rs = "1" Then
                         defectHome.leaderConfrime = tbEmpCodeleader.Text
                         tbEmpCodeleader.Text = ""
@@ -37,21 +37,21 @@ Public Class LeaderConfirmDefect
             End Try
         End If
     End Sub
-    Public Async Function checkPermissionLeader(Empcode As String, Line_cd As String) As Task(Of String)
+    Public Async Function checkPermissionLeader(Empcode As String, Line_cd As String, pd As String) As Task(Of String)
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                Dim checkPer = Await Backoffice_model.GetPermissionLeader(Empcode, Line_cd)
+                Dim checkPer = Await Backoffice_model.GetPermissionLeader(Empcode, Line_cd, pd)
                 Dim mp_adm_control_flg As String = 0
                 If checkPer <> "0" Then
-                    Dim dict3 As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(checkPer)
-                    For Each item As Object In dict3
-                        mp_adm_control_flg = item("mp_adm_control_flg").ToString()
-                    Next
-                    If mp_adm_control_flg = "1" Then
-                        Return "1"
-                    Else
-                        Return "2"
-                    End If
+                    ' Dim dict3 As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(checkPer)
+                    ' For Each item As Object In dict3
+                    ' mp_adm_control_flg = item("mp_adm_control_flg").ToString()
+                    ' Next
+                    ' If mp_adm_control_flg = "1" Then
+                    Return "1"
+                    ' Else
+                    '     Return "2"
+                    ' End If
                 Else
                     Return "0"
                 End If

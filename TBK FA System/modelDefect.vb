@@ -281,7 +281,21 @@ Public Class modelDefect
             Return 0
         End Try
     End Function
-
+    Public Shared Function mInsertdefectactualsqlite(wi As String, lot As String, seqNo As String)
+        Try
+            Dim api = New api()
+            Dim rsData = api.Load_data("http://" & Backoffice_model.svApi & "/apiShopfloor/index.php/getDatadefect/getBoxInformation?wi=" & wi & "&lot=" & lot & "&seq=" & seqNo)
+            If rsData <> "0" Then
+                Return rsData
+            Else
+                ' MsgBox("connect Api Faill Please check modelDefect in Function mGetboxInformation Data = 0 ")
+                Return 0
+            End If
+        Catch ex As Exception
+            MsgBox("connect Api Faill Please check modelDefect in Function mGetboxInformation = " & ex.Message)
+            Return 0
+        End Try
+    End Function
 
     Public Shared Function mInsertdefectregister(dtWino As String, dtLineno As String, dtItemcd As String, dtItemtype As String, dtLotno As String, dtSeqno As String, dtType As String, dtCode As String, dtQty As String, dtMenu As String, dtActualdate As String, pwi_id As String)
         Try
@@ -753,6 +767,27 @@ Public Class modelDefect
             Return False
         End Try
     End Function
+    Public Shared Async Function mTrasferInserttagdefect(dti_wi_no As String, dti_line_cd As String, dti_item_cd As String, dti_item_type As String, dti_lot_no As String, dti_seq_no As String, dti_type As String, dti_sum_qty As String, dti_menu As String, dti_box_no As String, dti_info_qr_cd As String, dti_defect_qr_cd As String, dti_status_flg As String, dti_created_date As String, dti_created_by As String, dti_updated_date As String, dti_updated_by As String, pwi_id As String) As Task(Of String)
+        Try
+            Dim api = New api()
+            ' Dim rsData = api.Load_data("http://" & Backoffice_model.svApi & "/apiShopfloor/index.php/insertDatadefect/insertDefectTransctionSupplier?lastId=" & lastId & "&dt_supplier_code=" & dt_supplier_code & "&dt_qty=" & dt_qty & "&Line=" & Line)
+            ' Console.WriteLine("http://" & Backoffice_model.svApi & "/apiShopfloor/index.php/insertDatadefect/insertDefectTransctionSupplier?lastId=" & lastId & "&dt_supplier_code=" & dt_supplier_code & "&dt_qty=" & dt_qty & "&Line=" & Line)
+            ' Return rsData
+            Try
+                Dim url As String = "http://" & Backoffice_model.svApi & "/apiShopfloor/index.php/insertDatadefect/inserttagdefect?dti_wi_no=" & dti_wi_no & "&dti_line_cd=" & dti_line_cd & "&dti_item_cd=" & dti_item_cd & "&dti_item_type=" & dti_item_type & "&dti_lot_no=" & dti_lot_no & "&dti_seq_no=" & dti_seq_no & "&dti_type=" & dti_type & "&dti_sum_qty=" & dti_sum_qty & "&dti_menu=" & dti_menu & "&dti_box_no=" & dti_box_no & "&dti_info_qr_cd=" & dti_info_qr_cd & "&dti_defect_qr_cd=" & dti_defect_qr_cd & "&dti_status_flg=" & dti_status_flg & "&dti_created_date=" & dti_created_date & "&dti_created_by=" & dti_created_by & "&dti_updated_date=" & dti_updated_date & "&dti_updated_by=" & dti_updated_by & "&pwi_id=" & pwi_id
+                Console.WriteLine("Calling API URL: " & url)
+                ' ✅ แปลงให้ async โดยรันบน background thread
+                Dim rsData As String = Await Task.Run(Function() api.Load_data(url))
+                Return rsData
+            Catch ex As Exception
+                MsgBox("❗ connect Api Fail in mInserttagdefect = " & ex.Message)
+                Return "0"
+            End Try
+        Catch ex As Exception
+            MsgBox("connect Api Faill Please check modelDefect in Function mInserttagdefect = " & ex.Message)
+            Return "0"
+        End Try
+    End Function
     Public Shared Function mGetDatasys_exp_defect_mst(def_cd As String)
         Try
             Dim api = New api()
@@ -773,5 +808,16 @@ Public Class modelDefect
             MsgBox("connect Api Faill Please check modelDefect in Function mGetCalPartOEE = " & ex.Message)
             Return False
         End Try
+    End Function
+    Public Shared Function LoadDataTagDefect(df_type As String, df_wi As String, DateStart As String, DateEnd As String)
+        Try
+            Dim api = New api()
+            Dim rsData = api.Load_data("http://" & Backoffice_model.svApi & "/apiShopfloor/index.php/getDatadefect/GetGroupDataTagDefect?df_type=" & df_type & "&df_wi=" & df_wi & "&DateStart=" & DateStart & "&DateEnd=" & DateEnd)
+            Return rsData
+        Catch ex As Exception
+            MsgBox("connect Api Faill Please check modelDefect in Function LoadDataTagDefect = " & ex.Message)
+            Return False
+        End Try
+        Return 1
     End Function
 End Class

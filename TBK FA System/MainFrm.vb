@@ -345,9 +345,11 @@ Public Class MainFrm
                 End If
             Else
                 load_show.Show()
+                Me.Enabled = True ' กัน หน้าจอ ล็อค
             End If
         Catch ex As Exception
             load_show.Show()
+            Me.Enabled = True ' กัน หน้าจอ ล็อค
             ' MsgBox("Please Wait Trasnfer Data.")
         End Try
     End Sub
@@ -379,7 +381,8 @@ Public Class MainFrm
             Dim LoadSQL = Backoffice_model.get_trdata_sqlite()
             Dim LoadSQL_tag_print_detail = Backoffice_model.get_tr_tag_print_detail()
             Dim LoadSQL_check_loss_actual = Backoffice_model.check_loss_actual()
-            hasData = LoadSQL.HasRows OrElse LoadSQL_tag_print_detail.HasRows OrElse LoadSQL_check_loss_actual > 0
+            Dim LoadSQL_get_defect_tag_information = Backoffice_model.get_defect_tag_information()
+            hasData = LoadSQL.HasRows OrElse LoadSQL_tag_print_detail.HasRows OrElse LoadSQL_get_defect_tag_information.HasRows OrElse LoadSQL_check_loss_actual > 0
             If hasData Then
                 Me.Enabled = False
                 Await dbClass.updated_data_to_dbsvr(Me, "1")

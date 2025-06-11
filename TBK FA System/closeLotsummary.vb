@@ -573,41 +573,45 @@ Public Class closeLotsummary
                 result_total = "1"
             End If
         End If
-        If Integer.Parse(lbGood.Text) > 0 And result_mod > 0 And CDbl(Val(Working_Pro.Label10.Text)) < 0 Then
-            Working_Pro.lb_box_count.Text = Working_Pro.lb_box_count.Text + 1
-            Working_Pro.Label_bach.Text = Working_Pro.Label_bach.Text + 1
-            Dim cupprint = 0
-            Dim rs = (CDbl(Val(lbNc.Text)) + (CDbl(Val(lbNg.Text))))
-            If rs > 0 Then
-                If rs <= Working_Pro.Label27.Text Then
-                    cupprint = 1
+        'If Integer.Parse(lbGood.Text) > 0 And result_mod > 0 And CDbl(Val(Working_Pro.Label10.Text)) < 0 Then
+        If Integer.Parse(lbGood.Text) > 0 And result_mod > 0 Then
+            If CDbl(Val(Working_Pro.Label10.Text)) < 0 Or result_mod > 0 Then
+                Working_Pro.lb_box_count.Text = Working_Pro.lb_box_count.Text + 1
+                Working_Pro.Label_bach.Text = Working_Pro.Label_bach.Text + 1
+                Dim cupprint = 0
+                Dim rs = (CDbl(Val(lbNc.Text)) + (CDbl(Val(lbNg.Text))))
+                If rs > 0 Then
+                    If rs <= Working_Pro.Label27.Text Then
+                        cupprint = 1
+                    Else
+                        '      MsgBox("rs ===>" & rs)
+                        '       MsgBox("CDbl(Val(Working_Pro.Label27.Text)) ===>" & CDbl(Val(Working_Pro.Label27.Text)))
+                        cupprint = rs / CDbl(Val(Working_Pro.Label27.Text))
+                    End If
+                End If
+                If MainFrm.chk_spec_line = "2" Then
+                    If result_mod <> 0 Then
+                        Working_Pro.GoodQty = Working_Pro.lb_good.Text 'lbGood.Text
+                        Working_Pro.tag_print()
+                        Dim GenSEQ As Integer = sSeq - MainFrm.ArrayDataPlan.ToArray.Length
+                        Dim Iseq = GenSEQ
+                        Dim j As Integer = 0
+                        For Each itemPlanData As DataPlan In Confrime_work_production.ArrayDataPlan
+                            'special
+                            Iseq += 1
+                            Backoffice_model.update_tagprintforDefect(itemPlanData.wi, "2", "1", Working_Pro.Spwi_id(j), (CDbl(Val(Working_Pro.lb_box_count.Text)) - 1), lbGood.Text, Math.Ceiling(cupprint))
+                            j += 1
+                        Next
+                    End If
                 Else
-                    '      MsgBox("rs ===>" & rs)
-                    '       MsgBox("CDbl(Val(Working_Pro.Label27.Text)) ===>" & CDbl(Val(Working_Pro.Label27.Text)))
-                    cupprint = rs / CDbl(Val(Working_Pro.Label27.Text))
-                End If
-            End If
-            If MainFrm.chk_spec_line = "2" Then
-                If result_mod <> 0 Then
-                    Working_Pro.GoodQty = Working_Pro.lb_good.Text 'lbGood.Text
+                    Working_Pro.GoodQty = Working_Pro.lb_good.Text
                     Working_Pro.tag_print()
-                    Dim GenSEQ As Integer = sSeq - MainFrm.ArrayDataPlan.ToArray.Length
-                    Dim Iseq = GenSEQ
-                    Dim j As Integer = 0
-                    For Each itemPlanData As DataPlan In Confrime_work_production.ArrayDataPlan
-                        'special
-                        Iseq += 1
-                        Backoffice_model.update_tagprintforDefect(itemPlanData.wi, "2", "1", Working_Pro.Spwi_id(j), (CDbl(Val(Working_Pro.lb_box_count.Text)) - 1), lbGood.Text, Math.Ceiling(cupprint))
-                        j += 1
-                    Next
+                    'MsgBox(Math.Ceiling(cupprint))
+                    'Backoffice_model.update_tagprintforDefect(sWi, "2", "1", Working_Pro.pwi_id, (CDbl(Val(Working_Pro.lb_box_count.Text)) - 1), Working_Pro.GoodQty, Math.Ceiling(cupprint))
                 End If
-            Else
-                Working_Pro.GoodQty = Working_Pro.lb_good.Text
-                Working_Pro.tag_print()
-                'MsgBox(Math.Ceiling(cupprint))
-                'Backoffice_model.update_tagprintforDefect(sWi, "2", "1", Working_Pro.pwi_id, (CDbl(Val(Working_Pro.lb_box_count.Text)) - 1), Working_Pro.GoodQty, Math.Ceiling(cupprint))
-            End If
-            ' Working_Pro.Label_bach.Text = Working_Pro.Label_bach.Text + 1
+                ' Working_Pro.Label_bach.Text = Working_Pro.Label_bach.Text + 1
+
+            End If ' end if   If CDbl(Val(Working_Pro.Label10.Text)) <= 0 And result_mod > 0 Then
         End If
         Try
             Working_Pro.LB_COUNTER_SEQ.Text = 0
@@ -689,13 +693,16 @@ Public Class closeLotsummary
     End Sub
     Public Async Sub ClickOk(dtWino As String, dtLineno As String, dtItemcd As String, dtItemtype As String, dtLotno As String, dtSeqno As String, dtType As String, dtCode As String, dtQty As String, dtActualdate As String, pwi_id As String)
         Dim md As New modelDefect()
-        Dim mdSQLite = New ModelSqliteDefect()
+        Dim apimdSQLite = New model_api_sqlite()
+        Dim mdSQLite = New ModelSqliteDefect
         Dim cFlg As Integer = comPleteflg(sAct, pQty)
         Try
 recheck_defect:
             ' ✅ ตรวจสอบ network ก่อนเริ่ม insert defect actual
             Await WaitForNetworkWithPopup()
+            Dim da_tranfer_flg As Integer = 1
             Dim lastId = Await md.mInsertdefectactual(dtWino, dtLineno, dtItemcd, dtItemtype, dtLotno, dtSeqno, dtType, dtCode, dtQty, "1", dtActualdate, pwi_id)
+            Dim lastIdsqlite = Await apimdSQLite.mInsertdefectactualsqlites(dtWino, dtLineno, dtItemcd, dtItemtype, dtLotno, dtSeqno, dtType, dtCode, dtQty, "1", dtActualdate, pwi_id, da_tranfer_flg)
             'If lastId = "0" Then
             ' 🔁 Net down หรือ insert fail ให้ loop ไปใหม่
             'GoTo recheck_defect

@@ -270,11 +270,13 @@ Public Class Backoffice_model
                 "DELETE FROM tag_print_detail_main where created_date BETWEEN '" & convert_date_start & "' AND '" & convert_del_2_week & "'" & " and tr_status = '1' ",
                 "DELETE FROM close_lot_act where prd_st_date BETWEEN '" & convert_date_start & "' AND '" & convert_del_2_week & "' and transfer_flg = '1'",
                 "DELETE FROM loss_actual where start_loss BETWEEN '" & convert_date_start & "' AND '" & convert_del_2_week & "' and transfer_flg = '1'",
-                "DELETE FROM maintenance where mn_create_date BETWEEN '" & convert_date_start1 & "' AND '" & currdated1 & "' and mn_status = '2'",
+                "DELETE FROM maintenance where mn_create_date BETWEEN '" & convert_date_start1 & "' AND '" & currdated1 & "' and mn_status = '1'",
+                "DELETE FROM defect_tag_information where dti_created_date BETWEEN '" & convert_date_start & "' AND '" & convert_del_2_week & "' and dti_tranfer_flg = '1'",
+                "DELETE FROM defect_actual where da_created_date BETWEEN '" & convert_date_start & "' AND '" & convert_del_2_week & "' and da_transfer_flg = '1'",
                 "DELETE FROM line_status_detail"
             }
         For i = 0 To command_data.Length - 1
-            'Console.WriteLine(command_data(i))
+            '  Console.WriteLine(command_data(i))
             Check_connect_sqlite()
             Dim sqliteConn As New SQLiteConnection(sqliteConnect)
             Try
@@ -1181,21 +1183,18 @@ where
             'Application.Exit()
         End Try
     End Function
-
     Public Shared Function Tag_seq_rec_sqlite(wi_plan As String, seq_no As Integer, qty As Integer, ref_key As String)
         Check_connect_sqlite()
         Dim currdated As String = DateTime.Now.ToString("yyyy/MM/dd H:m:s")
         Dim reader As SqlDataReader
         Dim SQLConn As New SqlConnection() 'The SQL Connection
         Dim SQLCmd As New SqlCommand()
-
         Dim sqliteConn As New SQLiteConnection(sqliteConnect)
         Try
             sqliteConn.Open()
             Dim cmd As New SQLiteCommand
             cmd.Connection = sqliteConn
             cmd.CommandText = "INSERT INTO sc_inc_tag(wi,seq_no,qty,created_date,ref_key) VALUES ('" & wi_plan & "','" & seq_no & "','" & qty & "','" & currdated & "','" & ref_key & "')"
-
             Dim LoadSQL As SQLiteDataReader = cmd.ExecuteReader()
             'MsgBox(LoadSQL)
             Return LoadSQL
@@ -1203,9 +1202,7 @@ where
             MsgBox("SQLite Database connect failed. Please contact PC System [Function Tag_seq_rec_sqlite]")
             sqliteConn.Close()
         End Try
-
     End Function
-
     Public Shared Function Insert_prd_detail(
     pd As String, line_cd As String, wi_plan As String,
     item_cd As String, item_name As String, staff_no As Integer,
@@ -1271,7 +1268,6 @@ where
         End Try
         Return insertId
     End Function
-
     Public Shared Async Function Insert_prd_detail_main(
     pd As String, line_cd As String, wi_plan As String,
     item_cd As String, item_name As String, staff_no As Integer,
@@ -1322,12 +1318,10 @@ where
                         SQLCmd.Parameters.AddWithValue("@number_qty", number_qty)
                         SQLCmd.Parameters.AddWithValue("@pwi_id", pwi_id)
                         SQLCmd.Parameters.AddWithValue("@status_sqlite", status_sqlite)
-
                         Await SQLConn.OpenAsync()
                         insertId = Convert.ToInt32(Await SQLCmd.ExecuteScalarAsync())
                     End Using
                 End Using
-
                 If insertId > 0 Then
                     ' ✅ สำเร็จ → update SQLite
                     Dim sqlUpdate = $"UPDATE act_ins SET tr_status = '1', updated_date = '{currdated}' WHERE id = '{id_sqlite}'"
@@ -1348,7 +1342,6 @@ where
         Loop While insertId = 0
         Return insertId
     End Function
-
     Public Shared Async Function ResetTransferTimeout() As Task
         Dim sql As String = "
         UPDATE act_ins 
@@ -1376,7 +1369,6 @@ where
             $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} | ❌ Error in {functionName}: {ex.Message}{Environment.NewLine}")
         End Try
     End Function
-
     Private Shared Function GetInsertedIdFromData(pd As String, line_cd As String, wi_plan As String, seq_no As Integer) As Integer
         Try
             Using conn As New SqlConnection(sqlConnect)
@@ -1401,8 +1393,6 @@ where
         End Try
         Return 0
     End Function
-
-
     Public Shared Function work_complete_offline(wi As String)
         Dim currdated As String = DateTime.Now.ToString("yyyy/MM/dd H:m:s")
         '  Dim reader As SqlDataReader
@@ -1558,12 +1548,16 @@ where
         Dim rs = api.Load_data("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/GetManageDefectMenu?line_cd=" & line_cd)
         Return rs
     End Function
+    Public Shared Function GetManageReprintMenu(line_cd As String)
+        Dim api = New api()
+        Dim rs = api.Load_data("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/GetManageReprintMenu?line_cd=" & line_cd)
+        Return rs
+    End Function
     Public Shared Function GetDefectMenuMaintenance(line_cd As String)
         Dim api = New api()
         Dim rs = api.Load_data("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/GetDefectMenuMaintenance?line_cd=" & line_cd)
         Return rs
     End Function
-
     Public Shared Function GET_STATUS_DELAY_BY_LINE(line_cd As String)
         Dim api = New api()
         Dim rs = api.Load_data("http://" & svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/GET_STATUS_DELAY_BY_LINE?line_cd=" & line_cd)
@@ -1578,9 +1572,7 @@ where
             SQLConn.Open()
             SQLCmd.Connection = SQLConn
             'SQLCmd.CommandText = "SELECT * FROM sys_user WHERE emp_id = '" & usernm & "' AND passwd = '" & passwd & "'"
-
             'Dim line_cd2 As String = "K1M057"
-
             SQLCmd.CommandText = "SELECT
 	                                    *
                                     FROM
@@ -1595,11 +1587,8 @@ where
 			                                    line_cd = '" & line_cd & "'
 		                                    AND del_flg = '0'
 	                                    )"
-
             reader = SQLCmd.ExecuteReader()
-
             'MsgBox(reader)
-
             Return reader
         Catch ex As Exception
             ' MsgBox("MSSQL Database connect failed. Please contact PC System [Function Get_Last_part]")
@@ -1608,7 +1597,6 @@ where
             ' Application.Exit()
         End Try
     End Function
-
     Public Shared Function Get_Line_id(line_cd As String)
         Dim reader As SqlDataReader
         Dim SQLConn As New SqlConnection() 'The SQL Connection
@@ -1618,15 +1606,10 @@ where
             SQLConn.Open()
             SQLCmd.Connection = SQLConn
             'SQLCmd.CommandText = "SELECT * FROM sys_user WHERE emp_id = '" & usernm & "' AND passwd = '" & passwd & "'"
-
             'Dim line_cd As String = "K1A027"
-
             SQLCmd.CommandText = "SELECT * FROM sys_line_mst WHERE line_cd = '" & line_cd & "'"
-
             reader = SQLCmd.ExecuteReader()
-
             'MsgBox(reader)
-
             Return reader
         Catch ex As Exception
             ' MsgBox("MSSQL Database connect failed. Please contact PC System [Function Get_Line_id]")
@@ -1635,7 +1618,6 @@ where
             '  Application.Exit()
         End Try
     End Function
-
     Public Shared Function Get_Line_skill_id(line_id As String)
         Dim reader As SqlDataReader
         Dim SQLConn As New SqlConnection() 'The SQL Connection
@@ -1657,11 +1639,12 @@ where
             'Application.Exit()
         End Try
     End Function
-    Public Shared Async Function GetPermissionLeader(emp_cd As String, line_cd As String) As Task(Of String)
+    Public Shared Async Function GetPermissionLeader(emp_cd As String, line_cd As String, pd As String) As Task(Of String)
         Try
-            Dim url As String = "http://" & Backoffice_model.svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/Get_permission_worker" &
+            Dim url As String = "http://" & Backoffice_model.svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/Get_permission_LeaderDefect" &
                             "?emp_code=" & emp_cd &
-                            "&line_cd=" & line_cd
+                            "&line_cd=" & line_cd &
+                            "&pd=" & pd
             Console.WriteLine("Calling API GetPermissionLeader URL: " & url)
             ' ✅ แปลงให้ async โดยรันบน background thread
             Dim api = New api()
@@ -1672,7 +1655,6 @@ where
             Return "0"
         End Try
     End Function
-
     Public Shared Function chk_user_skill_line(emp_cd As String, line_cd As String)
         ' Dim reader As SqlDataReader
         ' Dim SQLConn As New SqlConnection() 'The SQL Connection
@@ -3326,12 +3308,14 @@ re_insert_data:
                 Dim LoadSQLcl = Backoffice_model.get_tr_closelot_flg_sqlite()
                 Dim LoadSQL_tag_print_detail = Backoffice_model.get_tr_tag_print_detail()
                 Dim LoadSQL_check_loss_actual = Backoffice_model.check_loss_actual()
+                Dim LoadSQL_get_defect_tag_information = Backoffice_model.get_defect_tag_information()
                 '  Dim LoadSQL_tag_print_detail_main = Backoffice_model.get_tr_tag_print_detail_main()
                 '  Dim LoadSQL_tag_print_detail_sub = Backoffice_model.get_tr_tag_print_detail_sub()
-                Dim hasData = LoadSQL.HasRows Or LoadSQLcl.HasRows Or LoadSQL_tag_print_detail.HasRows Or LoadSQL_check_loss_actual > 0
+                Dim hasData = LoadSQL.HasRows Or LoadSQLcl.HasRows Or LoadSQL_tag_print_detail.HasRows Or LoadSQL_check_loss_actual > 0 Or LoadSQL_get_defect_tag_information.HasRows
                 If hasData Then
                     ' ✅ อัปเดตข้อมูล tag_print ทั้งหมด
                     Await model_api_sqlite.UpdateStatus_tag_print_detail()
+                    Await model_api_sqlite.UpdateStatus_defect_tag_information()
                     'สร้างหน้าต่าง Transfer ถ้ายังไม่มี
                     If objTransferData Is Nothing OrElse objTransferData.IsDisposed Then
                         objTransferData = New TrasnferData()
@@ -3820,6 +3804,26 @@ recheck:
             Dim cmd As New SQLiteCommand
             cmd.Connection = sqliteConn
             cmd.CommandText = "SELECT * FROM tag_print_detail where tr_status = '0'"
+            Dim LoadSQL As SQLiteDataReader = cmd.ExecuteReader()
+            'MsgBox(LoadSQL)
+            Return LoadSQL
+            sqliteConn.Dispose()
+            sqliteConn.Close()
+            sqliteConn = Nothing
+        Catch ex As Exception
+            MsgBox("SQLite Database connect failed. Please contact PC System [Function get_tr_tag_print_detail]")
+            sqliteConn.Close()
+        End Try
+    End Function
+
+    Public Shared Function get_defect_tag_information()
+        Dim sqliteConn As New SQLiteConnection(sqliteConnect)
+        Try
+            Check_connect_sqlite()
+            sqliteConn.Open()
+            Dim cmd As New SQLiteCommand
+            cmd.Connection = sqliteConn
+            cmd.CommandText = "SELECT * FROM defect_tag_information where dti_tranfer_flg = '0'"
             Dim LoadSQL As SQLiteDataReader = cmd.ExecuteReader()
             'MsgBox(LoadSQL)
             Return LoadSQL

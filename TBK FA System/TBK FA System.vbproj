@@ -704,6 +704,18 @@
     <Compile Include="load_show_OEE.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="ManagePrintDefectAdmin.Designer.vb">
+      <DependentUpon>ManagePrintDefectAdmin.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ManagePrintDefectAdmin.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MenuReprint.Designer.vb">
+      <DependentUpon>MenuReprint.vb</DependentUpon>
+    </Compile>
+    <Compile Include="MenuReprint.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="modelMaintenance.vb" />
     <Compile Include="ModelSqliteDefect.vb" />
     <Compile Include="model_api_sqlite.vb" />
@@ -1348,6 +1360,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="load_show_OEE.resx">
       <DependentUpon>load_show_OEE.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ManagePrintDefectAdmin.resx">
+      <DependentUpon>ManagePrintDefectAdmin.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MenuReprint.resx">
+      <DependentUpon>MenuReprint.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="numPadSetQTY.resx">
       <DependentUpon>numPadSetQTY.vb</DependentUpon>

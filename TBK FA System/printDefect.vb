@@ -26,6 +26,7 @@ Public Class printDefect
     Dim TypeMenu As String = ""
     Private defectDataList As List(Of Object)
     Private printReady As Boolean = False
+    Dim rs As String = "0"
     Private Sub printDefect_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         PrintDocument1.Print()
         'PrintPreviewDialog1.ShowDialog()
@@ -60,25 +61,54 @@ Public Class printDefect
         sDefect = Trim(dfType) '"2" 'da_type
         lItemtype = itemType
         TypeMenu = menu
-        While Not IsNetworkAvailable() OrElse Not My.Computer.Network.Ping(Backoffice_model.svp_ping)
+        While True
+            Try
+                ' ตรวจสอบเครือข่าย และ Ping เซิร์ฟเวอร์
+                If IsNetworkAvailable() AndAlso My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
+                    Exit While ' ออกจาก loop ถ้า network และ ping ได้
+                End If
+            Catch ex As InvalidOperationException
+                ' เครือข่ายไม่พร้อมใช้งาน
+                Console.WriteLine("⚠️ Network interface ไม่พร้อม: " & ex.Message)
+            Catch ex As System.Net.NetworkInformation.PingException
+                ' Ping ล้มเหลว เช่น DNS fail หรือ ICMP block
+                Console.WriteLine("⚠️ Ping ไม่สำเร็จ: " & ex.Message)
+            Catch ex As Exception
+                ' กรณีข้อผิดพลาดอื่น ๆ ที่ไม่คาดคิด
+                Console.WriteLine("❌ เกิดข้อผิดพลาด: " & ex.Message)
+            End Try
+            ' แสดงหน้ารอ (ถ้ายังไม่แสดง)
             If Not load_show.Visible Then load_show.Show()
+            ' รอ 1 วินาทีแล้ววนซ้ำ
             Threading.Thread.Sleep(1000)
         End While
         If load_show.Visible Then load_show.Hide()
 
         ' ✅ โหลด defect code
         Dim md = New modelDefect()
-        Dim rs = md.mGetDatadefectcodeprint(lwi, lLot, lSeq, lPartno, sDefect)
-        If rs = "0" Then
-            MsgBox("❌ ไม่พบข้อมูล defect หรือ network ไม่พร้อม", MsgBoxStyle.Critical)
+        Dim mdsqlite = New model_api_sqlite
+        ' Dim rs = md.mGetDatadefectcodeprint(lwi, lLot, lSeq, lPartno, sDefect)
+        Dim retryCount As Integer = 0
+        Dim maxRetries As Integer = 3
+        Dim success As Boolean = False
+
+        Do
+            rs = mdsqlite.mGetDatadefectcodeprint(lwi, lLot, lSeq, lPartno, sDefect)
+            If rs <> "0" Then
+                success = True
+                Exit Do
+            End If
+            retryCount += 1
+            Threading.Thread.Sleep(1000) ' รอ 1 วินาทีแล้วลองใหม่
+        Loop While retryCount < maxRetries
+        If Not success Then
+            ' MsgBox("❌ ไม่พบข้อมูล defect หรือ network ไม่พร้อมหลังจากพยายาม " & maxRetries & " ครั้ง", MsgBoxStyle.Critical)
             printReady = False
             Exit Sub
         End If
-
         ' ✅ เตรียมข้อมูล defect ล่วงหน้า
         defectDataList = New JavaScriptSerializer().Deserialize(Of List(Of Object))(rs)
         printReady = True
-
         ' ✅ พิมพ์
         PrintDocument1.Print()
     End Sub
@@ -97,16 +127,18 @@ Public Class printDefect
         If Not printReady OrElse defectDataList Is Nothing OrElse defectDataList.Count = 0 Then
             ' MsgBox("⚠️ ข้อมูล defect ยังไม่พร้อม หรือ network ยังไม่มา", MsgBoxStyle.Exclamation)
             Console.WriteLine("⚠️ ข้อมูล defect ยังไม่พร้อม หรือ network ยังไม่มา", MsgBoxStyle.Exclamation)
-            e.Cancel = True
-            Return
+            '  MsgBox("⚠️ ข้อมูล defect ยังไม่พร้อม หรือ network ยังไม่มา", MsgBoxStyle.Exclamation)
+            ' MsgBox("⚠️ ข้อมูล defect ยังไม่พร้อม หรือ network ยังไม่มา", MsgBoxStyle.Exclamation)
+            e.Cancel = True 'สั่งให้ยกเลิกการพิมพ์หน้านี้
+            Return ' ออกจากฟังก์ชันทันที
         End If
-        Try
-            Dim md = New modelDefect()
-            'MsgBox("lwi ==>" & lwi & "===seq====>" & lSeq)
-
-            Dim rs = md.mGetDatadefectcodeprint(lwi, lLot, lSeq, lPartno, sDefect)
-            ' MsgBox("rs====>" & rs)
-            If rs <> "0" Then
+        '  Try
+        Dim md = New modelDefect()
+        Dim mdsqlite = New model_api_sqlite()
+        'MsgBox("lwi ==>" & lwi & "===seq====>" & lSeq)
+        ' Dim rs = md.mGetDatadefectcodeprint(lwi, lLot, lSeq, lPartno, sDefect)
+        ' MsgBox("rs====>" & rs)
+        If rs <> "0" Then
                 Dim aPen = New Pen(Color.Black)
                 e.Graphics.DrawLine(Pens.Azure, 10, 10, 20, 20)
                 aPen.Width = 3.0F  'border 
@@ -247,18 +279,30 @@ outloop:
                 e.Graphics.DrawImage(PictureBox1.Image, 592, 195, 80, 80) 'buttom right'
                 PictureBox1.Image = QR_Generator.Encode(qrDefectcodedetails)
                 e.Graphics.DrawImage(PictureBox1.Image, 20, 125, 85, 85) 'bottom left'
-                Dim date_now = DateTime.Now.ToString("yyyy-MM-dd H:m:s")
-                Dim dti_status_flg = "" 'FG = 1 , 2 = CP
-                'If Backoffice_model.printedTags.Contains(qrDefectinfo) Then
-                '  MsgBox("Tag นี้พิมพ์แล้ว ไม่สามารถพิมพ์ซ้ำได้", MsgBoxStyle.Exclamation)
-                'Exit Sub
-                'Else
-                '   Backoffice_model.printedTags.Add(qrDefectinfo)
-                Dim rsInserttagdefect = md.mInserttagdefect(lwi, lLine, lPartno, lItemtype, lLot, lSeq, sDefect, CDbl(Val(lQtydefect)), TypeMenu, "001", qrDefectinfo, qrDefectcodedetails, lItemtype, date_now, lLine, date_now, lLine, Working_Pro.pwi_id)
+            Dim date_now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+            Dim dti_status_flg = "" 'FG = 1 , 2 = CP
+            'If Backoffice_model.printedTags.Contains(qrDefectinfo) Then
+            '  MsgBox("Tag นี้พิมพ์แล้ว ไม่สามารถพิมพ์ซ้ำได้", MsgBoxStyle.Exclamation)
+            'Exit Sub
+            'Else
+            '   Backoffice_model.printedTags.Add(qrDefectinfo)
+            Try
+                    If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
+                        Dim statusTrasnffer As Integer = 1
+                        Dim rsInserttagdefect = md.mInserttagdefect(lwi, lLine, lPartno, lItemtype, lLot, lSeq, sDefect, CDbl(Val(lQtydefect)), TypeMenu, "001", qrDefectinfo, qrDefectcodedetails, lItemtype, date_now, lLine, date_now, lLine, Working_Pro.pwi_id)
+                        Dim sqlitersInserttagdefect = model_api_sqlite.mas_mInserttagDefect(lwi, lLine, lPartno, lItemtype, lLot, lSeq, sDefect, CDbl(Val(lQtydefect)), TypeMenu, "001", qrDefectinfo, qrDefectcodedetails, lItemtype, date_now, lLine, date_now, lLine, Working_Pro.pwi_id, statusTrasnffer)
+                    Else
+                        Dim statusTrasnffer As Integer = 0
+                        Dim sqlitersInserttagdefect = model_api_sqlite.mas_mInserttagDefect(lwi, lLine, lPartno, lItemtype, lLot, lSeq, sDefect, CDbl(Val(lQtydefect)), TypeMenu, "001", qrDefectinfo, qrDefectcodedetails, lItemtype, date_now, lLine, date_now, lLine, Working_Pro.pwi_id, statusTrasnffer)
+                    End If
+                Catch ex As Exception
+                    Dim statusTrasnffer As Integer = 0
+                    Dim sqlitersInserttagdefect = model_api_sqlite.mas_mInserttagDefect(lwi, lLine, lPartno, lItemtype, lLot, lSeq, sDefect, CDbl(Val(lQtydefect)), TypeMenu, "001", qrDefectinfo, qrDefectcodedetails, lItemtype, date_now, lLine, date_now, lLine, Working_Pro.pwi_id, statusTrasnffer)
+                End Try
                 '  End If
             End If
-        Catch ex As Exception
-            load_show.Show()
-        End Try
+        ' Catch ex As Exception
+        '  load_show.Show()
+        '  End Try
     End Sub
 End Class

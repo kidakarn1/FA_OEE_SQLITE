@@ -61,6 +61,7 @@ Partial Class closeLotsummary
         Me.Panel2 = New System.Windows.Forms.Panel()
         Me.Panel3 = New System.Windows.Forms.Panel()
         Me.Panel4 = New System.Windows.Forms.Panel()
+        Me.lbDefectAll = New System.Windows.Forms.Label()
         Me.pbSpecialSummary = New System.Windows.Forms.PictureBox()
         Me.ListView2 = New System.Windows.Forms.ListView()
         Me.NO = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
@@ -73,7 +74,6 @@ Partial Class closeLotsummary
         Me.PictureBox3 = New System.Windows.Forms.PictureBox()
         Me.btnOk = New System.Windows.Forms.PictureBox()
         Me.loadNet = New System.Windows.Forms.PictureBox()
-        Me.lbDefectAll = New System.Windows.Forms.Label()
         CType(Me.Button1, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.btnUp, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.btnDown, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -451,6 +451,19 @@ Partial Class closeLotsummary
         Me.Panel4.Size = New System.Drawing.Size(113, 36)
         Me.Panel4.TabIndex = 61
         '
+        'lbDefectAll
+        '
+        Me.lbDefectAll.AutoSize = True
+        Me.lbDefectAll.BackColor = System.Drawing.Color.Transparent
+        Me.lbDefectAll.Font = New System.Drawing.Font("Panton-Trial ExtraBold", 24.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.lbDefectAll.ForeColor = System.Drawing.Color.FromArgb(CType(CType(254, Byte), Integer), CType(CType(0, Byte), Integer), CType(CType(102, Byte), Integer))
+        Me.lbDefectAll.Location = New System.Drawing.Point(37, -3)
+        Me.lbDefectAll.Name = "lbDefectAll"
+        Me.lbDefectAll.Size = New System.Drawing.Size(39, 41)
+        Me.lbDefectAll.TabIndex = 15
+        Me.lbDefectAll.Text = "0"
+        Me.lbDefectAll.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
+        '
         'pbSpecialSummary
         '
         Me.pbSpecialSummary.BackgroundImage = CType(resources.GetObject("pbSpecialSummary.BackgroundImage"), System.Drawing.Image)
@@ -556,19 +569,6 @@ Partial Class closeLotsummary
         Me.loadNet.TabIndex = 66
         Me.loadNet.TabStop = False
         Me.loadNet.Visible = False
-        '
-        'lbDefectAll
-        '
-        Me.lbDefectAll.AutoSize = True
-        Me.lbDefectAll.BackColor = System.Drawing.Color.Transparent
-        Me.lbDefectAll.Font = New System.Drawing.Font("Panton-Trial ExtraBold", 24.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.lbDefectAll.ForeColor = System.Drawing.Color.FromArgb(CType(CType(254, Byte), Integer), CType(CType(0, Byte), Integer), CType(CType(102, Byte), Integer))
-        Me.lbDefectAll.Location = New System.Drawing.Point(37, -3)
-        Me.lbDefectAll.Name = "lbDefectAll"
-        Me.lbDefectAll.Size = New System.Drawing.Size(39, 41)
-        Me.lbDefectAll.TabIndex = 15
-        Me.lbDefectAll.Text = "0"
-        Me.lbDefectAll.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
         '
         'closeLotsummary
         '

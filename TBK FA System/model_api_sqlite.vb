@@ -3,6 +3,76 @@ Imports System.Web.Script.Serialization
 Imports Newtonsoft.Json
 
 Public Class model_api_sqlite
+    Public Shared Async Function UpdateStatus_defect_tag_information() As Task(Of String)
+        Dim Sql = "Select * from defect_tag_information where dti_tranfer_flg = '0'"
+        Dim api = New api
+        Dim md = New modelDefect
+        Dim jsonData As String = Await api.Load_dataSQLiteAsyncLoaddata(Sql)
+        Try
+            Dim i As Integer = 0
+            Dim dcResultdata As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(jsonData)
+            For Each items As Object In dcResultdata
+                Dim dti_id As String = items("dti_id").ToString()
+                Dim dti_wi_no As String = items("dti_wi_no").ToString()
+                Dim dti_line_cd As String = items("dti_line_cd").ToString()
+                Dim dti_item_cd As String = items("dti_item_cd").ToString()
+                Dim dti_item_type As String = items("dti_item_type").ToString()
+                Dim dti_lot_no As String = items("dti_lot_no").ToString()
+                Dim dti_seq_no As String = items("dti_seq_no").ToString()
+                Dim dti_type As String = items("dti_type").ToString()
+                Dim dti_sum_qty As String = items("dti_sum_qty").ToString()
+                Dim dti_menu As String = items("dti_menu").ToString()
+                Dim dti_st_da As String = items("dti_st_da").ToString()
+                Dim dti_en_da As String = items("dti_en_da").ToString()
+                Dim dti_box_no As String = items("dti_box_no").ToString()
+                Dim dti_info_qr_cd As String = items("dti_info_qr_cd").ToString()
+                Dim dti_defect_qr_cd As String = items("dti_defect_qr_cd").ToString()
+                Dim dti_status_flg As String = items("dti_status_flg").ToString()
+                Dim dti_created_date As String = items("dti_created_date").ToString()
+                Dim dti_created_by As String = items("dti_created_by").ToString()
+                Dim dti_updated_date As String = items("dti_updated_date").ToString()
+                Dim dti_updated_by As String = items("dti_updated_by").ToString()
+                Dim pwi_id As String = items("pwi_id").ToString()
+                Dim rs = Await md.mTrasferInserttagdefect(dti_wi_no, dti_line_cd, dti_item_cd, dti_item_type, dti_lot_no, dti_seq_no, dti_type, dti_sum_qty, dti_menu, dti_box_no, dti_info_qr_cd, dti_defect_qr_cd, dti_status_flg, dti_created_date, dti_created_by, dti_updated_date, dti_updated_by, pwi_id)
+                If rs <> "0" Then
+                    Dim sqlUpdate = $"Update defect_tag_information set dti_tranfer_flg = '1' where dti_id = '{dti_id}'"
+                    Dim jsonDataUpdate As String = Await api.Load_dataSQLiteAsync(sqlUpdate)
+                End If
+            Next
+        Catch ex As Exception
+        End Try
+        Return "Done"
+    End Function
+    Public Shared Async Function Update_status_close_lot_defect() As Task(Of String) ' case ใส่ Defect โปรแกรม เด้งหลุด
+        Dim Sql = " SELECT
+						dt.dt_item_cd,
+						dt.dt_code,
+						SUM ( dt.dt_qty ) AS total_nc,
+						dt.dt_item_type ,
+						dt.dt_name_en AS description ,
+						dt.dt_type,
+						dt.dt_name_en AS defect_name,
+                        dt.pwi_id
+					FROM
+						defect_transactions AS dt
+					WHERE
+						 dt.dt_status_flg = '1' 
+ 						AND dt.dt_qty <> '0'
+					    AND dt.dt_status_close_lot = '0'
+					GROUP BY
+						dt.dt_item_cd,
+						dt.dt_code,
+						dt.dt_item_type,
+						dt.dt_name_en , 
+						dt.dt_type,
+						dt.dt_name_en,
+                        dt.pwi_id
+						ORDER BY
+						dt.dt_item_type ASC"
+        Dim api = New api
+        Dim md = New modelDefect
+
+    End Function
     Public Shared Async Function UpdateStatus_tag_print_detail() As Task(Of String)
         If ins_qty.Visible = False Then
             Dim date_st = DateTime.Now.ToString("yyyy-MM-dd") & " 00:00:00"
@@ -43,8 +113,165 @@ Public Class model_api_sqlite
         End If
         Return "Done"
     End Function
+    Public Shared Function mGetDatadefectcodeprint(wi As String, lot As String, seq_no As Integer, item_cd As String, dfType As String)
+        Try
+            Dim api = New api
+            Dim sql As String = "
+                SELECT 
+                    da_item_cd,  
+                    da_code,  
+                    SUM(da_qty) AS total_defect,
+                    (
+                        SELECT SUM(da_qty)  
+                        FROM defect_actual  
+                        WHERE da_wi_no = '" & wi & "'  
+                          AND da_lot_no = '" & lot & "'  
+                          AND da_seq_no = '" & seq_no & "'  
+                          AND da_item_cd = '" & item_cd & "'  
+                          AND da_type = '" & dfType & "'  
+                          AND da_status_flg = 1
+                    ) AS total_defect_all
+                FROM defect_actual  
+                WHERE da_wi_no = '" & wi & "'  
+                  AND da_lot_no = '" & lot & "'  
+                  AND da_seq_no = '" & seq_no & "'  
+                  AND da_item_cd = '" & item_cd & "'  
+                  AND da_type = '" & dfType & "'  
+                  AND da_status_flg = 1
+                GROUP BY da_item_cd, da_code;"
+            Console.WriteLine("funcrtion return data sql ====>" & sql)
+            ' MsgBox(sql)
+            Dim jsonData As String = api.Load_dataSQLite(sql)
+            Return jsonData
+        Catch ex As Exception
+            MsgBox("Get data fail function mGetDatadefectcodeprint ====>" & ex.Message)
+        End Try
+    End Function
 
-
+    Public Shared Async Function mas_mInserttagDefect(
+    dti_wi_no As String, dti_line_cd As String, dti_item_cd As String, dti_item_type As String,
+    dti_lot_no As String, dti_seq_no As String, dti_type As String, dti_sum_qty As String,
+    dti_menu As String, dti_box_no As String, dti_info_qr_cd As String, dti_defect_qr_cd As String,
+    dti_status_flg As String, dti_created_date As String, dti_created_by As String,
+    dti_updated_date As String, dti_updated_by As String, pwi_id As String, statusTrasfer As Integer
+) As Task(Of String)
+        Try
+            Dim sql As String = "
+            INSERT INTO defect_tag_information (
+                dti_wi_no, dti_line_cd, dti_item_cd, dti_item_type, dti_lot_no,
+                dti_seq_no, dti_type, dti_sum_qty, dti_menu, dti_box_no,
+                dti_info_qr_cd, dti_defect_qr_cd, dti_status_flg, dti_created_date, dti_created_by,
+                dti_updated_date, dti_updated_by, pwi_id, dti_tranfer_flg , dti_st_da , dti_en_da
+            ) VALUES (
+                '" & dti_wi_no & "',
+                '" & dti_line_cd & "',
+                '" & dti_item_cd & "',
+                '" & dti_item_type & "',
+                '" & dti_lot_no & "',
+                '" & dti_seq_no & "',
+                '" & dti_type & "',
+                '" & dti_sum_qty & "',
+                '" & dti_menu & "',
+                '" & dti_box_no & "',
+                '" & dti_info_qr_cd & "',
+                '" & dti_defect_qr_cd & "',
+                '" & dti_status_flg & "',
+                '" & dti_created_date & "',
+                '" & dti_created_by & "',
+                '" & dti_updated_date & "',
+                '" & dti_updated_by & "',
+                '" & pwi_id & "',
+                '" & statusTrasfer & "' ,
+                '0',
+                '0'
+            )"
+            Dim api = New api
+            Console.WriteLine(sql)
+            Dim result As String = Await api.Load_dataSQLiteAsync(sql)
+            Return 1
+        Catch ex As Exception
+            MsgBox("Insert TagDefect Sqlite Error Function  ===> " & ex.Message)
+            Return "0"
+        End Try
+    End Function
+    Public Shared Async Function mInsertdefectactualsqlites(
+    dtWino As String,
+    dtLineno As String,
+    dtItemcd As String,
+    dtItemtype As String,
+    dtLotno As String,
+    dtSeqno As String,
+    dtType As String,
+    dtCode As String,
+    dtQty As String,
+    dtMenu As String,
+    dtActualdate As String,
+    pwi_id As String,
+    da_tranfer_flg As Integer
+) As Task(Of String)
+        Try
+            Dim api = New api()
+            ' Step 1: ตรวจสอบข้อมูลซ้ำ
+            Dim sqliCheckDup As String = "
+            SELECT * 
+            FROM defect_actual 
+            WHERE da_wi_no = '" & dtWino & "' 
+              AND pwi_id = '" & pwi_id & "'
+              AND da_qty = '" & dtQty & "' 
+              AND da_code = '" & dtCode & "' 
+              AND da_item_type = '" & dtItemtype & "' 
+              AND da_status_flg = '1' 
+              AND da_item_cd = '" & dtItemcd & "' 
+            LIMIT 1;"
+            Dim jsonData As String = Await api.Load_dataSQLiteAsyncLoaddata(sqliCheckDup)
+            Dim dcResultdata As List(Of Object) = Nothing
+            If Not String.IsNullOrWhiteSpace(jsonData) AndAlso jsonData.Trim().StartsWith("[") Then
+                dcResultdata = New JavaScriptSerializer().Deserialize(Of List(Of Object))(jsonData)
+            End If
+            ' Step 2: ถ้าเจอข้อมูลซ้ำ
+            If dcResultdata IsNot Nothing AndAlso dcResultdata.Count > 0 Then
+                Return "Duplicate"
+            End If
+            ' Step 3: ไม่ซ้ำ → ทำการ Insert
+            Dim nowStr As String = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+            Dim sqlInsert As String = "
+            INSERT INTO defect_actual (
+                da_wi_no, da_line_cd, da_item_cd, da_item_type, da_lot_no,
+                da_seq_no, da_type, da_code, da_qty, da_menu,
+                da_actual_date, da_status_flg, da_transfer_flg,
+                da_created_date, da_created_by,
+                da_updated_date, da_updated_by, pwi_id, da_tranfer_flg , da_st_dt , da_en_dt
+            ) VALUES (
+                '" & dtWino & "',
+                '" & dtLineno & "',
+                '" & dtItemcd & "',
+                '" & dtItemtype & "',
+                '" & dtLotno & "',
+                '" & dtSeqno & "',
+                '" & dtType & "',
+                '" & dtCode & "',
+                '" & dtQty & "',
+                '" & dtMenu & "',
+                '" & dtActualdate & "',
+                '1',
+                '0',
+                '" & nowStr & "',
+                '" & dtLineno & "',
+                '" & nowStr & "',
+                '" & dtLineno & "',
+                " & pwi_id & ",
+                " & da_tranfer_flg & ",
+                '0',
+                '0'
+            );"
+            Console.WriteLine("✅ SQL Insert: " & sqlInsert)
+            Dim resultInsert As String = Await api.Load_dataSQLiteAsync(sqlInsert)
+            Return "1"
+        Catch ex As Exception
+            MsgBox("❌ Insert TagDefect Sqlite Error Function [mInsertdefectactualsqlites] ===> " & ex.Message)
+            Return "0"
+        End Try
+    End Function
 
     Public Shared Async Function UpdateStatus_tag_print_detail_main() As Task(Of String)
         Dim date_st = DateTime.Now.ToString("yyyy-MM-dd") & " 00:00:00"
@@ -368,6 +595,7 @@ Public Class model_api_sqlite
         End Try
         Return 0
     End Function
+
     Public Shared Async Function Get_time_start_shift(shift As String) As Task(Of DataTable)
         Try
             Dim api = New api()
