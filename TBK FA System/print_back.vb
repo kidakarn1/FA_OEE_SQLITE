@@ -277,6 +277,7 @@ Public Class print_back
         '  e.Graphics.DrawLine(aPen, 595, 235, 700, 235) 'actual
         e.Graphics.DrawLine(aPen, 10, 289, 700, 289)
         'DATA
+        Dim LotNo As String = Working_Pro.Label18.Text
         e.Graphics.DrawString("TBKK", lb_font1.Font, Brushes.Black, 19, 15)
         e.Graphics.DrawString("(Thailand) Co.,Ltd. ", Label_wi_type.Font, Brushes.Black, 12, 50)
         Dim result_snp
@@ -479,16 +480,33 @@ Public Class print_back
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
                 Dim rs = Backoffice_model.Insert_tag_print_main(Working_Pro.wi_no.Text, qr_code, the_Label_bach, 1, plan_seq, Working_Pro.Label14.Text, check_tagprint_main(), Working_Pro.Label3.Text, Working_Pro.pwi_id, Working_Pro.tag_group_no)
                 Dim rs1 = Await model_api_sqlite.mas_Insert_tag_print_main(Working_Pro.wi_no.Text, qr_code, the_Label_bach, 1, plan_seq, Working_Pro.Label14.Text, check_tagprint_main(), Working_Pro.Label3.Text, Working_Pro.pwi_id, Working_Pro.tag_group_no, Working_Pro.Gobal_NEXT_PROCESS, "1", Working_Pro.Label18.Text)
-                Dim id_tag = Await api.Load_data("http://" & Backoffice_model.svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/GET_ID_PRINT_DETAIL_MAIN?qr_code=" & qr_code)
-                For K = 1 To MainFrm.ArrayDataPlan.ToArray.Length Step 1
-                    Dim rs3 = Backoffice_model.Insert_tag_print_sub(id_tag, MainFrm.Label4.Text, arr_qr_code_sub(K - 1), Working_Pro.wi_no.Text, Working_Pro.tag_group_no)
-                    Dim rs4 = Await model_api_sqlite.mas_Insert_tag_print_sub(id_tag, MainFrm.Label4.Text, arr_qr_code_sub(K - 1), Working_Pro.wi_no.Text, Working_Pro.tag_group_no, Working_Pro.Gobal_NEXT_PROCESS, "1", Working_Pro.Label18.Text)
+                ' Dim id_tag = Await api.Load_data("http://" & Backoffice_model.svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/GET_ID_PRINT_DETAIL_MAIN?qr_code=" & qr_code)
+                Dim url As String = "http://" & Backoffice_model.svApi & "/API_NEW_FA/index.php/GET_DATA_NEW_FA/GET_ID_PRINT_DETAIL_MAIN?qr_code=" & qr_code
+                Console.WriteLine("Calling API GetPercenPlanned_OEE URL: " & url)
+                ' ✅ แปลงให้ async โดยรันบน background thread
+                Dim id_tag As String = Await Task.Run(Function() api.Load_data(url))
+                'For K = 1 To MainFrm.ArrayDataPlan.ToArray.Length Step 1
+                'Dim rs3 = Backoffice_model.Insert_tag_print_sub(id_tag, MainFrm.Label4.Text, arr_qr_code_sub(K - 1), Working_Pro.wi_no.Text, Working_Pro.tag_group_no)
+                'Dim rs4 = Await model_api_sqlite.mas_Insert_tag_print_sub(id_tag, MainFrm.Label4.Text, arr_qr_code_sub(K - 1), Working_Pro.wi_no.Text, Working_Pro.tag_group_no, Working_Pro.Gobal_NEXT_PROCESS, "1", Working_Pro.Label18.Text)
+                'Next
+                Dim index As Integer = 1
+                For Each itemPlanData As DataPlan In Confrime_work_production.ArrayDataPlan
+                    Dim special_wi As String = itemPlanData.wi
+                    Dim rs3 = Backoffice_model.Insert_tag_print_sub(id_tag, MainFrm.Label4.Text, arr_qr_code_sub(index - 1), special_wi, Working_Pro.tag_group_no)
+                    Dim rs4 = Await model_api_sqlite.mas_Insert_tag_print_sub(id_tag, MainFrm.Label4.Text, arr_qr_code_sub(index - 1), special_wi, Working_Pro.tag_group_no, Working_Pro.Gobal_NEXT_PROCESS, "1", LotNo)
+                    index = index + 1
                 Next
             Else
+                Dim indexelse As Integer = 1
                 Dim rs5 = Await model_api_sqlite.mas_Insert_tag_print_main(Working_Pro.wi_no.Text, qr_code, the_Label_bach, 1, plan_seq, Working_Pro.Label14.Text, check_tagprint_main(), Working_Pro.Label3.Text, Working_Pro.pwi_id, Working_Pro.tag_group_no, Working_Pro.Gobal_NEXT_PROCESS, "0", Working_Pro.Label18.Text)
                 Dim id_tag = Await model_api_sqlite.mas_get_tag_print_detail_main(qr_code)
-                For K = 1 To 5 Step 1
-                    Dim rs6 = Await model_api_sqlite.mas_Insert_tag_print_sub(id_tag, MainFrm.Label4.Text, arr_qr_code_sub(K - 1), Working_Pro.wi_no.Text, Working_Pro.tag_group_no, Working_Pro.Gobal_NEXT_PROCESS, "0", Working_Pro.Label18.Text)
+                'For K = 1 To 5 Step 1
+                ' Dim rs6 = Await model_api_sqlite.mas_Insert_tag_print_sub(id_tag, MainFrm.Label4.Text, arr_qr_code_sub(K - 1), Working_Pro.wi_no.Text, Working_Pro.tag_group_no, Working_Pro.Gobal_NEXT_PROCESS, "0", Working_Pro.Label18.Text)
+                ' Next
+                For Each itemPlanData As DataPlan In Confrime_work_production.ArrayDataPlan
+                    Dim special_wi As String = itemPlanData.wi
+                    Dim rs6 = Await model_api_sqlite.mas_Insert_tag_print_sub(id_tag, MainFrm.Label4.Text, arr_qr_code_sub(indexelse - 1), special_wi, Working_Pro.tag_group_no, Working_Pro.Gobal_NEXT_PROCESS, "0", LotNo)
+                    indexelse = indexelse + 1
                 Next
             End If
         Catch ex As Exception
@@ -497,14 +515,20 @@ Public Class print_back
         If hasError = True Then
             Dim rs7 = Await model_api_sqlite.mas_Insert_tag_print_main(Working_Pro.wi_no.Text, qr_code, the_Label_bach, 1, plan_seq, Working_Pro.Label14.Text, check_tagprint_main(), Working_Pro.Label3.Text, Working_Pro.pwi_id, Working_Pro.tag_group_no, Working_Pro.Gobal_NEXT_PROCESS, "0", Working_Pro.Label18.Text)
             Dim id_tag = Await model_api_sqlite.mas_get_tag_print_detail_main(qr_code)
-            For K = 1 To 5 Step 1
-                Dim rs8 = Await model_api_sqlite.mas_Insert_tag_print_sub(id_tag, MainFrm.Label4.Text, arr_qr_code_sub(K - 1), Working_Pro.wi_no.Text, Working_Pro.tag_group_no, Working_Pro.Gobal_NEXT_PROCESS, "0", Working_Pro.Label18.Text)
+            Dim indexcatch As Integer = 1
+            For Each itemPlanData As DataPlan In Confrime_work_production.ArrayDataPlan
+                Dim special_wi As String = itemPlanData.wi
+                Dim rs8 = Await model_api_sqlite.mas_Insert_tag_print_sub(id_tag, MainFrm.Label4.Text, arr_qr_code_sub(indexcatch - 1), special_wi, Working_Pro.tag_group_no, Working_Pro.Gobal_NEXT_PROCESS, "0", LotNo)
+                indexcatch = indexcatch + 1
             Next
+            ' For K = 1 To 5 Step 1
+            ' Dim rs8 = Await model_api_sqlite.mas_Insert_tag_print_sub(id_tag, MainFrm.Label4.Text, arr_qr_code_sub(K - 1), Working_Pro.wi_no.Text, Working_Pro.tag_group_no, Working_Pro.Gobal_NEXT_PROCESS, "0", Working_Pro.Label18.Text)
+            ' Next
         End If
     End Function
-    Private Async Sub PrintDocument1_PrintPage(sender As Object, e As Printing.PrintPageEventArgs) Handles PrintDocument1.PrintPage
+    Private Sub PrintDocument1_PrintPage(sender As Object, e As Printing.PrintPageEventArgs) Handles PrintDocument1.PrintPage
         'oldM83_batch(e)
-        Await newM83_batch(e) 'return data ต้องเอา result มาเก็บไม่งั้น ERROR
+        newM83_batch(e) 'return data ต้องเอา result มาเก็บไม่งั้น ERROR
     End Sub
     Public Sub oldM83_single(e)
         Dim aPen = New Pen(Color.Black)

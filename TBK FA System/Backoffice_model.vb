@@ -2040,6 +2040,7 @@ where
             SQLConn.Open()
             SQLCmd.Connection = SQLConn
             SQLCmd.CommandText = "INSERT INTO tag_print_detail_sub(tag_ref_id , line_cd , tag_qr_detail , flg_control , created_date , updated_date , tag_wi_no , tag_group_no) VALUES ('" & ref_id & "','" & line & "','" & qr_code & "' ,'" & print_back.check_tagprint_main() & "' , '" & currdated & "' , '" & currdated & "' , '" & wi & "' , '" & tag_group_no & "')"
+            Console.WriteLine(SQLCmd.CommandText)
             reader = SQLCmd.ExecuteReader()
         Catch ex As Exception
             MsgBox("MSSQL Database connect failed. Please contact PC System [Function Insert_tag_print_sub]")

@@ -31,10 +31,23 @@ Public Class printDefect
         PrintDocument1.Print()
         'PrintPreviewDialog1.ShowDialog()
     End Sub
+    Public Async Function WaitForNetworkWithPopup() As Task
+        Do While Not IsNetworkAvailable() OrElse Not My.Computer.Network.Ping(Backoffice_model.svp_ping)
+            If Not load_show.Visible Then
+                load_show.Show()
+            End If
+            Console.WriteLine("⛔ ยังไม่มี Network หรือ Ping ไม่ผ่าน... รอ 1 วินาที")
+            Await Task.Delay(3000)
+        Loop
+        If load_show.Visible Then
+            load_show.Hide()
+        End If
+    End Function
     Private Function IsNetworkAvailable() As Boolean
         Return NetworkInterface.GetIsNetworkAvailable()
     End Function
-    Public Sub Set_parameter_print(pNo As String, pName As String, Model As String, Line As String, atDate As Date, Location As String, Shift As String, Phase As String, lot As String, qtyDefect As String, seqQty As String, wi As String, itemType As String, dfType As String, menu As String)
+    Public Async Sub Set_parameter_print(pNo As String, pName As String, Model As String, Line As String, atDate As Date, Location As String, Shift As String, Phase As String, lot As String, qtyDefect As String, seqQty As String, wi As String, itemType As String, dfType As String, menu As String)
+        Await WaitForNetworkWithPopup()
         lPartno = pNo
         lPartname = pName
         lModel = Model
@@ -61,39 +74,15 @@ Public Class printDefect
         sDefect = Trim(dfType) '"2" 'da_type
         lItemtype = itemType
         TypeMenu = menu
-        While True
-            Try
-                ' ตรวจสอบเครือข่าย และ Ping เซิร์ฟเวอร์
-                If IsNetworkAvailable() AndAlso My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                    Exit While ' ออกจาก loop ถ้า network และ ping ได้
-                End If
-            Catch ex As InvalidOperationException
-                ' เครือข่ายไม่พร้อมใช้งาน
-                Console.WriteLine("⚠️ Network interface ไม่พร้อม: " & ex.Message)
-            Catch ex As System.Net.NetworkInformation.PingException
-                ' Ping ล้มเหลว เช่น DNS fail หรือ ICMP block
-                Console.WriteLine("⚠️ Ping ไม่สำเร็จ: " & ex.Message)
-            Catch ex As Exception
-                ' กรณีข้อผิดพลาดอื่น ๆ ที่ไม่คาดคิด
-                Console.WriteLine("❌ เกิดข้อผิดพลาด: " & ex.Message)
-            End Try
-            ' แสดงหน้ารอ (ถ้ายังไม่แสดง)
-            If Not load_show.Visible Then load_show.Show()
-            ' รอ 1 วินาทีแล้ววนซ้ำ
-            Threading.Thread.Sleep(1000)
-        End While
-        If load_show.Visible Then load_show.Hide()
-
         ' ✅ โหลด defect code
         Dim md = New modelDefect()
         Dim mdsqlite = New model_api_sqlite
         ' Dim rs = md.mGetDatadefectcodeprint(lwi, lLot, lSeq, lPartno, sDefect)
         Dim retryCount As Integer = 0
-        Dim maxRetries As Integer = 3
+        Dim maxRetries As Integer = 1000
         Dim success As Boolean = False
-
         Do
-            rs = mdsqlite.mGetDatadefectcodeprint(lwi, lLot, lSeq, lPartno, sDefect)
+            rs = Await mdsqlite.mGetDatadefectcodeprint(lwi, lLot, lSeq, lPartno, sDefect)
             If rs <> "0" Then
                 success = True
                 Exit Do
@@ -110,6 +99,7 @@ Public Class printDefect
         defectDataList = New JavaScriptSerializer().Deserialize(Of List(Of Object))(rs)
         printReady = True
         ' ✅ พิมพ์
+        Await WaitForNetworkWithPopup()
         PrintDocument1.Print()
     End Sub
     Public Function getPlant(phase)
@@ -287,20 +277,20 @@ outloop:
             'Else
             '   Backoffice_model.printedTags.Add(qrDefectinfo)
             Try
-                    If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                        Dim statusTrasnffer As Integer = 1
-                        Dim rsInserttagdefect = md.mInserttagdefect(lwi, lLine, lPartno, lItemtype, lLot, lSeq, sDefect, CDbl(Val(lQtydefect)), TypeMenu, "001", qrDefectinfo, qrDefectcodedetails, lItemtype, date_now, lLine, date_now, lLine, Working_Pro.pwi_id)
-                        Dim sqlitersInserttagdefect = model_api_sqlite.mas_mInserttagDefect(lwi, lLine, lPartno, lItemtype, lLot, lSeq, sDefect, CDbl(Val(lQtydefect)), TypeMenu, "001", qrDefectinfo, qrDefectcodedetails, lItemtype, date_now, lLine, date_now, lLine, Working_Pro.pwi_id, statusTrasnffer)
-                    Else
-                        Dim statusTrasnffer As Integer = 0
-                        Dim sqlitersInserttagdefect = model_api_sqlite.mas_mInserttagDefect(lwi, lLine, lPartno, lItemtype, lLot, lSeq, sDefect, CDbl(Val(lQtydefect)), TypeMenu, "001", qrDefectinfo, qrDefectcodedetails, lItemtype, date_now, lLine, date_now, lLine, Working_Pro.pwi_id, statusTrasnffer)
-                    End If
-                Catch ex As Exception
+                If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
+                    Dim statusTrasnffer As Integer = 1
+                    Dim rsInserttagdefect = md.mInserttagdefect(lwi, lLine, lPartno, lItemtype, lLot, lSeq, sDefect, CDbl(Val(lQtydefect)), TypeMenu, "001", qrDefectinfo, qrDefectcodedetails, lItemtype, date_now, lLine, date_now, lLine, Working_Pro.pwi_id)
+                    Dim sqlitersInserttagdefect = model_api_sqlite.mas_mInserttagDefect(lwi, lLine, lPartno, lItemtype, lLot, lSeq, sDefect, CDbl(Val(lQtydefect)), TypeMenu, "001", qrDefectinfo, qrDefectcodedetails, lItemtype, date_now, lLine, date_now, lLine, Working_Pro.pwi_id, statusTrasnffer)
+                Else
                     Dim statusTrasnffer As Integer = 0
                     Dim sqlitersInserttagdefect = model_api_sqlite.mas_mInserttagDefect(lwi, lLine, lPartno, lItemtype, lLot, lSeq, sDefect, CDbl(Val(lQtydefect)), TypeMenu, "001", qrDefectinfo, qrDefectcodedetails, lItemtype, date_now, lLine, date_now, lLine, Working_Pro.pwi_id, statusTrasnffer)
-                End Try
-                '  End If
-            End If
+                End If
+            Catch ex As Exception
+                Dim statusTrasnffer As Integer = 0
+                Dim sqlitersInserttagdefect = model_api_sqlite.mas_mInserttagDefect(lwi, lLine, lPartno, lItemtype, lLot, lSeq, sDefect, CDbl(Val(lQtydefect)), TypeMenu, "001", qrDefectinfo, qrDefectcodedetails, lItemtype, date_now, lLine, date_now, lLine, Working_Pro.pwi_id, statusTrasnffer)
+            End Try
+            '  End If
+        End If
         ' Catch ex As Exception
         '  load_show.Show()
         '  End Try

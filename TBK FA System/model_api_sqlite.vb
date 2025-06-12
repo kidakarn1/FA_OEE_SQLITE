@@ -113,7 +113,7 @@ Public Class model_api_sqlite
         End If
         Return "Done"
     End Function
-    Public Shared Function mGetDatadefectcodeprint(wi As String, lot As String, seq_no As Integer, item_cd As String, dfType As String)
+    Public Shared Async Function mGetDatadefectcodeprint(wi As String, lot As String, seq_no As Integer, item_cd As String, dfType As String) As Task(Of String)
         Try
             Dim api = New api
             Dim sql As String = "
@@ -141,7 +141,8 @@ Public Class model_api_sqlite
                 GROUP BY da_item_cd, da_code;"
             Console.WriteLine("funcrtion return data sql ====>" & sql)
             ' MsgBox(sql)
-            Dim jsonData As String = api.Load_dataSQLite(sql)
+            ' Dim jsonData As String = api.Load_dataSQLite(sql)
+            Dim jsonData As String = Await api.Load_dataSQLiteAsyncLoaddata(sql)
             Return jsonData
         Catch ex As Exception
             MsgBox("Get data fail function mGetDatadefectcodeprint ====>" & ex.Message)
