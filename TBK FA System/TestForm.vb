@@ -1,6 +1,7 @@
 ﻿Imports System.Net
 Imports System.IO
 Imports System.Web.Script.Serialization
+Imports NationalInstruments.DAQmx
 
 Public Class TestForm
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
@@ -111,26 +112,23 @@ Public Class TestForm
                 MessageBox.Show("ยังไม่ได้กำหนด Action สำหรับ: " & actionName, "Info")
         End Select
     End Sub
-
     ' ===== ฟังก์ชันแต่ละปุ่ม =====
     Private Sub RegisterNC()
         MessageBox.Show("เรียกเมนู NC", "NC Action")
     End Sub
-
     Private Sub RegisterNG()
         MessageBox.Show("เรียกเมนู NG", "NG Action")
     End Sub
-
     Private Sub AdjustNC()
         MessageBox.Show("เปิดหน้าปรับ NC", "Adjust NC")
     End Sub
-
     Private Sub AdjustNG()
         MessageBox.Show("เปิดหน้าปรับ NG", "Adjust NG")
     End Sub
-
     ' ===== ปุ่มรีเฟรชเมนูใหม่ =====
-    Private Sub ReButton_Click(sender As Object, e As EventArgs) Handles ReButton.Click
-        CreateCenteredPictureBoxes()
+    Private Sub ReButton_Click(sender As Object, e As EventArgs) Handles sentParameter.Click
+        'CreateCenteredPictureBoxes()
+        'สร้าง Task, Channel และเขียนค่า Output
+
     End Sub
 End Class

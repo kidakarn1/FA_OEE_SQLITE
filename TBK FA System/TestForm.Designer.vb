@@ -24,7 +24,7 @@ Partial Class TestForm
     Private Sub InitializeComponent()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(TestForm))
         Me.WebView21 = New Microsoft.Web.WebView2.WinForms.WebView2()
-        Me.ReButton = New System.Windows.Forms.Button()
+        Me.sentParameter = New System.Windows.Forms.Button()
         CType(Me.WebView21, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
@@ -40,15 +40,15 @@ Partial Class TestForm
         Me.WebView21.TabIndex = 4640
         Me.WebView21.ZoomFactor = 1.0R
         '
-        'ReButton
+        'sentParameter
         '
-        Me.ReButton.Font = New System.Drawing.Font("Microsoft Sans Serif", 36.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(222, Byte))
-        Me.ReButton.Location = New System.Drawing.Point(640, 521)
-        Me.ReButton.Name = "ReButton"
-        Me.ReButton.Size = New System.Drawing.Size(137, 67)
-        Me.ReButton.TabIndex = 4641
-        Me.ReButton.Text = "Re"
-        Me.ReButton.UseVisualStyleBackColor = True
+        Me.sentParameter.Font = New System.Drawing.Font("Microsoft Sans Serif", 36.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(222, Byte))
+        Me.sentParameter.Location = New System.Drawing.Point(12, 253)
+        Me.sentParameter.Name = "sentParameter"
+        Me.sentParameter.Size = New System.Drawing.Size(391, 115)
+        Me.sentParameter.TabIndex = 4641
+        Me.sentParameter.Text = "Sent Parameter"
+        Me.sentParameter.UseVisualStyleBackColor = True
         '
         'TestForm
         '
@@ -57,7 +57,7 @@ Partial Class TestForm
         Me.BackgroundImage = CType(resources.GetObject("$this.BackgroundImage"), System.Drawing.Image)
         Me.ClientSize = New System.Drawing.Size(800, 600)
         Me.ControlBox = False
-        Me.Controls.Add(Me.ReButton)
+        Me.Controls.Add(Me.sentParameter)
         Me.Controls.Add(Me.WebView21)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None
         Me.Name = "TestForm"
@@ -68,5 +68,5 @@ Partial Class TestForm
     End Sub
 
     Friend WithEvents WebView21 As Microsoft.Web.WebView2.WinForms.WebView2
-    Friend WithEvents ReButton As Button
+    Friend WithEvents sentParameter As Button
 End Class
