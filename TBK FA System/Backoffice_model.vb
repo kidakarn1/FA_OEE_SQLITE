@@ -273,10 +273,11 @@ Public Class Backoffice_model
                 "DELETE FROM maintenance where mn_create_date BETWEEN '" & convert_date_start1 & "' AND '" & currdated1 & "' and mn_status = '1'",
                 "DELETE FROM defect_tag_information where dti_created_date BETWEEN '" & convert_date_start & "' AND '" & convert_del_2_week & "' and dti_tranfer_flg = '1'",
                 "DELETE FROM defect_actual where da_created_date BETWEEN '" & convert_date_start & "' AND '" & convert_del_2_week & "' and da_transfer_flg = '1'",
+                "DELETE FROM defect_transactions where dt_created_date BETWEEN '" & convert_date_start & "' AND '" & convert_del_2_week & "' and dt_status_close_lot = '1'",
                 "DELETE FROM line_status_detail"
             }
         For i = 0 To command_data.Length - 1
-            '  Console.WriteLine(command_data(i))
+            Console.WriteLine(command_data(i))
             Check_connect_sqlite()
             Dim sqliteConn As New SQLiteConnection(sqliteConnect)
             Try

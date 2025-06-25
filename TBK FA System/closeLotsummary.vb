@@ -573,7 +573,7 @@ Public Class closeLotsummary
                 result_total = "1"
             End If
         End If
-        'If Integer.Parse(lbGood.Text) > 0 And result_mod > 0 And CDbl(Val(Working_Pro.Label10.Text)) < 0 Then
+        ' If Integer.Parse(lbGood.Text) > 0 And result_mod > 0 And CDbl(Val(Working_Pro.Label10.Text)) < 0 Then
         If Integer.Parse(lbGood.Text) > 0 And result_mod > 0 Then
             If CDbl(Val(Working_Pro.Label10.Text)) < 0 Or result_mod > 0 Then
                 Working_Pro.lb_box_count.Text = Working_Pro.lb_box_count.Text + 1
@@ -610,10 +610,9 @@ Public Class closeLotsummary
                     'Backoffice_model.update_tagprintforDefect(sWi, "2", "1", Working_Pro.pwi_id, (CDbl(Val(Working_Pro.lb_box_count.Text)) - 1), Working_Pro.GoodQty, Math.Ceiling(cupprint))
                 End If
                 ' Working_Pro.Label_bach.Text = Working_Pro.Label_bach.Text + 1
-
             End If ' end if   If CDbl(Val(Working_Pro.Label10.Text)) <= 0 And result_mod > 0 Then
         End If
-        Try
+            Try
             Working_Pro.LB_COUNTER_SEQ.Text = 0
         Catch ex As Exception
             Working_Pro.LB_COUNTER_SEQ.Text = 0

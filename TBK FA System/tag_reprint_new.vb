@@ -25,7 +25,7 @@ Public Class tag_reprint_new
             Me.Close()
         Else
             Show_reprint_wi.Show()
-            '  MenuReprint.Show()
+            'MenuReprint.Show()
             Me.Close()
         End If
     End Sub

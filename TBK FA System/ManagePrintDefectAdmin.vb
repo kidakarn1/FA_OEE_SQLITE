@@ -11,13 +11,17 @@
     ' ตอนโหลดฟอร์ม
     Private Sub ManagePrintDefectAdmin_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         combodfType()
+        loadDataDefect("1", Show_reprint_wi.hide_wi_select.Text, Scan_reprint.date_now_start, Scan_reprint.date_now_end)
         isLoaded = True ' เปิดให้ SelectedIndexChanged ทำงานหลังโหลดเสร็จ
     End Sub
 
     ' โหลดข้อมูลให้ ComboBox
     Public Sub combodfType()
-        comboxitemtype.Items.Clear()
+        Try
+            comboxitemtype.Items.Clear()
+        Catch ex As Exception
 
+        End Try
         ' Key = ชื่อ, Value = รหัส
         Dim myItems As New List(Of KeyValuePair(Of String, Integer)) From {
             New KeyValuePair(Of String, Integer)("NC", 1),
@@ -34,7 +38,8 @@
     ' โหลดข้อมูล defect ตามประเภท
     Public Sub loadDataDefect(df_item_type As String, df_wi As String, DateStart As String, DateEnd As String)
         ' สามารถเปิดใช้งานเมื่อมี model เชื่อม DB:
-        ' Dim rsData = modelDefect.LoadDataTagDefect(df_item_type, df_wi, DateStart, DateEnd)
+        Dim rsData = modelDefect.LoadDataTagDefect(df_item_type, df_wi, DateStart, DateEnd)
+        MsgBox(rsData)
     End Sub
 
     ' เมื่อเลือกประเภท defect
@@ -49,10 +54,9 @@
             MessageBox.Show("คุณเลือก: " & selectedText & " (Key = " & selectedValue & ")")
 
             ' เรียกโหลดข้อมูล defect
-            loadDataDefect(selectedText, Show_reprint_wi.hide_wi_select.Text, Scan_reprint.date_now_start, Scan_reprint.date_now_end)
+            loadDataDefect(selectedValue, Show_reprint_wi.hide_wi_select.Text, Scan_reprint.date_now_start, Scan_reprint.date_now_end)
         End If
     End Sub
-
     ' ปุ่มอื่น (ว่าง)
     Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
         ' กำหนดโค้ดตามต้องการ

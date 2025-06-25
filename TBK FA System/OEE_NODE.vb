@@ -27,12 +27,13 @@ Public Class OEE_NODE
             End Try
         End Try
     End Function
-    Public Shared Function OEE_LOAD_MSTOEEColor(line_cd As String)
+
+    Public Shared Function OldOEE_LOAD_MSTOEEColor(line_cd As String) As Task
         Try
             Dim api = New api()
             Console.WriteLine("http://" & Backoffice_model.svOEE & "/api/dataGetOEEColor?line_cd=" & line_cd)
             Dim jsonString = api.Load_data("http://" & Backoffice_model.svOEE & "/api/dataGetOEEColor?line_cd=" & line_cd)
-            Dim dcResultdata As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(jsonString)
+            Dim dcResultdata As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(jsonString) '
             Dim i As Integer = 1
             load_show_OEE.Close()
             Return dcResultdata
@@ -48,6 +49,39 @@ Public Class OEE_NODE
                 load_show_OEE.Close()
                 load_show.Show()
             End Try
+        End Try
+    End Function
+
+
+    Public Shared Async Function OEE_LOAD_MSTOEEColor(line_cd As String) As Task(Of List(Of Object))
+        Try
+            Dim api = New api()
+            Dim url As String = "http://" & Backoffice_model.svOEE & "/api/dataGetOEEColor?line_cd=" & line_cd
+            Console.WriteLine("API URL: " & url)
+
+            ' ✅ รันโหลดข้อมูลแบบ background thread ป้องกัน block UI
+            Dim jsonString As String = Await Task.Run(Function() api.Load_data(url))
+
+            ' ✅ แปลง JSON เป็น List(Of Object)
+            Dim dcResultdata As List(Of Object) = New JavaScriptSerializer().Deserialize(Of List(Of Object))(jsonString)
+
+            load_show_OEE.Close()
+            Return dcResultdata
+
+        Catch ex As Exception
+            MsgBox("Please Check OEE_LOAD_MSTOEEColor Data Master OEE In line_mst =>" & ex.Message)
+            Try
+                If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
+                    load_show_OEE.Show()
+                Else
+                    load_show.Show()
+                End If
+            Catch ex2 As Exception
+                load_show_OEE.Close()
+                load_show.Show()
+            End Try
+
+            Return New List(Of Object)() ' ส่งคืน list ว่างถ้า error
         End Try
     End Function
     Public Shared Function OEE_GET_NEW_TARGET(st_shift As String, end_shift As String, std_ct As String, shift As String)

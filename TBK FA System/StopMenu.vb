@@ -79,8 +79,8 @@
             Me.Close()
         End If
     End Function
-    Private Sub btnContinue_Click(sender As Object, e As EventArgs) Handles btnContinue.Click
-        SatrtWork()
+    Private Async Sub btnContinue_Click(sender As Object, e As EventArgs) Handles btnContinue.Click
+        Await SatrtWork()
     End Sub
     Public Async Function UpdateAutoLoss() As Task
         Dim pd As String = MainFrm.Label6.Text

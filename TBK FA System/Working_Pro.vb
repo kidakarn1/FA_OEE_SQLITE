@@ -108,6 +108,9 @@ Public Class Working_Pro
     Public Shared statusSwitchModel As String = ""
     Public Shared IsOnlyone As String = ""
     Public Shared Product_type As String = ""
+    Private isSettingLvA As Boolean = False
+    Private isSettingLvQ As Boolean = False
+
     Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
         'Label44.Text = TimeOfDay.ToString("H:mm:ss")
         Label17.Text = TimeOfDay.ToString("H:mm:ss")
@@ -192,27 +195,66 @@ Public Class Working_Pro
             status_conter = 1
         End Try
     End Function
+    ' Flag สำหรับป้องกันการรันซ้ำ
     Public Async Function setlvA(line_cd As String, lot_no As String, shift As String, dateStart As String, timeShift As String, stTimeModel As String, special_flg As String) As Task
-        Dim OEE = New OEE_NODE
-        Dim OEE_LOCAL = New OEE_SQLITE
-        lvA.Items.Clear()
-        lbOverTimeAvailability.Text = 0
-        'stTimeModel = OEE.OEE_getDataGetWorkingTimeModel(timeShift, line_cd, Label3.Text)
-        '  Dim rslvA = OEE.OEE_GET_Data_LOSS(line_cd, lot_no, shift, dateStart, stTimeModel, statusSwitchModel, IsOnlyone)
-        Dim rslvA = OEE_LOCAL.OEE_GET_Data_LOSS(line_cd, lot_no, shift, dateStart, stTimeModel, statusSwitchModel, IsOnlyone, special_flg)
-        If rslvA <> "0" Then
-            Dim dict3 As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(rslvA)
-            Try
-                For Each item As Object In dict3
-                    lbOverTimeAvailability.Text = item("AllLossTime").ToString()
-                    datlvDefectsumary = New ListViewItem(item("loss_cd").ToString())
-                    datlvDefectsumary.SubItems.Add(item("lossTime").ToString())
-                    lvA.Items.Add(datlvDefectsumary)
-                Next
-            Catch ex As Exception
-            End Try
-        End If
+        ' ป้องกันไม่ให้ฟังก์ชันซ้อนกันทำงาน
+        If isSettingLvA Then Exit Function
+        isSettingLvA = True
+
+        Dim OEE_LOCAL = New OEE_SQLITE()
+
+        Try
+            lvA.BeginUpdate()
+            lvA.Items.Clear()
+            ' lbOverTimeAvailability.Text = "0"
+
+            ' เรียกใช้งาน SQLite บน thread พื้นหลัง
+            Dim json As String = Await Task.Run(Function()
+                                                    Return OEE_LOCAL.OEE_GET_Data_LOSS(line_cd, lot_no, shift, dateStart, stTimeModel, statusSwitchModel, IsOnlyone, special_flg)
+                                                End Function)
+
+            If json <> "0" Then
+                Try
+                    Dim dict = New JavaScriptSerializer().Deserialize(Of List(Of Object))(json)
+                    Dim seenCodes As New HashSet(Of String)
+                    Dim allLossTime As String = ""
+
+                    For Each item In dict
+                        Dim code As String = item("loss_cd").ToString()
+                        Dim lossTime As String = item("lossTime").ToString()
+
+                        ' ดึง AllLossTime จากรายการแรก (หรือรายการสุดท้ายก็ได้)
+                        If allLossTime = "" Then
+                            allLossTime = item("AllLossTime").ToString()
+                        End If
+
+                        ' เพิ่มรายการ loss ที่ยังไม่ซ้ำ
+                        If Not seenCodes.Contains(code) Then
+                            seenCodes.Add(code)
+                            Dim row = New ListViewItem(code)
+                            row.SubItems.Add(lossTime)
+                            lvA.Items.Add(row)
+                        End If
+                    Next
+
+                    ' อัปเดต Text หลัง loop เพื่อไม่ให้กระพริบ
+                    lbOverTimeAvailability.Text = allLossTime
+
+                Catch ex As Exception
+                    Console.WriteLine("setlvA error (parse): " & ex.Message)
+                End Try
+            End If
+
+        Catch ex As Exception
+            Console.WriteLine("setlvA error (main): " & ex.Message)
+
+        Finally
+            lvA.EndUpdate()
+            isSettingLvA = False
+        End Try
     End Function
+
+
     Public Sub showWorkker()
         Dim emp_cd As String = List_Emp.ListView1.Items(0).Text
         Dim tclient As New WebClient
@@ -255,157 +297,240 @@ Public Class Working_Pro
             Label48.Text = "2"
         End If
     End Sub
-    Public Function cal_progressbarQ(NGAll As String, Good As String) As Integer
-        Dim ngCount As Integer = 0
-        Dim goodCount As Integer = 0
-        ' ป้องกัน error กรณีค่าที่ไม่ใช่ตัวเลข
-        Integer.TryParse(NGAll, ngCount)
-        Integer.TryParse(Good, goodCount)
-        Dim totalCount As Integer = ngCount + goodCount
-        Dim totalProgressbar As Double = 100
-        If totalCount > 0 Then
-            totalProgressbar = (goodCount / totalCount) * 100
-        End If
-        ' Clamp ค่าให้อยู่ในช่วง 0–100
-        totalProgressbar = Math.Max(0, Math.Min(100, totalProgressbar))
-        Dim intProgress As Integer = CInt(Math.Floor(totalProgressbar))
-        ' กำหนดค่า ProgressBar
-        progressbarQ.Text = intProgress.ToString()
-        progressbarQ.Value = intProgress
-        ' หาสีจากช่วงที่เหมาะสมใน oeeLevelList
-        For Each level As Working_Pro In QLevelList
-            If intProgress >= level.MinValue AndAlso intProgress <= level.MaxValue Then
-                Dim rgbParts() As String = level.ColorRGB.Split(","c)
-                If rgbParts.Length = 3 Then
-                    Dim R As Integer = Convert.ToInt32(rgbParts(0).Trim())
-                    Dim G As Integer = Convert.ToInt32(rgbParts(1).Trim())
-                    Dim B As Integer = Convert.ToInt32(rgbParts(2).Trim())
-                    progressbarQ.ProgressColor = Color.FromArgb(R, G, B)
-                End If
-                Exit For
-            End If
-        Next
-        Return intProgress
+    Public Async Function cal_progressbarQ(NGAll As String, Good As String) As Task(Of Integer)
+        Return Await Task.Run(Function()
+                                  Try
+                                      Dim ngCount As Integer = 0
+                                      Dim goodCount As Integer = 0
+
+                                      Integer.TryParse(NGAll, ngCount)
+                                      Integer.TryParse(Good, goodCount)
+
+                                      Dim totalCount As Integer = ngCount + goodCount
+                                      Dim totalProgressbar As Double = If(totalCount > 0, (goodCount / totalCount) * 100, 100)
+                                      totalProgressbar = Math.Max(0, Math.Min(100, totalProgressbar))
+                                      Dim intProgress As Integer = CInt(Math.Floor(totalProgressbar))
+
+                                      ' อัปเดต UI ปลอดภัย
+                                      If progressbarQ.InvokeRequired Then
+                                          progressbarQ.Invoke(Sub()
+                                                                  progressbarQ.Text = intProgress.ToString()
+                                                                  progressbarQ.Value = intProgress
+                                                              End Sub)
+                                      Else
+                                          progressbarQ.Text = intProgress.ToString()
+                                          progressbarQ.Value = intProgress
+                                      End If
+                                      ' ตั้งสี
+                                      For Each level As Working_Pro In QLevelList
+                                          If intProgress >= level.MinValue AndAlso intProgress <= level.MaxValue Then
+                                              Dim rgbParts() As String = level.ColorRGB.Split(","c)
+                                              If rgbParts.Length = 3 Then
+                                                  Dim r = Convert.ToInt32(rgbParts(0).Trim())
+                                                  Dim g = Convert.ToInt32(rgbParts(1).Trim())
+                                                  Dim b = Convert.ToInt32(rgbParts(2).Trim())
+
+                                                  If progressbarQ.InvokeRequired Then
+                                                      progressbarQ.Invoke(Sub()
+                                                                              progressbarQ.ProgressColor = Color.FromArgb(r, g, b)
+                                                                          End Sub)
+                                                  Else
+                                                      progressbarQ.ProgressColor = Color.FromArgb(r, g, b)
+                                                  End If
+                                              End If
+                                              Exit For
+                                          End If
+                                      Next
+
+                                      Return intProgress
+                                  Catch ex As Exception
+                                      Console.WriteLine("Error in cal_progressbarQ: " & ex.Message)
+                                      Return 0
+                                  End Try
+                              End Function)
     End Function
-    Public Sub calProgressOEE(A As Double, Q As Double, P As Double)
-        ' Clamp ค่าไม่เกิน 100%
-        A = Math.Max(0, Math.Min(100, A))
-        Q = Math.Max(0, Math.Min(100, Q))
-        P = Math.Max(0, Math.Min(100, P))
-        ' คำนวณ OEE
-        Dim result As Double = (A / 100) * (Q / 100) * (P / 100)
-        Dim totalProgressbar As Integer = CInt(Math.Floor(result * 100))
-        ' กำหนดค่า ProgressBar
-        progressbarOEE.Text = totalProgressbar.ToString()
-        progressbarOEE.Value = totalProgressbar
-        ' หาสีจากช่วงที่เหมาะสมใน oeeLevelList
+
+    Public Async Function calProgressOEE(A As Double, Q As Double, P As Double) As Task
+        Try
+            A = Math.Max(0, Math.Min(100, A))
+            Q = Math.Max(0, Math.Min(100, Q))
+            P = Math.Max(0, Math.Min(100, P))
+            Dim oeeValue As Double = (A / 100) * (Q / 100) * (P / 100)
+            Dim totalProgressbar As Integer = CInt(Math.Floor(oeeValue * 100))
+            'MsgBox("totalProgressbar===>" & totalProgressbar)
+
+            If progressbarOEE.InvokeRequired Then
+                progressbarOEE.Invoke(Sub()
+                                          UpdateProgressOEE(totalProgressbar)
+                                      End Sub)
+            Else
+                UpdateProgressOEE(totalProgressbar)
+            End If
+        Catch ex As Exception
+            MsgBox("Error in calProgressOEE: " & ex.Message)
+        End Try
+    End Function
+
+
+    Private Sub UpdateProgressOEE(value As Integer)
+        ' Clamp ซ้ำเพื่อความปลอดภัย
+        'MsgBox("GGG")
+        value = Math.Max(0, Math.Min(100, value))
+        'MsgBox("value ===>" & value)
+        progressbarOEE.Text = value.ToString()
+        progressbarOEE.Value = value
+        ' ตั้งค่าสีตามระดับ
         For Each level As Working_Pro In oeeLevelList
-            If totalProgressbar >= level.MinValue AndAlso totalProgressbar <= level.MaxValue Then
+            If value >= level.MinValue AndAlso value <= level.MaxValue Then
                 Dim rgbParts() As String = level.ColorRGB.Split(","c)
                 If rgbParts.Length = 3 Then
-                    Dim R As Integer = Convert.ToInt32(rgbParts(0).Trim())
-                    Dim G As Integer = Convert.ToInt32(rgbParts(1).Trim())
-                    Dim B As Integer = Convert.ToInt32(rgbParts(2).Trim())
-                    progressbarOEE.ProgressColor = Color.FromArgb(R, G, B)
+                    Dim r = Convert.ToInt32(rgbParts(0).Trim())
+                    Dim g = Convert.ToInt32(rgbParts(1).Trim())
+                    Dim b = Convert.ToInt32(rgbParts(2).Trim())
+                    progressbarOEE.ProgressColor = Color.FromArgb(r, g, b)
                 End If
                 Exit For
             End If
         Next
     End Sub
-    Public Function cal_progressbarA(line_cd As String, st_shift As String, end_shift As String) As Integer
-        Dim OEE_LOCAL = New OEE_SQLITE
-        Dim totalProgressbar As Integer = OEE_LOCAL.mas_GetDataProgressbarA(
-        st_shift, end_shift, line_cd,
-        gobal_stTimeModel, statusSwitchModel,
-        IsOnlyone, MainFrm.chk_spec_line)
 
-        ' Clamp ค่าให้อยู่ระหว่าง 0-100
-        totalProgressbar = Math.Max(0, Math.Min(100, totalProgressbar))
+    Public Async Function cal_progressbarA(line_cd As String, st_shift As String, end_shift As String) As Task(Of Integer)
+        Return Await Task.Run(Function()
+                                  Try
+                                      Dim OEE_LOCAL As New OEE_SQLITE()
+                                      Dim totalProgressbar As Integer = OEE_LOCAL.mas_GetDataProgressbarA(
+                st_shift, end_shift, line_cd,
+                gobal_stTimeModel, statusSwitchModel,
+                IsOnlyone, MainFrm.chk_spec_line)
 
-        ' กำหนดค่า ProgressBar
-        progressbarA.Text = totalProgressbar.ToString()
-        progressbarA.Value = totalProgressbar
-        ' หาสีจากช่วงที่เหมาะสมใน oeeLevelList
-        For Each level As Working_Pro In ALevelList
-            If totalProgressbar >= level.MinValue AndAlso totalProgressbar <= level.MaxValue Then
-                Dim rgbParts() As String = level.ColorRGB.Split(","c)
-                If rgbParts.Length = 3 Then
-                    Dim R As Integer = Convert.ToInt32(rgbParts(0).Trim())
-                    Dim G As Integer = Convert.ToInt32(rgbParts(1).Trim())
-                    Dim B As Integer = Convert.ToInt32(rgbParts(2).Trim())
-                    progressbarA.ProgressColor = Color.FromArgb(R, G, B)
-                End If
-                Exit For
-            End If
-        Next
-        ' แสดงค่า % แบบ RichText
-        Dim rtb As New RichTextBox()
-        rtb.SelectionFont = New Font("Panton-Trial", 18, FontStyle.Bold)
-        rtb.AppendText(totalProgressbar.ToString())
-        rtb.SelectionFont = New Font("Broadway", 20, FontStyle.Bold)
-        rtb.AppendText("%")
-        Return totalProgressbar
+                                      ' Clamp ค่าอยู่ระหว่าง 0-100
+                                      totalProgressbar = Math.Max(0, Math.Min(100, totalProgressbar))
+
+                                      ' อัปเดต ProgressBar UI อย่างปลอดภัย
+                                      If progressbarA.InvokeRequired Then
+                                          progressbarA.Invoke(Sub()
+                                                                  progressbarA.Text = totalProgressbar.ToString()
+                                                                  progressbarA.Value = totalProgressbar
+                                                              End Sub)
+                                      Else
+                                          progressbarA.Text = totalProgressbar.ToString()
+                                          progressbarA.Value = totalProgressbar
+                                      End If
+
+                                      ' ตั้งสี ProgressBar ตาม Level
+                                      For Each level As Working_Pro In ALevelList
+                                          If totalProgressbar >= level.MinValue AndAlso totalProgressbar <= level.MaxValue Then
+                                              Dim rgbParts() As String = level.ColorRGB.Split(","c)
+                                              If rgbParts.Length = 3 Then
+                                                  Dim r = Convert.ToInt32(rgbParts(0).Trim())
+                                                  Dim g = Convert.ToInt32(rgbParts(1).Trim())
+                                                  Dim b = Convert.ToInt32(rgbParts(2).Trim())
+
+                                                  If progressbarA.InvokeRequired Then
+                                                      progressbarA.Invoke(Sub()
+                                                                              progressbarA.ProgressColor = Color.FromArgb(r, g, b)
+                                                                          End Sub)
+                                                  Else
+                                                      progressbarA.ProgressColor = Color.FromArgb(r, g, b)
+                                                  End If
+                                              End If
+                                              Exit For
+                                          End If
+                                      Next
+
+                                      Return totalProgressbar
+
+                                  Catch ex As Exception
+                                      Console.WriteLine("Error in cal_progressbarA: " & ex.Message)
+                                      Return 0
+                                  End Try
+                              End Function)
     End Function
 
 
 
-    Public Function setgetSpeedLoss(NG As String, Good As String, timeShift As String, std_cd As String, line_cd As String, stTimeModel As String)
-        Dim OEE_LOCAL As New OEE_SQLITE()
-        Dim startDate As DateTime
 
-        ' 1. คำนวณเวลาเริ่มต้น (startDate)
-        If MainFrm.chk_spec_line = "2" OrElse Backoffice_model.S_chk_spec_line <> "0" Then
-            startDate = Backoffice_model.date_time_start_master_shift
-            If TimeOfDay < TimeValue("08:00:00") Then startDate = startDate.AddDays(-1)
-        ElseIf statusSwitchModel = 0 OrElse (statusSwitchModel <= 2 AndAlso IsOnlyone = "1") Then
-            startDate = DateTime.Parse(DateTimeStartofShift.Text)
-        Else
-            startDate = DateTime.Parse(stTimeModel)
-        End If
+    Public Async Function setgetSpeedLoss(NG As String, Good As String, timeShift As String, std_cd As String, line_cd As String, stTimeModel As String) As Task(Of Integer)
+        Return Await Task.Run(Function()
+                                  Try
+                                      Dim OEE_LOCAL As New OEE_SQLITE()
+                                      Dim startDate As DateTime
 
-        ' 2. เวลาที่ผ่านไป (sec/min)
-        Dim secDiff As Long = DateDiff("s", startDate, Now())
-        Dim minSwitchModel As Integer = CInt(secDiff / 60)
+                                      ' 1. คำนวณเวลาเริ่มต้น
+                                      If MainFrm.chk_spec_line = "2" OrElse Backoffice_model.S_chk_spec_line <> "0" Then
+                                          startDate = Backoffice_model.date_time_start_master_shift
+                                          If TimeOfDay < TimeValue("08:00:00") Then startDate = startDate.AddDays(-1)
+                                      ElseIf statusSwitchModel = 0 OrElse (statusSwitchModel <= 2 AndAlso IsOnlyone = "1") Then
+                                          startDate = DateTime.Parse(DateTimeStartofShift.Text)
+                                      Else
+                                          startDate = DateTime.Parse(stTimeModel)
+                                      End If
 
-        ' 3. actualP (จำนวนที่ผลิตจริงในช่วงเวลา)
-        Dim actualP_val As Integer = CInt(OEE_LOCAL.mas_getProduction_actual_detailByHour(line_cd, minSwitchModel, startDate, Label3.Text, MainFrm.chk_spec_line))
-        actualP.Text = actualP_val.ToString()
+                                      ' 2. เวลา diff
+                                      Dim secDiff As Long = DateDiff("s", startDate, Now())
+                                      Dim minSwitchModel As Integer = CInt(secDiff / 60)
 
-        ' 4. stdJobP (คำนวณจากเวลาทำงาน / std_cd)
-        Dim stdJobP_val As Integer
-        If secDiff < 3600 Then
-            stdJobP_val = CInt(Math.Ceiling(secDiff / Val(std_cd)))
-        Else
-            Dim lossTime = CInt(OEE_LOCAL.mas_OEE_GetLossByHouseP1(line_cd))
-            Dim usableTime = If(lossTime > 0, secDiff - lossTime, secDiff)
-            stdJobP_val = CInt(Math.Ceiling(usableTime / Val(std_cd)))
-        End If
-        stdJobP.Text = stdJobP_val.ToString()
+                                      ' 3. จำนวนผลิตจริง
+                                      Dim actualP_val As Integer = CInt(OEE_LOCAL.mas_getProduction_actual_detailByHour(line_cd, minSwitchModel, startDate, Label3.Text, MainFrm.chk_spec_line))
 
-        ' 5. คำนวณ P% และ Clamp ค่า
-        Dim totalProgressbar As Double = If(actualP_val = 0 Or stdJobP_val = 0, 0, (actualP_val / stdJobP_val) * 100)
-        totalProgressbar = Math.Max(0, Math.Min(100, totalProgressbar))
-        Dim intProgress As Integer = CInt(Math.Floor(totalProgressbar))
+                                      ' 4. คำนวณ stdJobP
+                                      Dim stdJobP_val As Integer
+                                      If secDiff < 3600 Then
+                                          stdJobP_val = CInt(Math.Ceiling(secDiff / Val(std_cd)))
+                                      Else
+                                          Dim lossTime = CInt(OEE_LOCAL.mas_OEE_GetLossByHouseP1(line_cd))
+                                          Dim usableTime = If(lossTime > 0, secDiff - lossTime, secDiff)
+                                          stdJobP_val = CInt(Math.Ceiling(usableTime / Val(std_cd)))
+                                      End If
 
-        ' 6. ตั้งค่า ProgressBar
-        progressbarP.Text = intProgress.ToString()
-        progressbarP.Value = intProgress
+                                      ' 5. P% และ Clamp
+                                      Dim totalProgressbar As Double = If(actualP_val = 0 Or stdJobP_val = 0, 0, (actualP_val / stdJobP_val) * 100)
+                                      totalProgressbar = Math.Max(0, Math.Min(100, totalProgressbar))
+                                      Dim intProgress As Integer = CInt(Math.Floor(totalProgressbar))
 
-        ' 7. ตั้งสีตามช่วงที่กำหนดใน oeeLevelList
-        For Each level As Working_Pro In PLevelList
-            If intProgress >= level.MinValue AndAlso intProgress <= level.MaxValue Then
-                Dim rgbParts() As String = level.ColorRGB.Split(","c)
-                If rgbParts.Length = 3 Then
-                    progressbarP.ProgressColor = Color.FromArgb(
-                    CInt(rgbParts(0).Trim()),
-                    CInt(rgbParts(1).Trim()),
-                    CInt(rgbParts(2).Trim()))
-                End If
-                Exit For
-            End If
-        Next
-        Return intProgress
+                                      ' 6. อัปเดต UI อย่างปลอดภัย
+                                      If progressbarP.InvokeRequired Then
+                                          progressbarP.Invoke(Sub()
+                                                                  actualP.Text = actualP_val.ToString()
+                                                                  stdJobP.Text = stdJobP_val.ToString()
+                                                                  progressbarP.Text = intProgress.ToString()
+                                                                  progressbarP.Value = intProgress
+                                                              End Sub)
+                                      Else
+                                          actualP.Text = actualP_val.ToString()
+                                          stdJobP.Text = stdJobP_val.ToString()
+                                          progressbarP.Text = intProgress.ToString()
+                                          progressbarP.Value = intProgress
+                                      End If
+
+                                      ' 7. สี
+                                      For Each level As Working_Pro In PLevelList
+                                          If intProgress >= level.MinValue AndAlso intProgress <= level.MaxValue Then
+                                              Dim rgbParts() As String = level.ColorRGB.Split(","c)
+                                              If rgbParts.Length = 3 Then
+                                                  Dim r = CInt(rgbParts(0).Trim())
+                                                  Dim g = CInt(rgbParts(1).Trim())
+                                                  Dim b = CInt(rgbParts(2).Trim())
+                                                  If progressbarP.InvokeRequired Then
+                                                      progressbarP.Invoke(Sub()
+                                                                              progressbarP.ProgressColor = Color.FromArgb(r, g, b)
+                                                                          End Sub)
+                                                  Else
+                                                      progressbarP.ProgressColor = Color.FromArgb(r, g, b)
+                                                  End If
+                                              End If
+                                              Exit For
+                                          End If
+                                      Next
+
+                                      Return intProgress
+                                  Catch ex As Exception
+                                      Console.WriteLine("setgetSpeedLoss error: " & ex.Message)
+                                      Return 0
+                                  End Try
+                              End Function)
     End Function
+
     Public Sub setNgByHour(line_cd As String, lot_no As String)
         'Dim sqlite = New ModelSqliteDefect
         'Dim rs = sqlite.mSqliteGetDataNG_BYHOUR(line_cd, lot_no)
@@ -420,54 +545,104 @@ Public Class Working_Pro
         'lbNG.Text = lbOverTimeQuality.Text
     End Sub
     Public Async Function set_AccTarget(TimestartShift As String, std_ct As String, stTimeModel As String) As Task
-        ' Dim OEE = New OEE_NODE
-        Dim OEE_LOCAL = New OEE_SQLITE
-        'lbAccTarget.Text = OEE.OEE_GET_Data_AccTarget(TimestartShift, std_ct)
-        lbAccTarget.Text = OEE_LOCAL.mas_OEE_GET_Data_AccTarget(TimestartShift, std_ct)
+        Try
+            Dim OEE_LOCAL = New OEE_SQLITE()
+            ' ดึงข้อมูลจาก SQLite บน Background Thread
+            Dim result As String = Await Task.Run(Function()
+                                                      Return OEE_LOCAL.mas_OEE_GET_Data_AccTarget(TimestartShift, std_ct)
+                                                  End Function)
+
+            ' กลับมาอัปเดต UI บน UI Thread
+            If Me.InvokeRequired Then
+                Me.Invoke(Sub()
+                              lbAccTarget.Text = result
+                          End Sub)
+            Else
+                lbAccTarget.Text = result
+            End If
+        Catch ex As Exception
+            Console.WriteLine("Error in set_AccTarget: " & ex.Message)
+        End Try
     End Function
     Public Async Function setlvQ(line_cd As String, lot_no As String, TimeShift As String, stTimeModel As String) As Task
-        lvQ.Items.Clear()
-        lbOverTimeQuality.Text = "0"
-        lbNG.Text = "0"
-        Dim OEE = New OEE_NODE
-        Dim sqlite = New ModelSqliteDefect
-        Dim startDate As Date
-        'MsgBox("DateTimeStartofShift.Text.ToString=====>" & DateTimeStartofShift.Text.ToString)
-        If statusSwitchModel = 0 Then
-            startDate = DateTime.Parse(DateTimeStartofShift.Text.ToString)
-            startDate = Convert.ToDateTime(startDate).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
-            '''Console.WriteLine("setlvQ IFFFFFFFFFFFF0001")
-        ElseIf statusSwitchModel = 1 Or statusSwitchModel = 2 Then
-            If IsOnlyone = "1" Then
-                startDate = DateTime.Parse(DateTimeStartofShift.Text.ToString)
-                '  ''Console.WriteLine("setlvQ IFFFFFFFFFFFF0002")
-                startDate = Convert.ToDateTime(startDate).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
-            Else
-                ' ''Console.WriteLine("setlvQ ELSE")
-                startDate = Convert.ToDateTime(stTimeModel).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
+        If isSettingLvQ Then Exit Function
+        isSettingLvQ = True
+
+        Dim sqlite As New ModelSqliteDefect()
+
+        Try
+            lvQ.BeginUpdate()
+            lvQ.Items.Clear()
+            'lbOverTimeQuality.Text = "0"
+            'lbNG.Text = "0"
+            ' หา startDate อย่างปลอดภัย
+            Dim startDate As Date = Await Task.Run(Function()
+                                                       If statusSwitchModel = 0 OrElse IsOnlyone = "1" Then
+                                                           Return DateTime.Parse(DateTimeStartofShift.Text)
+                                                       Else
+                                                           Return DateTime.Parse(stTimeModel)
+                                                       End If
+                                                   End Function)
+
+            ' ดึงข้อมูล NG ทั้งหมด
+            Dim result_ng As String = Await Task.Run(Function()
+                                                         Return sqlite.mSqliteGetDataQualityOverAllNG(line_cd, lot_no, DateTimeStartofShift.Text)
+                                                     End Function)
+
+            Dim tempNGText As String = "0"
+            If result_ng <> "0" Then
+                Try
+                    Dim dictNG = New JavaScriptSerializer().Deserialize(Of List(Of Object))(result_ng)
+                    If dictNG.Count > 0 Then
+                        tempNGText = dictNG(0)("AllDefect").ToString()
+                    End If
+                Catch ex As Exception
+                    Console.WriteLine("Error parsing NG: " & ex.Message)
+                End Try
             End If
-        End If
-        Dim rslvQ = sqlite.mSqliteGetDataQuality(line_cd, lot_no, startDate)
-        Dim rsOverAllNG = sqlite.mSqliteGetDataQualityOverAllNG(line_cd, lot_no, DateTimeStartofShift.Text)
-        ' MsgBox("DateTimeStartofShift ===>" & DateTimeStartofShift.Text)
-        If rsOverAllNG <> "0" Then
-            Dim dictOverall As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(rsOverAllNG)
-            For Each item As Object In dictOverall
-                lbNG.Text = item("AllDefect").ToString()
-            Next
-        End If
-        If rslvQ <> "0" Then
-            Dim dict3 As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(rslvQ)
-            Try
-                For Each item As Object In dict3
-                    lbOverTimeQuality.Text = item("AllDefect").ToString()
-                    datlvDefectsumary = New ListViewItem(item("dt_code").ToString())
-                    datlvDefectsumary.SubItems.Add(item("TotalQ").ToString())
-                    lvQ.Items.Add(datlvDefectsumary)
-                Next
-            Catch ex As Exception
-            End Try
-        End If
+
+            ' ดึงข้อมูล Quality (Q)
+            Dim result_q As String = Await Task.Run(Function()
+                                                        Return sqlite.mSqliteGetDataQuality(line_cd, lot_no, startDate)
+                                                    End Function)
+
+            Dim tempOverTimeQ As String = "0"
+            If result_q <> "0" Then
+                Try
+                    Dim dictQ = New JavaScriptSerializer().Deserialize(Of List(Of Object))(result_q)
+                    Dim seenCodes As New HashSet(Of String)
+
+                    For Each item In dictQ
+                        Dim code As String = item("dt_code").ToString()
+                        Dim qty As String = item("TotalQ").ToString()
+
+                        ' ใช้ AllDefect จาก record แรกพอ
+                        If tempOverTimeQ = "0" Then
+                            tempOverTimeQ = item("AllDefect").ToString()
+                        End If
+
+                        ' เพิ่มรายการถ้าไม่ซ้ำ
+                        If Not seenCodes.Contains(code) Then
+                            seenCodes.Add(code)
+                            Dim row As New ListViewItem(code)
+                            row.SubItems.Add(qty)
+                            lvQ.Items.Add(row)
+                        End If
+                    Next
+                Catch ex As Exception
+                    Console.WriteLine("Error parsing Q: " & ex.Message)
+                End Try
+            End If
+
+            ' อัปเดต Label เฉพาะเมื่อค่าต่างจากเดิม → ป้องกันการกระพริบ
+            If lbNG.Text <> tempNGText Then lbNG.Text = tempNGText
+            If lbOverTimeQuality.Text <> tempOverTimeQ Then lbOverTimeQuality.Text = tempOverTimeQ
+        Catch ex As Exception
+            Console.WriteLine("setlvQ error (main): " & ex.Message)
+        Finally
+            lvQ.EndUpdate()
+            isSettingLvQ = False
+        End Try
     End Function
     Private Async Function ShowLoadingAndLoadData() As Task
         loadingForm.Show()
@@ -504,7 +679,7 @@ Public Class Working_Pro
         End Try
         st_time.Text = DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") ' ไม่งั้น พอ auto close lot ทำงาน close lot ไม่ได้ 
         Await ShowLoadingAndLoadData()
-        Dim mastOEE = OEE.OEE_LOAD_MSTOEEColor(MainFrm.Label4.Text)
+        Dim mastOEE As List(Of Object) = Await OEE.OEE_LOAD_MSTOEEColor(MainFrm.Label4.Text)
         Dim i As Integer = 1
         Try
             For Each item As Object In mastOEE
@@ -704,11 +879,11 @@ Public Class Working_Pro
         lb_good.Text = mdDf.mGetGoodWILot(wi_no.Text, Label18.Text)
         pb_netdown.Visible = False
         ' Main() ' P1 Loss Code 36 
-        Dim P = setgetSpeedLoss(lbOverTimeQuality.Text, lb_good.Text, Prd_detail.Label12.Text.Substring(3, 5), Label38.Text, MainFrm.Label4.Text, gobal_stTimeModel)
+        Dim P = Await setgetSpeedLoss(lbOverTimeQuality.Text, lb_good.Text, Prd_detail.Label12.Text.Substring(3, 5), Label38.Text, MainFrm.Label4.Text, gobal_stTimeModel)
         Dim GoodByPartNo As Integer = CDbl(Val(actualP.Text)) - CDbl(Val(lbOverTimeQuality.Text))
-        Dim Q = cal_progressbarQ(lbOverTimeQuality.Text, GoodByPartNo)
-        Dim A = cal_progressbarA(MainFrm.Label4.Text, Prd_detail.Label12.Text.Substring(3, 5), Prd_detail.Label12.Text.Substring(11, 5))
-        calProgressOEE(A, Q, P)
+        Dim Q = Await cal_progressbarQ(lbOverTimeQuality.Text, GoodByPartNo)
+        Dim A = Await cal_progressbarA(MainFrm.Label4.Text, Prd_detail.Label12.Text.Substring(3, 5), Prd_detail.Label12.Text.Substring(11, 5))
+        Await calProgressOEE(A, Q, P)
         Timer2.Start()
         Me.Enabled = True
         loadingForm.Hide()
@@ -920,7 +1095,7 @@ Public Class Working_Pro
 
     ' ====== 7. ฟังก์ชันจัดการเมื่อเจอ Error ======
     Private Sub HandleDIOError(message As String)
-        ' ปิดการใช้งานปุ่มที่เกี่ยวข้อง
+        ' ปิดการใช้งานปุ่มที่เกี่ยวข้องหะฟพะ
         btnStart.Enabled = False
         btn_back.Enabled = False
         panelpcWorker1.Enabled = False
@@ -1074,6 +1249,12 @@ Public Class Working_Pro
         End Try
         stop_working()
     End Sub
+    Private Sub EnableDoubleBufferListView(ByVal listView As ListView)
+        Dim pi As System.Reflection.PropertyInfo = GetType(Control).GetProperty("DoubleBuffered", Reflection.BindingFlags.Instance Or Reflection.BindingFlags.NonPublic)
+        If pi IsNot Nothing Then
+            pi.SetValue(listView, True, Nothing)
+        End If
+    End Sub
     Private Sub Button3_Click(sender As Object, e As EventArgs)
         Dim dfHome = New defectHome()
         dfHome.Show()
@@ -1219,8 +1400,8 @@ Public Class Working_Pro
         btn_stop.Visible = True
         Prd_detail.Timer3.Enabled = False
     End Sub
-    Private Sub btn_start_Click(sender As Object, e As EventArgs) Handles btn_start.Click
-        Start_Production()
+    Private Async Sub btn_start_Click(sender As Object, e As EventArgs) Handles btn_start.Click
+        Await Start_Production()
     End Sub
     Public Sub ins_loss_code(pd As String, line_cd As String, wi_plan As String, item_cd As String, seq_no As String, shift_prd As String, start_loss As String, end_loss As String, total_loss As String, loss_type As String, loss_cd_id As String, op_id As String, pwi_id As String)
         Dim flg_control As String = "0"
@@ -1412,9 +1593,12 @@ Public Class Working_Pro
         Dim hasError As Boolean = False
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                Dim bf = New Backoffice_model
+                ' Dim bf = New Backoffice_model
                 ' Dim RsCheckProduction_Plan = bf.Get_Plan_All_By_Line(Backoffice_model.GET_LINE_PRODUCTION(), Label14.Text, DateTime.Now.ToString("yyyy-MM-dd"))
-                RsCheckProduction_Plan = bf.Get_Plan_All_By_Line_Loss_E1(Backoffice_model.GET_LINE_PRODUCTION(), Label14.Text, dateNow, timeNow, Backoffice_model.S_chk_spec_line, Label3.Text)
+                ' RsCheckProduction_Plan = bf.Get_Plan_All_By_Line_Loss_E1(Backoffice_model.GET_LINE_PRODUCTION(), Label14.Text, dateNow, timeNow, Backoffice_model.S_chk_spec_line, Label3.Text)
+                Dim mdsqlite = New model_api_sqlite
+                Dim Timestart = Prd_detail.Label12.Text.Substring(3, 5) & ":00"
+                RsCheckProduction_Plan = Await model_api_sqlite.mas_Get_Plan_All_By_Line_Loss_E1(Backoffice_model.GET_LINE_PRODUCTION(), Label14.Text, dateNow, timeNow, Backoffice_model.S_chk_spec_line, Label3.Text, Timestart)
             Else
                 Dim mdsqlite = New model_api_sqlite
                 Dim Timestart = Prd_detail.Label12.Text.Substring(3, 5) & ":00"
@@ -1485,6 +1669,8 @@ Public Class Working_Pro
     End Function
     Public Async Function Start_Production() As Task '
         StatusClickStart = 1
+        EnableDoubleBufferListView(lvA)
+        EnableDoubleBufferListView(lvQ)
         If check_network_frist = 0 Then
             Try
                 If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
@@ -1807,7 +1993,7 @@ Public Class Working_Pro
         End If
 
         statusPrint = "Normal"
-        cal_eff()
+        Await cal_eff()
         'asdasdas
         'TIME_CAL_EFF.Start()
         LB_COUNTER_SHIP.Visible = True
@@ -2326,16 +2512,20 @@ outNet:
 
     Public count As String = 0
     Public Async Function counter_contect_DIO() As Task
+        Dim hasError As Boolean = False
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
                 Await Backoffice_model.updated_data_to_dbsvr(Me, "2")
-                insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
+                Await insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
             Else
-                insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
+                Await insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
             End If
         Catch ex As Exception
-            insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
+            hasError = True
         End Try
+        If hasError Then
+            Await insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
+        End If
         Dim yearNow As Integer = DateTime.Now.ToString("yyyy")
         Dim monthNow As Integer = DateTime.Now.ToString("MM")
         Dim dayNow As Integer = DateTime.Now.ToString("dd")
@@ -2708,16 +2898,20 @@ outNet:
         'Edit_Down(BitNo).Text = CStr(DownCount(BitNo))
     End Function
     Public Async Function counter_contect_DIO_RS232() As Task
+        Dim hasError As Boolean = False
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
                 Await Backoffice_model.updated_data_to_dbsvr(Me, "2")
-                insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
+                Await insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
             Else
-                insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
+                Await insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
             End If
         Catch ex As Exception
-            insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
+            hasError = True
         End Try
+        If hasError Then
+            Await insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
+        End If
         Dim yearNow As Integer = DateTime.Now.ToString("yyyy")
         Dim monthNow As Integer = DateTime.Now.ToString("MM")
         Dim dayNow As Integer = DateTime.Now.ToString("dd")
@@ -3093,7 +3287,7 @@ outNet:
                 Console.WriteLine("[Manage_counter_contect_DIO - inner] " & ex.Message)
                 fallbackNeeded = True
             End Try
-            cal_eff()
+            Await cal_eff()
             Dim delay_setting As Integer = If(status_conter = "0", s_delay * 100, s_delay * 1000)
             Dim cts As New Threading.CancellationTokenSource()
 
@@ -3145,7 +3339,7 @@ outNet:
                 Console.WriteLine("[Manage_counter_contect_DIO_RS232 - inner] " & ex.Message)
                 fallbackNeeded = True
             End Try
-            cal_eff()
+            Await cal_eff()
             Dim delay_setting As Integer = If(status_conter = "0", s_delay * 100, s_delay * 1000)
             Dim cts As New Threading.CancellationTokenSource()
             Try
@@ -3200,7 +3394,7 @@ outNet:
                     Console.WriteLine("[Inner Error] " & innerEx.Message)
                     fallbackNeeded = True
                 End Try
-                cal_eff()
+                Await cal_eff()
                 Dim delay_setting As Integer = If(status_conter = "0", s_delay * 100, s_delay * 1000)
                 Dim cts As New Threading.CancellationTokenSource()
                 Await Task.Delay(delay_setting, cts.Token).ContinueWith(Sub(task)
@@ -3943,7 +4137,7 @@ outNet:
             'End If
         Next
     End Sub
-    Public Function ins_qty_fn_manual()
+    Public Async Function ins_qty_fn_manual() As Task
         statusPrint = "Normal"
         Dim add_value_loop As Integer = 0
         Dim result_add As Integer = CDbl(Val(lb_ins_qty.Text)) + CDbl(Val(Label6.Text))
@@ -4145,46 +4339,36 @@ outNet:
             End If
             Finish_work.Show() ' เกี่ยว
         End If
-        cal_eff()
+        Await cal_eff()
     End Function
-    Private cts As CancellationTokenSource = New CancellationTokenSource()
-    Async Function LOAD_OEE() As Task
-        ' MsgBox("load oee")
+    Private cts As New Threading.CancellationTokenSource()
+
+    Public Async Function LOAD_OEE() As Task
         Try
-            While True
-                ''Console.WriteLine("READY LOAD OEE 2 ")
-                ' รอ 60 วินาที
-                ' Await Task.Delay(60000, cts.Token).ContinueWith(Sub(task)
-                ' ตรวจสอบว่า Task ไม่ถูกยกเลิก
-                Await Task.Delay(60000, cts.Token).ContinueWith(Sub(task)
-                                                                    If Not task.IsCanceled Then
-                                                                        ' ตรวจสอบว่า Handle ของฟอร์มยังถูกสร้างอยู่และไม่ถูก Dispose
-                                                                        If Me.IsHandleCreated AndAlso Not Me.IsDisposed Then
-                                                                            Try
-                                                                                Me.Invoke(Sub()
-                                                                                              Try
-                                                                                                  ' If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
-                                                                                                  cal_eff()
-                                                                                                  '   Else
-                                                                                                  '   MsgBox("ELSE MODE OFFLINE")
-                                                                                                  'End If
-                                                                                                  ''Console.WriteLine("READY LOAD OEE call ")
-                                                                                              Catch ex As Exception
-                                                                                                  ' MsgBox("CATCH MODE OFFLINE")
-                                                                                                  ''Console.WriteLine("CATCH LOAD OEE call: " & ex.Message)
-                                                                                              End Try
-                                                                                          End Sub)
-                                                                            Catch ex As Exception
-                                                                                ''Console.WriteLine("CATCH NO LOAD OEE: " & ex.Message)
-                                                                            End Try
-                                                                        End If
-                                                                    End If
-                                                                End Sub, TaskScheduler.FromCurrentSynchronizationContext())
-            End While
+            Do While Not cts.Token.IsCancellationRequested
+                Await Task.Delay(60000, cts.Token)
+                If Me.IsHandleCreated AndAlso Not Me.IsDisposed Then
+                    Try
+                        Me.Invoke(Sub()
+                                      Try
+                                          Dim task = cal_eff() ' หรือใช้ cal_eff() เฉย ๆ ก็ได้
+                                      Catch ex As Exception
+                                          Console.WriteLine("Error calling cal_eff: " & ex.Message)
+                                      End Try
+                                  End Sub)
+                    Catch ex As Exception
+                        Console.WriteLine("Invoke error: " & ex.Message)
+                    End Try
+                End If
+            Loop
+        Catch ex As TaskCanceledException
+            ' ถูก cancel แบบปกติ
         Catch ex As Exception
-            ''Console.WriteLine("err cal_eff ===>" & ex.Message)
+            Console.WriteLine("LOAD_OEE error: " & ex.Message)
         End Try
     End Function
+
+
     ' ฟังก์ชันสำหรับยกเลิกการโหลด OEE
     Public Sub CancelLOAD_OEE()
         cts.Cancel()
@@ -4239,34 +4423,32 @@ outNet:
                 'No Net
             End Try
             ' MsgBox("ready run 3 ")
-            MainFrm.RunCmd(MainFrm.Label4.Text)
+            Await MainFrm.RunCmd(MainFrm.Label4.Text)
             'MsgBox("ready run 4 ")
-            '
             ''Console.WriteLine("READY LOAD OEE cal_eff ")
             ' Inside the continuation, invoke on the UI thread
             ''Console.WriteLine("CAL OEE cal_eff")
             ' Perform various UI operations
             ' MsgBox("ready run 5 ")
-            set_AccTarget(Prd_detail.Label12.Text.Substring(3, 5), Label38.Text, gobal_stTimeModel)
+            Await set_AccTarget(Prd_detail.Label12.Text.Substring(3, 5), Label38.Text, gobal_stTimeModel)
             'MsgBox("ready run 6 ")
-            setlvA(MainFrm.Label4.Text, Label18.Text, Label14.Text, DateTime.Now.ToString("yyyy-MM-dd"), Prd_detail.Label12.Text.Substring(3, 5), gobal_stTimeModel, MainFrm.chk_spec_line)
+            Await setlvA(MainFrm.Label4.Text, Label18.Text, Label14.Text, DateTime.Now.ToString("yyyy-MM-dd"), Prd_detail.Label12.Text.Substring(3, 5), gobal_stTimeModel, MainFrm.chk_spec_line)
             ' MsgBox("ready run 7 ")
-            setlvQ(MainFrm.Label4.Text, Label18.Text, Prd_detail.Label12.Text.Substring(3, 5), gobal_stTimeModel)
+            Await setlvQ(MainFrm.Label4.Text, Label18.Text, Prd_detail.Label12.Text.Substring(3, 5), gobal_stTimeModel)
             ' MsgBox("ready run 8 ")
             'MsgBox("READY LOAD P ")
-            Dim P = setgetSpeedLoss(lbNG.Text, lb_good.Text, Prd_detail.Label12.Text.Substring(3, 5), Label38.Text, MainFrm.Label4.Text, gobal_stTimeModel)
-
+            Dim P = Await setgetSpeedLoss(lbNG.Text, lb_good.Text, Prd_detail.Label12.Text.Substring(3, 5), Label38.Text, MainFrm.Label4.Text, gobal_stTimeModel)
             ' MsgBox("ready run 9")
             Dim GoodByPartNo As Integer = CDbl(Val(actualP.Text)) - CDbl(Val(lbOverTimeQuality.Text))
             ' MsgBox("ready run 10 ")
-            Dim Q = cal_progressbarQ(lbOverTimeQuality.Text, GoodByPartNo)
+            Dim Q = Await cal_progressbarQ(lbOverTimeQuality.Text, GoodByPartNo)
             ' MsgBox("ready run 11 ")
-            Dim A = cal_progressbarA(MainFrm.Label4.Text, Prd_detail.Label12.Text.Substring(3, 5), Prd_detail.Label12.Text.Substring(11, 5))
-            setNgByHour(MainFrm.Label4.Text, Label18.Text)
+            Dim A = Await cal_progressbarA(MainFrm.Label4.Text, Prd_detail.Label12.Text.Substring(3, 5), Prd_detail.Label12.Text.Substring(11, 5))
+            'setNgByHour(MainFrm.Label4.Text, Label18.Text)
             ' MsgBox("ready run 12 ")
             'Dim rswebview = loadDataProgressBar(MainFrm.Label4.Text, Label14.Text)
             ' WebViewProgressbar.Reload()
-            calProgressOEE(A, Q, P)
+            Await calProgressOEE(A, Q, P)
             ' MsgBox("ready run 13 ")
         Catch ex As Exception
             ''Console.WriteLine("err cal_eff ===>" & ex.Message)
@@ -4618,17 +4800,21 @@ outNet:
     End Function
     Public Async Function counter_data_new_dio() As Task ' NI MAX
         ''Console.WriteLine("READY NI MAX")
+        Dim hasError As Boolean = False
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
                 Await Backoffice_model.updated_data_to_dbsvr(Me, "2")
-                insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
+                Await insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
             Else
-                insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
+                Await insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
                 ' MsgBox("NO NET")
             End If
         Catch ex As Exception
-            insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
+            hasError = True
         End Try
+        If hasError Then
+            Await insLossClickStart_Loss_E1(DateTime.Now.ToString("yyyy-MM-dd"), DateTime.Now.ToString("HH:mm:ss"))
+        End If
         Dim yearNow As Integer = DateTime.Now.ToString("yyyy")
         Dim monthNow As Integer = DateTime.Now.ToString("MM")
         Dim dayNow As Integer = DateTime.Now.ToString("dd")

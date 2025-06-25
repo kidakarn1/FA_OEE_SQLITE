@@ -2,13 +2,11 @@
 Imports System.IO
 Imports System.Web.Script.Serialization
 Imports NationalInstruments.DAQmx
-
 Public Class TestForm
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Me.BackColor = Color.FromArgb(12, 59, 99)
         CreateCenteredPictureBoxes()
     End Sub
-
     Private Sub CreateCenteredPictureBoxes()
         ' ===== ลบ PictureBox เดิมก่อน (Reset) =====
         For i As Integer = Me.Controls.Count - 1 To 0 Step -1
@@ -16,7 +14,6 @@ Public Class TestForm
                 Me.Controls.RemoveAt(i)
             End If
         Next
-
         Dim boxWidth As Integer = 318
         Dim boxHeight As Integer = 148
         Dim gapX As Integer = 30

@@ -813,6 +813,7 @@ Public Class modelDefect
         Try
             Dim api = New api()
             Dim rsData = api.Load_data("http://" & Backoffice_model.svApi & "/apiShopfloor/index.php/getDatadefect/GetGroupDataTagDefect?df_type=" & df_type & "&df_wi=" & df_wi & "&DateStart=" & DateStart & "&DateEnd=" & DateEnd)
+            Console.WriteLine("http://" & Backoffice_model.svApi & "/apiShopfloor/index.php/getDatadefect/GetGroupDataTagDefect?df_type=" & df_type & "&df_wi=" & df_wi & "&DateStart=" & DateStart & "&DateEnd=" & DateEnd)
             Return rsData
         Catch ex As Exception
             MsgBox("connect Api Faill Please check modelDefect in Function LoadDataTagDefect = " & ex.Message)
