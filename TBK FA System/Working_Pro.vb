@@ -31,6 +31,10 @@ Public Class Working_Pro
     Private lossPopupCts As CancellationTokenSource
     Private WithEvents WebViewProgressbar As WebView2
     Private WithEvents WebViewEmergency As WebView2
+
+    Private currentProgressbarUrl As String = ""
+    Private currentEmergencyUrl As String = ""
+
     ' Public Shared comportTowerLamp = "COM7"
     ' Public Shared ArrayDataSpecial As New List(Of DataPlan)
     Public check_cal_eff As Integer = 0
@@ -657,7 +661,7 @@ Public Class Working_Pro
         Await Task.Delay(5000) ' รอ 3 วินาที
     End Function
     Private Async Sub Working_Pro_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        loadWebviewEmergency()
+        Await loadWebviewEmergency()
         'GenQrScanChecklist(MainFrm.Label4.Text)
         Me.Enabled = False
         statusPrint = "Normal"
@@ -2122,56 +2126,70 @@ outNet:
         'MsgBox("tb2222===>" & tb)
         ins_qty_fn_manual()
     End Sub
-    Public Async Function loadDataProgressBar(line_cd As String, shift As String) As Task
-        ' ตรวจสอบและ Dispose instance ของ WebViewProgressbar หากมีการสร้างไว้ก่อนแล้ว
-        ' If WebViewProgressbar IsNot Nothing Then
-        ' WebViewProgressbar.Dispose()
-        ' End If
-        ' Create a new instance of WebView2 control
-        WebViewProgressbar = New WebView2() With {
-            .Dock = DockStyle.Fill
-        }
-        PanelProgressbar.Controls.Add(WebViewProgressbar)
+    Public Async Function LoadDataProgressBar(line_cd As String, shift As String) As Task
         Try
-            ' กำหนดไดเรกทอรีสำหรับ environment
-            Dim webViewEnvironment = Await CoreWebView2Environment.CreateAsync(Nothing, "C:\Temp")
-            ' สร้าง instance ของ WebView2 control
-            Await WebViewProgressbar.EnsureCoreWebView2Async(webViewEnvironment)
-            ' เรียกใช้ URL โดยแสดงค่า line_cd และ shift
-            WebViewProgressbar.CoreWebView2.Navigate("http://" & Backoffice_model.svApi & "/productionHrprogress/?line_cd=" & line_cd & "&shift=" & shift)
-            'WebViewProgressbar.CoreWebView2.Navigate("http://" & Backoffice_model.svApi & "/productionHrprogress/?line_cd=" & line_cd & "&shift=" & shift)
-            ''Console.WriteLine("http://" & Backoffice_model.svApi & "/productionHrprogress/?line_cd=" & line_cd & "&shift=" & shift)
+            Dim url As String = $"http://{Backoffice_model.svApi}/productionHrprogress/?line_cd={line_cd}&shift={shift}"
+
+            If WebViewProgressbar Is Nothing Then
+                WebViewProgressbar = New WebView2 With {
+                    .Dock = DockStyle.Fill,
+                    .Visible = False
+                }
+
+                Dim env = Await CoreWebView2Environment.CreateAsync(Nothing, "C:\Temp")
+                Await WebViewProgressbar.EnsureCoreWebView2Async(env)
+
+                ' Event: โหลดหน้าเสร็จ
+                AddHandler WebViewProgressbar.CoreWebView2.DOMContentLoaded, Sub(sender, args)
+                                                                                 WebViewProgressbar.Visible = True
+                                                                             End Sub
+
+                PanelProgressbar.Controls.Add(WebViewProgressbar)
+            End If
+
+            ' ถ้า URL เปลี่ยนค่อยโหลดใหม่
+            If currentProgressbarUrl <> url Then
+                WebViewProgressbar.Visible = False
+                WebViewProgressbar.CoreWebView2.Navigate(url)
+                currentProgressbarUrl = url
+            End If
+
         Catch ex As Exception
-            ' แสดงข้อผิดพลาดในกรณีที่การเริ่มต้นใช้งาน WebView2 ล้มเหลว
-            ''Console.WriteLine($"Failed to initialize WebView2: {ex.Message}")
+            Debug.WriteLine($"[LoadDataProgressBar] Error: {ex.Message}")
         End Try
     End Function
-    Public Async Function loadWebviewEmergency() As Task
-        ' ตรวจสอบว่ามี WebView2 instance ที่ใช้งานอยู่หรือไม่ ถ้ามีให้ Dispose ก่อน
-        ' If WebViewProgressbar IsNot Nothing Then
-        ' WebViewProgressbar.Dispose()
-        ' End If
-        ' Create a new instance of WebView2 control
-        WebViewEmergency = New WebView2() With {
-        .Dock = DockStyle.Fill
-    }
-        ' ตั้งค่าตำแหน่งของ PanelWebviewEmergency
-        PanelWebviewEmergency.Location = New Point(0, 99)
-        ' ตั้งค่าขนาดของ PanelWebviewEmergency
-        PanelWebviewEmergency.Size = New Size(800, 501)
-        PanelWebviewEmergency.Controls.Add(WebViewEmergency)
+    Public Async Function LoadWebviewEmergency() As Task
         Try
-            ' กำหนดไดเรกทอรีสำหรับ environment
-            Dim webViewEnvironment = Await CoreWebView2Environment.CreateAsync(Nothing, "C:\Temp")
-            ' สร้าง instance ของ WebView2 control
-            Await WebViewEmergency.EnsureCoreWebView2Async(webViewEnvironment)
-            ' เรียกใช้ URL โดยแสดงค่า line_cd และ shift
-            PanelWebviewEmergency.BringToFront()
-            WebViewEmergency.CoreWebView2.Navigate("http://" & Backoffice_model.svApi & "/API_NEW_FA/SpecialCode/EMERGENCY")
-            ''Console.WriteLine("http://" & Backoffice_model.svApi & "/API_NEW_FA/SpecialCode/EMERGENCY")
+            Dim url As String = $"http://{Backoffice_model.svApi}/API_NEW_FA/SpecialCode/EMERGENCY"
+
+            If WebViewEmergency Is Nothing Then
+                WebViewEmergency = New WebView2 With {
+                    .Dock = DockStyle.Fill,
+                    .Visible = False
+                }
+
+                PanelWebviewEmergency.Location = New Point(0, 99)
+                PanelWebviewEmergency.Size = New Size(800, 501)
+
+                Dim env = Await CoreWebView2Environment.CreateAsync(Nothing, "C:\Temp")
+                Await WebViewEmergency.EnsureCoreWebView2Async(env)
+
+                AddHandler WebViewEmergency.CoreWebView2.DOMContentLoaded, Sub(sender, args)
+                                                                               WebViewEmergency.Visible = True
+                                                                           End Sub
+
+                PanelWebviewEmergency.Controls.Add(WebViewEmergency)
+                PanelWebviewEmergency.BringToFront()
+            End If
+
+            If currentEmergencyUrl <> url Then
+                WebViewEmergency.Visible = False
+                WebViewEmergency.CoreWebView2.Navigate(url)
+                currentEmergencyUrl = url
+            End If
+
         Catch ex As Exception
-            ' แสดงข้อผิดพลาดในกรณีที่การเริ่มต้นใช้งาน WebView2 ล้มเหลว
-            ''Console.WriteLine($"Failed to initialize WebView2: {ex.Message}")
+            Debug.WriteLine($"[LoadWebviewEmergency] Error: {ex.Message}")
         End Try
     End Function
     Private Sub Button1_Click(sender As Object, e As EventArgs)

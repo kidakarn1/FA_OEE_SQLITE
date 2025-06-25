@@ -229,7 +229,6 @@
                     End If
                 End If
                 lbEndCount.Text = TimeOfDay.ToString("H:mm:ss")
-
             End If
         Catch ex As Exception
             Working_Pro.Enabled = True
