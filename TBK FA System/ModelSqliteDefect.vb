@@ -14,6 +14,16 @@ Public Class ModelSqliteDefect
             MsgBox("Error Files ModelSqliteDefect In Function UpdateStatusCloselotSqlite")
         End Try
     End Function
+    Public Shared Function cancelCloselotStatusUpdate(status As String)
+        Dim api As New api
+        Try
+            Dim Sql = " Update defect_transactions set dt_status_close_lot = '" & status & "' where dt_status_close_lot = '0'"
+            Dim jsonData As String = api.Load_dataSQLite(Sql)
+            Return jsonData
+        Catch ex As Exception
+            MsgBox("Error Files ModelSqliteDefect In Function cancelCloselotStatusUpdate")
+        End Try
+    End Function
     Public Shared Function mSqliteGetDataQuality(line_cd As String, lot_no As String, startTimeFrith As String)
         Dim api As New api
         startTimeFrith = Convert.ToDateTime(startTimeFrith).ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
@@ -23,9 +33,9 @@ Public Class ModelSqliteDefect
                         (SELECT SUM(dt_qty)
                              FROM defect_transactions
                              I where 
-		                        dt_line_cd ='" & line_cd & "' and dt_lot_no ='" & lot_no & "' and dt_main_cp = '1' and dt_type ='1' and dt_status_flg = '1' and dt_created_date >= '" & startTimeFrith & "'  
+		                        dt_line_cd ='" & line_cd & "' and dt_lot_no ='" & lot_no & "' and dt_main_cp = '1' and dt_type ='1' and dt_status_flg = '1' and dt_created_date >= '" & startTimeFrith & "' and dt_status_close_lot != '2'
 	                         ) AS AllDefect
-                         from defect_transactions where dt_line_cd ='" & line_cd & "' and dt_lot_no ='" & lot_no & "' and dt_main_cp = '1' and dt_type ='1' and dt_status_flg = '1' and dt_created_date >= '" & startTimeFrith & "'  
+                         from defect_transactions where dt_line_cd ='" & line_cd & "' and dt_lot_no ='" & lot_no & "' and dt_main_cp = '1' and dt_type ='1' and dt_status_flg = '1' and dt_created_date >= '" & startTimeFrith & "' and dt_status_close_lot != '2'
                         GROUP by dt_code order by sum(dt_qty) Desc LIMIT 3;"
             'Console.WriteLine(Sql)
             Dim jsonData As String = api.Load_dataSQLite(Sql)
@@ -43,9 +53,9 @@ Public Class ModelSqliteDefect
                         (SELECT SUM(dt_qty)
                              FROM defect_transactions
                              I where 
-		                        dt_line_cd ='" & line_cd & "' and dt_lot_no ='" & lot_no & "'  and dt_type ='1' and dt_status_flg = '1' and dt_created_date >= '" & startTimeFrith & "'  
+		                        dt_line_cd ='" & line_cd & "' and dt_lot_no ='" & lot_no & "'  and dt_type ='1' and dt_status_flg = '1' and dt_created_date >= '" & startTimeFrith & "'  and dt_status_close_lot != '2'
 	                         ) AS AllDefect
-                         from defect_transactions where dt_line_cd ='" & line_cd & "' and dt_lot_no ='" & lot_no & "' and  dt_type ='1' and dt_status_flg = '1' and dt_created_date >= '" & startTimeFrith & "'  
+                         from defect_transactions where dt_line_cd ='" & line_cd & "' and dt_lot_no ='" & lot_no & "' and  dt_type ='1' and dt_status_flg = '1' and dt_created_date >= '" & startTimeFrith & "'  and dt_status_close_lot != '2'
                         GROUP by dt_code order by sum(dt_qty) Desc LIMIT 3;"
             Console.WriteLine(Sql)
             Dim jsonData As String = api.Load_dataSQLite(Sql)

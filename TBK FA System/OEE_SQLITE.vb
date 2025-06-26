@@ -242,11 +242,11 @@ Public Class OEE_SQLITE
         Console.WriteLine("ConvertFormatDate ====>" & ConvertDate)
         Return ConvertDate
     End Function
-    Public Shared Function OEE_GET_Data_LOSS(line_cd As String, lot_no As String, shift As String, dateStart As String, dateTimeswModel As String, statusSwitchModel As String, IsOnlyone As String, SpecFlgLine As String)
+    Public Shared Function OEE_GET_Data_LOSS(line_cd As String, lot_no As String, shift As String, dateStart As String, dateTimeswModel As String, statusSwitchModel As String, IsOnlyone As String, SpecFlgLine As String, st_shift As String)
         Try
             Dim start_dateTime As String
             Dim date_now_date As Date = DateTime.Now.ToString("yyyy-MM-dd")
-            Dim st_shift = Prd_detail.Label12.Text.Substring(3, 5) & ":00"
+            ' Dim st_shift = Prd_detail.Label12.Text.Substring(3, 5) & ":00"
             Dim dateEnd = DateTime.Now.ToString("yyyy-MM-dd")
             Dim end_shift As String = DateTime.Now.ToString("HH:mm:ss")
             Dim time_now As String = DateTime.Now.ToString("HH:mm:ss tt")

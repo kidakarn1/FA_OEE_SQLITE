@@ -387,6 +387,7 @@ Public Class MainFrm
                 If load_show.Visible Then load_show.Hide()
                 Me.Enabled = True
             End If
+            ModelSqliteDefect.cancelCloselotStatusUpdate("2")
             Dim LoadSQL = Backoffice_model.get_trdata_sqlite()
             Dim LoadSQL_tag_print_detail = Backoffice_model.get_tr_tag_print_detail()
             Dim LoadSQL_check_loss_actual = Backoffice_model.check_loss_actual()

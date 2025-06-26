@@ -211,10 +211,10 @@ Public Class Working_Pro
             lvA.BeginUpdate()
             lvA.Items.Clear()
             ' lbOverTimeAvailability.Text = "0"
-
             ' เรียกใช้งาน SQLite บน thread พื้นหลัง
             Dim json As String = Await Task.Run(Function()
-                                                    Return OEE_LOCAL.OEE_GET_Data_LOSS(line_cd, lot_no, shift, dateStart, stTimeModel, statusSwitchModel, IsOnlyone, special_flg)
+                                                    Dim st_shift = timeShift & ":00"
+                                                    Return OEE_LOCAL.OEE_GET_Data_LOSS(line_cd, lot_no, shift, dateStart, stTimeModel, statusSwitchModel, IsOnlyone, special_flg, st_shift)
                                                 End Function)
 
             If json <> "0" Then

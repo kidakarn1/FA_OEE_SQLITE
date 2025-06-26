@@ -38,8 +38,8 @@ Public Class Show_reprint_wi
         load_wi()
     End Sub
     Private Sub PictureBox1_Click(sender As Object, e As EventArgs) Handles pcOK.Click
-        load_data_show_of()
-        'MenuReprint.Show()
+        'load_data_show_of()
+        MenuReprint.Show()
         Me.Hide()
     End Sub
     Public Sub load_data_show_of()

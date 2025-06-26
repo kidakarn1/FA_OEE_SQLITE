@@ -16,6 +16,7 @@ Public Class MenuReprint
         Me.Close()
     End Sub
     Private Sub MenuReprint_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        lbLineProd.Text = MainFrm.Label4.Text
         CreateCenteredPictureBoxes()
     End Sub
 

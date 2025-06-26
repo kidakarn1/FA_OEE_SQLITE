@@ -24,16 +24,16 @@ Partial Class ManagePrintDefectAdmin
     Private Sub InitializeComponent()
         Me.Label2 = New System.Windows.Forms.Label()
         Me.btnBack = New System.Windows.Forms.Button()
-        Me.ListView1 = New System.Windows.Forms.ListView()
-        Me.comboxitemtype = New System.Windows.Forms.ComboBox()
-        Me.Button1 = New System.Windows.Forms.Button()
+        Me.lvShowDataDefect = New System.Windows.Forms.ListView()
+        Me.NO = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.Part_NO = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.Lot_NO = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.SEQ = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.QTY = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.BOX = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
-        Me.NO = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.Shift = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
+        Me.comboxitemtype = New System.Windows.Forms.ComboBox()
+        Me.Button1 = New System.Windows.Forms.Button()
         Me.SuspendLayout()
         '
         'Label2
@@ -56,36 +56,22 @@ Partial Class ManagePrintDefectAdmin
         Me.btnBack.Text = "btnBack"
         Me.btnBack.UseVisualStyleBackColor = True
         '
-        'ListView1
+        'lvShowDataDefect
         '
-        Me.ListView1.Columns.AddRange(New System.Windows.Forms.ColumnHeader() {Me.NO, Me.Part_NO, Me.Lot_NO, Me.SEQ, Me.QTY, Me.BOX, Me.Shift})
-        Me.ListView1.Font = New System.Drawing.Font("Microsoft Sans Serif", 20.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(222, Byte))
-        Me.ListView1.HideSelection = False
-        Me.ListView1.Location = New System.Drawing.Point(42, 91)
-        Me.ListView1.Name = "ListView1"
-        Me.ListView1.Size = New System.Drawing.Size(674, 406)
-        Me.ListView1.TabIndex = 4
-        Me.ListView1.UseCompatibleStateImageBehavior = False
-        Me.ListView1.View = System.Windows.Forms.View.Details
+        Me.lvShowDataDefect.Columns.AddRange(New System.Windows.Forms.ColumnHeader() {Me.NO, Me.Part_NO, Me.Lot_NO, Me.SEQ, Me.QTY, Me.BOX, Me.Shift})
+        Me.lvShowDataDefect.Font = New System.Drawing.Font("Microsoft Sans Serif", 20.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(222, Byte))
+        Me.lvShowDataDefect.FullRowSelect = True
+        Me.lvShowDataDefect.HideSelection = False
+        Me.lvShowDataDefect.Location = New System.Drawing.Point(42, 91)
+        Me.lvShowDataDefect.Name = "lvShowDataDefect"
+        Me.lvShowDataDefect.Size = New System.Drawing.Size(674, 406)
+        Me.lvShowDataDefect.TabIndex = 4
+        Me.lvShowDataDefect.UseCompatibleStateImageBehavior = False
+        Me.lvShowDataDefect.View = System.Windows.Forms.View.Details
         '
-        'comboxitemtype
+        'NO
         '
-        Me.comboxitemtype.Font = New System.Drawing.Font("Microsoft Sans Serif", 36.0!)
-        Me.comboxitemtype.FormattingEnabled = True
-        Me.comboxitemtype.Location = New System.Drawing.Point(431, 12)
-        Me.comboxitemtype.Name = "comboxitemtype"
-        Me.comboxitemtype.Size = New System.Drawing.Size(285, 63)
-        Me.comboxitemtype.TabIndex = 5
-        '
-        'Button1
-        '
-        Me.Button1.Font = New System.Drawing.Font("Microsoft Sans Serif", 18.0!)
-        Me.Button1.Location = New System.Drawing.Point(627, 507)
-        Me.Button1.Name = "Button1"
-        Me.Button1.Size = New System.Drawing.Size(161, 85)
-        Me.Button1.TabIndex = 6
-        Me.Button1.Text = "Print"
-        Me.Button1.UseVisualStyleBackColor = True
+        Me.NO.Text = "NO"
         '
         'Part_NO
         '
@@ -112,14 +98,29 @@ Partial Class ManagePrintDefectAdmin
         Me.BOX.Text = "BOX"
         Me.BOX.Width = 80
         '
-        'NO
-        '
-        Me.NO.Text = "NO"
-        '
         'Shift
         '
         Me.Shift.Text = "Shift"
         Me.Shift.Width = 80
+        '
+        'comboxitemtype
+        '
+        Me.comboxitemtype.Font = New System.Drawing.Font("Microsoft Sans Serif", 36.0!)
+        Me.comboxitemtype.FormattingEnabled = True
+        Me.comboxitemtype.Location = New System.Drawing.Point(431, 12)
+        Me.comboxitemtype.Name = "comboxitemtype"
+        Me.comboxitemtype.Size = New System.Drawing.Size(285, 63)
+        Me.comboxitemtype.TabIndex = 5
+        '
+        'Button1
+        '
+        Me.Button1.Font = New System.Drawing.Font("Microsoft Sans Serif", 18.0!)
+        Me.Button1.Location = New System.Drawing.Point(627, 507)
+        Me.Button1.Name = "Button1"
+        Me.Button1.Size = New System.Drawing.Size(161, 85)
+        Me.Button1.TabIndex = 6
+        Me.Button1.Text = "Print"
+        Me.Button1.UseVisualStyleBackColor = True
         '
         'ManagePrintDefectAdmin
         '
@@ -128,7 +129,7 @@ Partial Class ManagePrintDefectAdmin
         Me.ClientSize = New System.Drawing.Size(800, 600)
         Me.Controls.Add(Me.Button1)
         Me.Controls.Add(Me.comboxitemtype)
-        Me.Controls.Add(Me.ListView1)
+        Me.Controls.Add(Me.lvShowDataDefect)
         Me.Controls.Add(Me.btnBack)
         Me.Controls.Add(Me.Label2)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None
@@ -141,7 +142,7 @@ Partial Class ManagePrintDefectAdmin
     End Sub
     Friend WithEvents Label2 As Label
     Friend WithEvents btnBack As Button
-    Friend WithEvents ListView1 As ListView
+    Friend WithEvents lvShowDataDefect As ListView
     Friend WithEvents comboxitemtype As ComboBox
     Friend WithEvents Button1 As Button
     Friend WithEvents NO As ColumnHeader

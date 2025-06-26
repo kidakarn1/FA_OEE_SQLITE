@@ -24,7 +24,7 @@ Partial Class MenuReprint
     Private Sub InitializeComponent()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(MenuReprint))
         Me.pbRefectData = New System.Windows.Forms.PictureBox()
-        Me.Label1 = New System.Windows.Forms.Label()
+        Me.lbLineProd = New System.Windows.Forms.Label()
         Me.btnBack = New System.Windows.Forms.PictureBox()
         CType(Me.pbRefectData, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.btnBack, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -39,17 +39,17 @@ Partial Class MenuReprint
         Me.pbRefectData.TabIndex = 3
         Me.pbRefectData.TabStop = False
         '
-        'Label1
+        'lbLineProd
         '
-        Me.Label1.AutoSize = True
-        Me.Label1.BackColor = System.Drawing.Color.Transparent
-        Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 15.0!, System.Drawing.FontStyle.Bold)
-        Me.Label1.ForeColor = System.Drawing.Color.White
-        Me.Label1.Location = New System.Drawing.Point(111, 149)
-        Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(162, 25)
-        Me.Label1.TabIndex = 4
-        Me.Label1.Text = "XXXXXXXXXX"
+        Me.lbLineProd.AutoSize = True
+        Me.lbLineProd.BackColor = System.Drawing.Color.Transparent
+        Me.lbLineProd.Font = New System.Drawing.Font("Microsoft Sans Serif", 15.0!, System.Drawing.FontStyle.Bold)
+        Me.lbLineProd.ForeColor = System.Drawing.Color.White
+        Me.lbLineProd.Location = New System.Drawing.Point(111, 149)
+        Me.lbLineProd.Name = "lbLineProd"
+        Me.lbLineProd.Size = New System.Drawing.Size(162, 25)
+        Me.lbLineProd.TabIndex = 4
+        Me.lbLineProd.Text = "XXXXXXXXXX"
         '
         'btnBack
         '
@@ -68,7 +68,7 @@ Partial Class MenuReprint
         Me.BackgroundImage = CType(resources.GetObject("$this.BackgroundImage"), System.Drawing.Image)
         Me.ClientSize = New System.Drawing.Size(800, 600)
         Me.Controls.Add(Me.btnBack)
-        Me.Controls.Add(Me.Label1)
+        Me.Controls.Add(Me.lbLineProd)
         Me.Controls.Add(Me.pbRefectData)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None
         Me.Name = "MenuReprint"
@@ -81,6 +81,6 @@ Partial Class MenuReprint
 
     End Sub
     Friend WithEvents pbRefectData As PictureBox
-    Friend WithEvents Label1 As Label
+    Friend WithEvents lbLineProd As Label
     Friend WithEvents btnBack As PictureBox
 End Class
