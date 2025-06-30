@@ -661,7 +661,7 @@ Public Class Working_Pro
         Await Task.Delay(5000) ' รอ 3 วินาที
     End Function
     Private Async Sub Working_Pro_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        Await loadWebviewEmergency()
+        Await LoadWebviewEmergency()
         'GenQrScanChecklist(MainFrm.Label4.Text)
         Me.Enabled = False
         statusPrint = "Normal"
@@ -2161,7 +2161,7 @@ outNet:
     Public Async Function LoadWebviewEmergency() As Task
         Try
             Dim url As String = $"http://{Backoffice_model.svApi}/API_NEW_FA/SpecialCode/EMERGENCY"
-
+            Console.WriteLine(url)
             If WebViewEmergency Is Nothing Then
                 WebViewEmergency = New WebView2 With {
                     .Dock = DockStyle.Fill,

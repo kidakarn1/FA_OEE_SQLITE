@@ -324,8 +324,18 @@ Public Class MainFrm
         '       load_show.Show()
         '   End Try
     End Function
-
+    Public Async Function CheckMemoryLeak() As Task
+        Dim memUsed As Long = GC.GetTotalMemory(False) \ 1024 \ 1024 ' >= 2.5 GB Clear Memory 
+        If memUsed >= 2560 Then
+            GC.Collect()
+            GC.WaitForPendingFinalizers()
+            GC.Collect()
+            ' Logging & UI
+        End If
+    End Function
     Private Async Sub menu1_Click_1(sender As Object, e As EventArgs) Handles menu1.Click
+        Await CheckMemoryLeak()
+
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
                 Await WaitForSQLiteEmptyAsync()
@@ -545,6 +555,7 @@ Public Class MainFrm
         Me.Enabled = False
     End Sub
     Private Async Sub Timer2_Elapsed(sender As Object, e As Timers.ElapsedEventArgs) Handles Timer2.Elapsed
+        Await CheckMemoryLeak()
         Await RunCmd(Label4.Text)
         If isRunning Then Exit Sub
         isRunning = True
