@@ -137,4 +137,17 @@ _สำหรับ Admin / Engineer_
 - Production line configuration  
 - Automatic FA Tag generation  
 
-👉 Designed for smooth, accurate, and efficient production operations.  
+
+
+## ⚙️ Installation
+
+### Prerequisites
+- 🖥️ Windows 
+- 🗄️ Database: SQL SERVER / MySql
+- 🔧 Git
+
+### Steps
+1. Clone the repository
+   ```bash
+   git clone https://github.com/your-username/fa-system.git
+   cd fa-system
