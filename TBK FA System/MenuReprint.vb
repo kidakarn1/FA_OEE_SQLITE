@@ -19,7 +19,6 @@ Public Class MenuReprint
         lbLineProd.Text = MainFrm.Label4.Text
         CreateCenteredPictureBoxes()
     End Sub
-
     Public Sub CreateCenteredPictureBoxes()
         ' ===== ลบ PictureBox และ Control อื่น ๆ ที่ไม่จำเป็น (Reset) =====
         Try
@@ -176,7 +175,7 @@ Public Class MenuReprint
         ManagePrintDefectAdmin.ShowDialog()
     End Sub
     Public Sub FPrintLable()
-
+        ManagePrintLable.ShowDialog()
     End Sub
     Public Sub ManageMenuDefect(actionName As String)
         Select Case actionName

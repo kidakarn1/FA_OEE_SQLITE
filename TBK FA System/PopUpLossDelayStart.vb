@@ -1,5 +1,5 @@
 ﻿Public Class PopUpLossDelayStart
-    Private Async Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
+    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
                 Working_Pro.Start_Production()

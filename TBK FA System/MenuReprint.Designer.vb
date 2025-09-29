@@ -1,9 +1,9 @@
-﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
+﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
 Partial Class MenuReprint
     Inherits System.Windows.Forms.Form
 
     'Form overrides dispose to clean up the component list.
-    <System.Diagnostics.DebuggerNonUserCode()> _
+    <System.Diagnostics.DebuggerNonUserCode()>
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
         Try
             If disposing AndAlso components IsNot Nothing Then
@@ -20,7 +20,7 @@ Partial Class MenuReprint
     'NOTE: The following procedure is required by the Windows Form Designer
     'It can be modified using the Windows Form Designer.  
     'Do not modify it using the code editor.
-    <System.Diagnostics.DebuggerStepThrough()> _
+    <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(MenuReprint))
         Me.pbRefectData = New System.Windows.Forms.PictureBox()
@@ -33,9 +33,9 @@ Partial Class MenuReprint
         'pbRefectData
         '
         Me.pbRefectData.BackColor = System.Drawing.Color.Transparent
-        Me.pbRefectData.Location = New System.Drawing.Point(657, 45)
+        Me.pbRefectData.Location = New System.Drawing.Point(645, 40)
         Me.pbRefectData.Name = "pbRefectData"
-        Me.pbRefectData.Size = New System.Drawing.Size(60, 70)
+        Me.pbRefectData.Size = New System.Drawing.Size(74, 78)
         Me.pbRefectData.TabIndex = 3
         Me.pbRefectData.TabStop = False
         '
@@ -45,10 +45,10 @@ Partial Class MenuReprint
         Me.lbLineProd.BackColor = System.Drawing.Color.Transparent
         Me.lbLineProd.Font = New System.Drawing.Font("Microsoft Sans Serif", 15.0!, System.Drawing.FontStyle.Bold)
         Me.lbLineProd.ForeColor = System.Drawing.Color.White
-        Me.lbLineProd.Location = New System.Drawing.Point(111, 149)
+        Me.lbLineProd.Location = New System.Drawing.Point(110, 150)
         Me.lbLineProd.Name = "lbLineProd"
         Me.lbLineProd.Size = New System.Drawing.Size(162, 25)
-        Me.lbLineProd.TabIndex = 4
+        Me.lbLineProd.TabIndex = 5
         Me.lbLineProd.Text = "XXXXXXXXXX"
         '
         'btnBack
@@ -57,7 +57,7 @@ Partial Class MenuReprint
         Me.btnBack.Location = New System.Drawing.Point(12, 505)
         Me.btnBack.Name = "btnBack"
         Me.btnBack.Size = New System.Drawing.Size(197, 83)
-        Me.btnBack.TabIndex = 5
+        Me.btnBack.TabIndex = 6
         Me.btnBack.TabStop = False
         '
         'MenuReprint

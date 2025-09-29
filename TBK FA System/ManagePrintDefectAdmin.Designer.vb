@@ -40,20 +40,22 @@ Partial Class ManagePrintDefectAdmin
         '
         Me.Label2.AutoSize = True
         Me.Label2.Font = New System.Drawing.Font("Microsoft Sans Serif", 41.0!, System.Drawing.FontStyle.Bold)
-        Me.Label2.Location = New System.Drawing.Point(41, 9)
+        Me.Label2.Location = New System.Drawing.Point(55, 11)
+        Me.Label2.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
         Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(328, 63)
+        Me.Label2.Size = New System.Drawing.Size(405, 79)
         Me.Label2.TabIndex = 1
         Me.Label2.Text = "Print Defect"
         '
         'btnBack
         '
         Me.btnBack.Font = New System.Drawing.Font("Microsoft Sans Serif", 18.0!)
-        Me.btnBack.Location = New System.Drawing.Point(12, 507)
+        Me.btnBack.Location = New System.Drawing.Point(16, 624)
+        Me.btnBack.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.btnBack.Name = "btnBack"
-        Me.btnBack.Size = New System.Drawing.Size(161, 85)
+        Me.btnBack.Size = New System.Drawing.Size(215, 105)
         Me.btnBack.TabIndex = 3
-        Me.btnBack.Text = "btnBack"
+        Me.btnBack.Text = "Back"
         Me.btnBack.UseVisualStyleBackColor = True
         '
         'lvShowDataDefect
@@ -62,9 +64,10 @@ Partial Class ManagePrintDefectAdmin
         Me.lvShowDataDefect.Font = New System.Drawing.Font("Microsoft Sans Serif", 20.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(222, Byte))
         Me.lvShowDataDefect.FullRowSelect = True
         Me.lvShowDataDefect.HideSelection = False
-        Me.lvShowDataDefect.Location = New System.Drawing.Point(42, 91)
+        Me.lvShowDataDefect.Location = New System.Drawing.Point(56, 112)
+        Me.lvShowDataDefect.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.lvShowDataDefect.Name = "lvShowDataDefect"
-        Me.lvShowDataDefect.Size = New System.Drawing.Size(674, 406)
+        Me.lvShowDataDefect.Size = New System.Drawing.Size(897, 499)
         Me.lvShowDataDefect.TabIndex = 4
         Me.lvShowDataDefect.UseCompatibleStateImageBehavior = False
         Me.lvShowDataDefect.View = System.Windows.Forms.View.Details
@@ -107,32 +110,35 @@ Partial Class ManagePrintDefectAdmin
         '
         Me.comboxitemtype.Font = New System.Drawing.Font("Microsoft Sans Serif", 36.0!)
         Me.comboxitemtype.FormattingEnabled = True
-        Me.comboxitemtype.Location = New System.Drawing.Point(431, 12)
+        Me.comboxitemtype.Location = New System.Drawing.Point(575, 15)
+        Me.comboxitemtype.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.comboxitemtype.Name = "comboxitemtype"
-        Me.comboxitemtype.Size = New System.Drawing.Size(285, 63)
+        Me.comboxitemtype.Size = New System.Drawing.Size(379, 77)
         Me.comboxitemtype.TabIndex = 5
         '
         'Button1
         '
         Me.Button1.Font = New System.Drawing.Font("Microsoft Sans Serif", 18.0!)
-        Me.Button1.Location = New System.Drawing.Point(627, 507)
+        Me.Button1.Location = New System.Drawing.Point(836, 624)
+        Me.Button1.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.Button1.Name = "Button1"
-        Me.Button1.Size = New System.Drawing.Size(161, 85)
+        Me.Button1.Size = New System.Drawing.Size(215, 105)
         Me.Button1.TabIndex = 6
         Me.Button1.Text = "Print"
         Me.Button1.UseVisualStyleBackColor = True
         '
         'ManagePrintDefectAdmin
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(8.0!, 16.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(800, 600)
+        Me.ClientSize = New System.Drawing.Size(1067, 738)
         Me.Controls.Add(Me.Button1)
         Me.Controls.Add(Me.comboxitemtype)
         Me.Controls.Add(Me.lvShowDataDefect)
         Me.Controls.Add(Me.btnBack)
         Me.Controls.Add(Me.Label2)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None
+        Me.Margin = New System.Windows.Forms.Padding(4, 4, 4, 4)
         Me.Name = "ManagePrintDefectAdmin"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "ManagePrintDefectAdmin"

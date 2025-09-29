@@ -325,6 +325,8 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Api_Scan_FA.vb" />
+    <Compile Include="AppGuard.vb" />
+    <Compile Include="ApplicationEvents.vb" />
     <Compile Include="AssemblyInfo.vb" />
     <Compile Include="AutoUpdate.vb" />
     <Compile Include="Auto_close_lot.Designer.vb">
@@ -710,6 +712,12 @@
     <Compile Include="ManagePrintDefectAdmin.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="ManagePrintLable.Designer.vb">
+      <DependentUpon>ManagePrintLable.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ManagePrintLable.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="MenuReprint.Designer.vb">
       <DependentUpon>MenuReprint.vb</DependentUpon>
     </Compile>
@@ -740,6 +748,13 @@
     <Compile Include="PopUpLossDelayStart.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="PrintDefectAdmin.Designer.vb">
+      <DependentUpon>PrintDefectAdmin.vb</DependentUpon>
+    </Compile>
+    <Compile Include="PrintDefectAdmin.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PrintQueue.vb" />
     <Compile Include="ProgressBar_Form.Designer.vb">
       <DependentUpon>ProgressBar_Form.vb</DependentUpon>
     </Compile>
@@ -752,6 +767,7 @@
     <Compile Include="RobotApppSuport.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="SafeFonts.vb" />
     <Compile Include="ScanQRprod.Designer.vb">
       <DependentUpon>ScanQRprod.vb</DependentUpon>
     </Compile>
@@ -776,6 +792,9 @@
     <Compile Include="ShowSpcDetailDefect.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="modelSpecialLine.vb" />
+    <Compile Include="TagPrintData.vb" />
+    <Compile Include="TagPrintModel.vb" />
     <Compile Include="tag_print_normal.Designer.vb">
       <DependentUpon>tag_print_normal.vb</DependentUpon>
     </Compile>
@@ -1364,6 +1383,9 @@
     <EmbeddedResource Include="ManagePrintDefectAdmin.resx">
       <DependentUpon>ManagePrintDefectAdmin.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ManagePrintLable.resx">
+      <DependentUpon>ManagePrintLable.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="MenuReprint.resx">
       <DependentUpon>MenuReprint.vb</DependentUpon>
     </EmbeddedResource>
@@ -1375,6 +1397,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="PopUpLossDelayStart.resx">
       <DependentUpon>PopUpLossDelayStart.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PrintDefectAdmin.resx">
+      <DependentUpon>PrintDefectAdmin.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ProgressBar_Form.resx">
       <DependentUpon>ProgressBar_Form.vb</DependentUpon>

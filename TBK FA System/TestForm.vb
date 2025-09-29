@@ -1,133 +1,73 @@
-﻿Imports System.Net
-Imports System.IO
-Imports System.Web.Script.Serialization
+﻿Imports NationalInstruments.DAQmx
+
 Public Class TestForm
+    Private diTask As Task
+    Private reader As DigitalSingleChannelReader
+
+    Private goodCount As Long = 0
+    Private defectCount As Long = 0
+
+    Private lastState(3) As Boolean ' เก็บสถานะรอบก่อน
+
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        Me.BackColor = Color.FromArgb(12, 59, 99)
-        CreateCenteredPictureBoxes()
+        Try
+            ' อ่าน 4 line (port0 line0 ถึง line3)
+            diTask = New Task()
+            diTask.DIChannels.CreateChannel("Dev1/port0/line0:3",
+                                            "ProductionLines",
+                                            ChannelLineGrouping.OneChannelForAllLines)
+
+            reader = New DigitalSingleChannelReader(diTask.Stream)
+
+            ' เริ่มอ่านทุก 50ms
+            Timer1.Interval = 50
+            Timer1.Start()
+
+        Catch ex As DaqException
+            MessageBox.Show("เกิดข้อผิดพลาด: " & ex.Message)
+        End Try
     End Sub
-    Private Sub CreateCenteredPictureBoxes()
-        ' ===== ลบ PictureBox เดิมก่อน (Reset) =====
-        For i As Integer = Me.Controls.Count - 1 To 0 Step -1
-            If TypeOf Me.Controls(i) Is PictureBox Then
-                Me.Controls.RemoveAt(i)
-            End If
-        Next
-        Dim boxWidth As Integer = 318
-        Dim boxHeight As Integer = 148
-        Dim gapX As Integer = 30
-        Dim gapY As Integer = 30
-        Dim totalWidth As Integer = (2 * boxWidth) + gapX
-        Dim totalHeight As Integer = (2 * boxHeight) + gapY
-        Dim offsetY As Integer = 40
-        Dim startX As Integer = (Me.ClientSize.Width - totalWidth) \ 2
-        Dim startY As Integer = ((Me.ClientSize.Height - totalHeight) \ 2) + offsetY
 
-        ' ดึงข้อมูลจาก API
-        Dim rsLoadMenuDefect = Backoffice_model.GetManageDefectMenu("K1A003")
-        Dim imagePaths As New List(Of String)
-        Dim actionList As New List(Of String)
+    Private Sub Timer1_Tick(sender As Object, e As EventArgs) Handles Timer1.Tick
+        Try
+            ' อ่านสถานะปุ่มทั้ง 4
+            Dim states As Boolean() = reader.ReadSingleSampleMultiLine()
 
-        If rsLoadMenuDefect <> "0" Then
-            Try
-                Dim dict2 As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(rsLoadMenuDefect)
-                For Each item As Object In dict2
-                    Dim dict As Dictionary(Of String, Object) = CType(item, Dictionary(Of String, Object))
-                    imagePaths.Add(dict("smc_path_pic").ToString())
-                    actionList.Add(dict("smc_function").ToString())
-                Next
-            Catch ex As Exception
-                MessageBox.Show("Error parsing JSON: " & ex.Message)
-                Return
-            End Try
-        End If
-
-        For i As Integer = 0 To imagePaths.Count - 1
-            Dim pic As New PictureBox()
-            pic.Name = "pic" & (i + 1).ToString()
-            pic.Width = boxWidth
-            pic.Height = boxHeight
-            ' pic.BorderStyle = BorderStyle.FixedSingle
-            pic.BorderStyle = BorderStyle.None
-            'pic.BackColor = Me.BackColor ' หรือใช้ Color.Transparent ถ้าไม่มีปัญหา render
-            pic.SizeMode = PictureBoxSizeMode.Zoom
-
-            ' fallback สีพื้น
-            Dim fallbackBmp As New Bitmap(boxWidth, boxHeight)
-            Using g As Graphics = Graphics.FromImage(fallbackBmp)
-                g.Clear(Color.WhiteSmoke)
-            End Using
-
-            ' โหลดภาพจาก URL
-            If i < imagePaths.Count Then
-                Dim url As String = imagePaths(i)
-                Try
-                    Dim wc As New WebClient()
-                    Dim imgData As Byte() = wc.DownloadData(url)
-                    Using ms As New MemoryStream(imgData)
-                        pic.Image = Image.FromStream(ms)
-                    End Using
-                Catch ex As Exception
-                    pic.Image = fallbackBmp
-                End Try
-            Else
-                pic.Image = fallbackBmp
+            ' ===== Port 0 (ปุ่มดี) =====
+            If Not states(0) AndAlso lastState(0) Then ' High → Low
+                goodCount += 1
             End If
 
-            ' ใส่ action name ไว้ใน Tag
-            If i < actionList.Count Then
-                pic.Tag = actionList(i)
-            Else
-                pic.Tag = ""
+            ' ===== Port 1 (ปุ่มดี) =====
+            If Not states(1) AndAlso lastState(1) Then
+                goodCount += 1
             End If
 
-            ' จัดตำแหน่ง
-            Dim row As Integer = i \ 2
-            Dim col As Integer = i Mod 2
-            pic.Left = startX + col * (boxWidth + gapX)
-            pic.Top = startY + row * (boxHeight + gapY)
-            AddHandler pic.Click, AddressOf PictureBox_Click
-            Me.Controls.Add(pic)
-        Next
+            ' ===== Port 2 (ปุ่มเสีย) =====
+            If Not states(2) AndAlso lastState(2) Then
+                defectCount += 1
+            End If
+
+            ' ===== Port 3 (ปุ่มเสีย) =====
+            If Not states(3) AndAlso lastState(3) Then
+                defectCount += 1
+            End If
+
+            ' เก็บสถานะล่าสุด
+            For i As Integer = 0 To 3
+                lastState(i) = states(i)
+            Next
+
+            ' แสดงผล
+            lblGood.Text = "ชิ้นดี: " & goodCount
+            lblDefect.Text = "ชิ้นเสีย: " & defectCount
+
+        Catch ex As DaqException
+            MessageBox.Show("เกิดข้อผิดพลาดในการอ่านค่า: " & ex.Message)
+        End Try
     End Sub
 
-    Private Sub PictureBox_Click(sender As Object, e As EventArgs)
-        Dim clickedPic As PictureBox = DirectCast(sender, PictureBox)
-        Dim actionName As String = clickedPic.Tag.ToString()
-
-        Select Case actionName
-            Case "RegisterNC"
-                RegisterNC()
-            Case "RegisterNG"
-                RegisterNG()
-            Case "AdjustNC"
-                AdjustNC()
-            Case "AdjustNG"
-                AdjustNG()
-            Case Else
-                MessageBox.Show("ยังไม่ได้กำหนด Action สำหรับ: " & actionName, "Info")
-        End Select
-    End Sub
-
-    ' ===== ฟังก์ชันแต่ละปุ่ม =====
-    Private Sub RegisterNC()
-        MessageBox.Show("เรียกเมนู NC", "NC Action")
-    End Sub
-
-    Private Sub RegisterNG()
-        MessageBox.Show("เรียกเมนู NG", "NG Action")
-    End Sub
-
-    Private Sub AdjustNC()
-        MessageBox.Show("เปิดหน้าปรับ NC", "Adjust NC")
-    End Sub
-
-    Private Sub AdjustNG()
-        MessageBox.Show("เปิดหน้าปรับ NG", "Adjust NG")
-    End Sub
-
-    ' ===== ปุ่มรีเฟรชเมนูใหม่ =====
-    Private Sub ReButton_Click(sender As Object, e As EventArgs) Handles ReButton.Click
-        CreateCenteredPictureBoxes()
+    Private Sub Form1_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
+        If diTask IsNot Nothing Then diTask.Dispose()
     End Sub
 End Class

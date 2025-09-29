@@ -2,7 +2,12 @@ Imports System.IO
 Imports System.IO.Pipes
 Imports System.Threading
 Imports System.Web.Script.Serialization
+Imports Microsoft.Web
+Imports Microsoft.Web.WebView2.Core
+Imports Microsoft.Web.WebView2.WinForms
+
 Public Class MainFrm
+    Private WithEvents WebViewEmergency As WebView2
     Public Sub ClickButton()
         Application.Exit()
     End Sub
@@ -25,9 +30,9 @@ Public Class MainFrm
     Public Sub check_process()
         Dim hWnd As Integer = FindWindowNullClassName(0, "TBK FA System.exe")
         If hWnd = 0 Then
-            'MsgBox("No process found!")
+            ''msgBox("No process found!")
         Else
-            'MsgBox(" process found!")
+            ''msgBox(" process found!")
         End If
     End Sub
     Public Function CheckIfRunning()
@@ -35,7 +40,7 @@ Public Class MainFrm
         If p.Count > 1 Then
             Application.Exit()
             Return 1
-            ' Process is running
+            'Process Is running
         Else
             Return 0
             ' Process is not running
@@ -44,34 +49,130 @@ Public Class MainFrm
     Public Sub check_close_fa()
         If Application.OpenForms().OfType(Of MainFrm).Any Then
         Else
-            MsgBox("end program")
+            'msgBox("end program")
         End If
     End Sub
     Public Async Function Main() As Task
         ' Create PipeServer
         Dim pipeServer As New NamedPipeServerStream("mypipe", PipeDirection.In)
-        'Console.WriteLine("Waiting for connection...")
+        ''Console.WriteLine("Waiting for connection...")
 
         ' Wait asynchronously for a connection from the client
         Await pipeServer.WaitForConnectionAsync()
-        'Console.WriteLine("Client connected.")
+        ''Console.WriteLine("Client connected.")
 
         ' Read command from the client
         Dim reader As New StreamReader(pipeServer)
         Dim command As String = Await reader.ReadLineAsync()
-        'Console.WriteLine("Received command from client: " & command)
+        ''Console.WriteLine("Received command from client: " & command)
 
         ' Check the command
         If command = "click button" Then
             reader.Close()
             pipeServer.Close()
         ElseIf command = "Wait_DATA" Then
-            'Console.WriteLine("Wait_DATA")
+            ''Console.WriteLine("Wait_DATA")
         End If
-
         ' Close the connection
-        'Console.WriteLine("close Connection main")
+        ''Console.WriteLine("close Connection main")
     End Function
+    Public Async Function CheckMemoryLeak() As Task
+        Dim memUsed As Long = GC.GetTotalMemory(False) \ 1024 \ 1024 ' >= 2.5 GB Clear Memory 
+        If memUsed >= 2560 Then
+            GC.Collect()
+            GC.WaitForPendingFinalizers()
+            GC.Collect()
+            ' Logging & UI
+        End If
+    End Function
+    Public Async Function ShowInformationByStatus(pd As String, line_cd As String) As Task
+        Try
+            Dim api = New api()
+            Dim infoUrl As String = "http://" & Backoffice_model.svApi &
+            "/API_NEW_FA/index.php/Api_Information/CheckInformation?pd=" & pd & "&line_cd=" & line_cd
+
+            'Console.WriteLine(infoUrl)
+
+            Dim result_data As String = Await Task.Run(Function() api.Load_data(infoUrl))
+
+            If result_data = "0" Then
+                PanelShowInformation.Visible = False
+                PanelWebviewInformation.Visible = False
+                Return
+            End If
+
+            ' === แสดง Panel ===
+            PanelShowInformation.Visible = True
+            PanelShowInformation.Location = New Point(0, 0)
+            PanelShowInformation.Size = New Size(800, 600)
+
+            PanelWebviewInformation.Visible = True
+            PanelWebviewInformation.Location = New Point(0, 0)
+            PanelWebviewInformation.Size = New Size(800, 600)
+
+            ' === ตรวจสอบ WebViewEmergency ===
+            If WebViewEmergency Is Nothing OrElse WebViewEmergency.IsDisposed Then
+                WebViewEmergency = New WebView2 With {
+                .Dock = DockStyle.Fill
+            }
+                Dim webViewEnvironment = Await CoreWebView2Environment.CreateAsync(Nothing, "C:\Temp")
+                Await WebViewEmergency.EnsureCoreWebView2Async(webViewEnvironment)
+            End If
+
+            ' ล้าง Control ถ้ายังไม่ได้เพิ่ม WebView และปุ่ม
+            If Not PanelWebviewInformation.Controls.Contains(WebViewEmergency) Then
+                PanelWebviewInformation.Controls.Clear()
+
+                ' === Panel แสดง WebView ===
+                Dim panelMain As New Panel With {
+                .Dock = DockStyle.Fill,
+                .BackColor = Color.White
+            }
+                panelMain.Controls.Add(WebViewEmergency)
+
+                ' === Panel ปุ่มล่าง ===
+                Dim panelButtons As New Panel With {
+                .Dock = DockStyle.Bottom,
+                .Height = 80,
+                .BackColor = Color.LightGray
+            }
+
+                ' ตรวจสอบว่ามีปุ่มรับทราบหรือยัง
+                Dim BtnAccept As New Button With {
+                .Name = "BtnAcceptInfo",
+                .Text = "รับทราบ",
+                .Size = New Size(140, 50),
+                .Location = New Point(620, 15),
+                .Font = New Font("Segoe UI", 20, FontStyle.Bold),
+                .BackColor = Color.FromArgb(40, 167, 69),
+                .ForeColor = Color.White
+            }
+                AddHandler BtnAccept.Click, Async Sub(sender As Object, e As EventArgs)
+                                                Await Task.Run(Sub()
+                                                                   api.Load_data("http://" & Backoffice_model.svApi &
+                                   "/API_NEW_FA/index.php/Api_Information/AcceptInformation?pd=" & pd & "&line_cd=" & line_cd)
+                                                               End Sub)
+                                                PanelWebviewInformation.Visible = False
+                                                PanelShowInformation.Visible = False
+                                            End Sub
+                panelButtons.Controls.Add(BtnAccept)
+                ' เพิ่มเข้า Panel หลัก
+                PanelWebviewInformation.Controls.Add(panelMain)
+                PanelWebviewInformation.Controls.Add(panelButtons)
+            End If
+            ' === Navigate WebView ===
+            If WebViewEmergency.CoreWebView2 IsNot Nothing Then
+                WebViewEmergency.CoreWebView2.Navigate(infoUrl)
+            End If
+        Catch ex As Exception
+            'msgBox("ไม่สามารถโหลดข้อมูลได้ กรุณาตรวจสอบเครือข่าย", 'msgBoxStyle.Exclamation)
+        End Try
+    End Function
+    Protected Overrides Sub OnHandleCreated(e As EventArgs)
+        MyBase.OnHandleCreated(e)
+        Try : Timer2.SynchronizingObject = Me : Catch : End Try
+    End Sub
+
     Private Async Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         check_process()
         If CheckIfRunning() = 0 Then
@@ -96,12 +197,12 @@ Public Class MainFrm
                 lb_dio_port.Text = sqlss("dio_port").ToString()
                 Backoffice_model.SCANNER_PORT = sqlss("scanner_port").ToString()
             End While
-
             If Backoffice_model.SCANNER_PORT <> "" AndAlso Backoffice_model.SCANNER_PORT <> "USB" Then
                 lb_ctrl_sc_flg.Text = "emp"
             End If
             Insert_list.Label3.Text = Label4.Text
             Prd_detail.Label3.Text = Label4.Text
+            Await ShowInformationByStatus(Label6.Text, Label4.Text)
             Await checkcmd()
         Else
             Application.Exit()
@@ -117,7 +218,7 @@ Public Class MainFrm
     Private Sub Label2_Click(sender As Object, e As EventArgs)
     End Sub
     Private Sub menu3_Click(sender As Object, e As EventArgs)
-        MsgBox("New version")
+        'msgBox("New version")
     End Sub
     Private Sub TextBox1_TextChanged(sender As Object, e As EventArgs)
     End Sub
@@ -264,8 +365,8 @@ Public Class MainFrm
                                 date_digit = re
                             Else
                                 Dim tmp_date As String = d.AddDays(-1)
-                                'MsgBox(tmp_date)
-                                'MsgBox("day = " & tmp_date.Substring(0, 2))
+                                ''msgBox(tmp_date)
+                                ''msgBox("day = " & tmp_date.Substring(0, 2))
                                 lotthirdDigit = tmp_date.Substring(0, 2)
                                 date_digit = lotthirdDigit
                             End If
@@ -294,7 +395,7 @@ Public Class MainFrm
                     Label5.Text = listdetail
                     Label5.BringToFront()
                     Label5.Show()
-                    ' MsgBox("กรุณาลงข้อมูลพนักงานเพื่อเริ่มการผลิต")
+                    ' 'msgBox("กรุณาลงข้อมูลพนักงานเพื่อเริ่มการผลิต")
                 End If
             Else
                 load_show.Show()
@@ -324,18 +425,9 @@ Public Class MainFrm
         '       load_show.Show()
         '   End Try
     End Function
-    Public Async Function CheckMemoryLeak() As Task
-        Dim memUsed As Long = GC.GetTotalMemory(False) \ 1024 \ 1024 ' >= 2.5 GB Clear Memory 
-        If memUsed >= 2560 Then
-            GC.Collect()
-            GC.WaitForPendingFinalizers()
-            GC.Collect()
-            ' Logging & UI
-        End If
-    End Function
+
     Private Async Sub menu1_Click_1(sender As Object, e As EventArgs) Handles menu1.Click
         Await CheckMemoryLeak()
-
         Try
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
                 Await WaitForSQLiteEmptyAsync()
@@ -360,12 +452,11 @@ Public Class MainFrm
         Catch ex As Exception
             load_show.Show()
             Me.Enabled = True ' กัน หน้าจอ ล็อค
-            ' MsgBox("Please Wait Trasnfer Data.")
+            ' 'msgBox("Please Wait Trasnfer Data.")
         End Try
     End Sub
     Private Async Function WaitForSQLiteEmptyAsync() As Task
         Dim hasData As Boolean = True
-
         ' ฟังก์ชันช่วย ping แบบปลอดภัย ป้องกัน exception
         Dim SafePing As Func(Of String, Boolean) = Function(host As String) As Boolean
                                                        Try
@@ -407,7 +498,7 @@ Public Class MainFrm
     Public Async Function load_page() As Task(Of String)
         Working_Pro.lb_nc_qty.Text = "0"
         Working_Pro.lb_ng_qty.Text = "0"
-        'MsgBox(line_id.Text)
+        ''msgBox(line_id.Text)
         Try
             ArrayDataPlan = New List(Of DataPlan)
             If My.Computer.Network.Ping(Backoffice_model.svp_ping) Then
@@ -463,7 +554,7 @@ Public Class MainFrm
                 LoadSQLskill.Close()
             End If
         Catch ex As Exception
-            Console.WriteLine("error ===>" & ex.Message)
+            'Console.WriteLine("error ===>" & ex.Message)
             load_show.Show()
             Me.Enabled = True
         End Try
@@ -506,7 +597,7 @@ Public Class MainFrm
         Return lotSecondDigit
     End Function
     Public Function set_data_Year(lotSubstYear)
-        'MsgBox("(((((999")
+        ''msgBox("(((((999")
         lotSubstYear = lotSubstYear.Substring(1, 1)
         'lotSubstYear = lotSubstYear - 1
         If lotSubstYear = "1" Then
@@ -555,8 +646,12 @@ Public Class MainFrm
         Me.Enabled = False
     End Sub
     Private Async Sub Timer2_Elapsed(sender As Object, e As Timers.ElapsedEventArgs) Handles Timer2.Elapsed
-        Await CheckMemoryLeak()
         Await RunCmd(Label4.Text)
+        Await CheckMemoryLeak()
+        If Me.Enabled Then
+            Await ShowInformationByStatus(Label6.Text, Label4.Text)
+        End If
+        '  Await ShowInformationByStatus(Label6.Text, Label4.Text)
         If isRunning Then Exit Sub
         isRunning = True
         Try
@@ -571,7 +666,7 @@ Public Class MainFrm
     End Sub
     Private Sub menu3_Click_2(sender As Object, e As EventArgs) Handles menu3.Click
         Dim mdD = New modelDefect
-        Backoffice_model.Check_detail_actual_insert_act(Me) 'กรณีเครื่องดับ'
+        ' Backoffice_model.Check_detail_actual_insert_act(Me) 'กรณีเครื่องดับ' เพราะ ใช้ ทับ  
         Dim data = mdD.mGetDatamsterLine(Label4.Text)
         If data <> "0" Then
             Dim dict As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(data)
@@ -595,9 +690,10 @@ Public Class MainFrm
         List_Emp.lb_link.Text = "main"
         List_Emp.Show()
         List_Emp.Enabled = False
-        Me.Enabled = False
+        ' Me.Enabled = False
         Sc.TextBox2.Select()
-        Sc.Show()
+        'Sc.Show()
+        Sc.ShowDialog()
     End Sub
     Private Sub PictureBox7_Click(sender As Object, e As EventArgs) Handles PictureBox7.Click
         load_worker()

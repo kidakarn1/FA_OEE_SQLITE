@@ -68,7 +68,7 @@ Public Class defectRegister
             If rsCheck Then
                 tbQtydefectnc.Text = CDbl(Val(tbQtydefectnc.Text)) + number
             Else
-                MsgBox("Please Check QTY Input")
+                'msgBox("Please Check QTY Input")
             End If
         Else
             Dim dfNumpadregister As New defectNumpadregister
@@ -81,10 +81,10 @@ Public Class defectRegister
                 If CDbl(Val(Working_Pro.LB_COUNTER_SEQ.Text)) > 0 Then
                     tbQtydefectnc.Text = CDbl(Val(tbQtydefectnc.Text)) + number
                 Else
-                    MsgBox("Please Input Actaual QTY")
+                    'msgBox("Please Input Actaual QTY")
                 End If
             Else
-                MsgBox("Please Check QTY Input")
+                'msgBox("Please Check QTY Input")
             End If
             'tbQtydefectnc.Text = CDbl(Val(tbQtydefectnc.Text)) + number
         End If
@@ -97,7 +97,7 @@ Public Class defectRegister
         defectNumpadregister.Show()
         Me.Close()
     End Sub
-    Private Async Sub oK_Click(sender As Object, e As EventArgs) Handles oK.Click
+    Private Sub oK_Click(sender As Object, e As EventArgs) Handles oK.Click
         If tbQtydefectnc.Text <> "0" Then
             If defectSelecttype.type = "1" Then
                 If Working_Pro.slm_flg_qr_prod = "1" Then ' scan QR 
@@ -105,13 +105,14 @@ Public Class defectRegister
                     ScanQRprod.ManageQrScanFA(4, tbQtydefectnc.Text)
                     ScanQRprod.Show()
                 Else ' case Normal
-                    Await CalFG()
+                    CalFG()
+                    Working_Pro.flg_tag_print = 0
                 End If
             Else
-                Await CalChildPart()
+                CalChildPart()
             End If
         Else
-            MsgBox("Please Check QTY.")
+            'msgBox("Please Check QTY.")
         End If
     End Sub
     Public Shared ReadOnly Property Instance As defectRegister
@@ -122,7 +123,8 @@ Public Class defectRegister
             Return _instance
         End Get
     End Property
-    Public Async Function CalFG() As Task
+
+    Public Sub CalFG()
         mainCP = modelDefect.mGetCalPartOEE(MainFrm.Label4.Text, dtItemcd, dtItemcd, defectSelecttype.type, MainFrm.chk_spec_line, MainFrm.Label6.Text)
         'mainCP = "1"
         If tbQtydefectnc.Text < 0 Then
@@ -151,18 +153,18 @@ Public Class defectRegister
             End If
             Dim dfAll = CDbl(Val(Working_Pro.lb_ng_qty.Text)) + CDbl(Val(Working_Pro.lb_nc_qty.Text))
             Dim OEE As New OEE_NODE
-            Await Working_Pro.set_AccTarget(Prd_detail.Label12.Text.Substring(3, 5), Working_Pro.Label38.Text, Working_Pro.gobal_stTimeModel)
-            Await Working_Pro.setlvA(Working_Pro.Label24.Text, Working_Pro.Label18.Text, Working_Pro.Label14.Text, DateTime.Now.ToString("yyyy-MM-dd"), Prd_detail.Label12.Text.Substring(3, 5), Working_Pro.gobal_stTimeModel, MainFrm.chk_spec_line)
-            Await Working_Pro.setlvQ(Working_Pro.Label24.Text, Working_Pro.Label18.Text, Prd_detail.Label12.Text.Substring(3, 5), Working_Pro.gobal_stTimeModel)
-            Dim P = Await Working_Pro.setgetSpeedLoss(Working_Pro.lbOverTimeQuality.Text, Working_Pro.lb_good.Text, Prd_detail.Label12.Text.Substring(3, 5), Working_Pro.Label38.Text, Working_Pro.Label24.Text, Working_Pro.gobal_stTimeModel)
+            Working_Pro.set_AccTarget(Prd_detail.Label12.Text.Substring(3, 5), Working_Pro.Label38.Text, Working_Pro.gobal_stTimeModel)
+            Working_Pro.setlvA(Working_Pro.Label24.Text, Working_Pro.Label18.Text, Working_Pro.Label14.Text, DateTime.Now.ToString("yyyy-MM-dd"), Prd_detail.Label12.Text.Substring(3, 5), Working_Pro.gobal_stTimeModel, MainFrm.chk_spec_line)
+            Working_Pro.setlvQ(Working_Pro.Label24.Text, Working_Pro.Label18.Text, Prd_detail.Label12.Text.Substring(3, 5), Working_Pro.gobal_stTimeModel)
+            Dim P = Working_Pro.setgetSpeedLoss(Working_Pro.lbOverTimeQuality.Text, Working_Pro.lb_good.Text, Prd_detail.Label12.Text.Substring(3, 5), Working_Pro.Label38.Text, Working_Pro.Label24.Text, Working_Pro.gobal_stTimeModel)
             Dim GoodByPartNo As Integer = CDbl(Val(Working_Pro.actualP.Text)) - CDbl(Val(Working_Pro.lbOverTimeQuality.Text))
-            Dim Q = Await Working_Pro.cal_progressbarQ(Working_Pro.lbOverTimeQuality.Text, GoodByPartNo)
-            Dim A = Await Working_Pro.cal_progressbarA(Working_Pro.Label24.Text, Prd_detail.Label12.Text.Substring(3, 5), Prd_detail.Label12.Text.Substring(11, 5))
+            Dim Q = Working_Pro.cal_progressbarQ(Working_Pro.lbOverTimeQuality.Text, GoodByPartNo)
+            Dim A = Working_Pro.cal_progressbarA(Working_Pro.Label24.Text, Prd_detail.Label12.Text.Substring(3, 5), Prd_detail.Label12.Text.Substring(11, 5))
             Working_Pro.setNgByHour(Working_Pro.Label24.Text, Working_Pro.Label18.Text)
             'Dim rswebview = loadDataProgressBar(Label24.Text, Label14.Text)
             ' WebViewProgressbar.Reload()
-            Await Working_Pro.calProgressOEE(A, Q, P)
-            Await Working_Pro.cal_eff()
+            Working_Pro.calProgressOEE(A, Q, P)
+            Working_Pro.cal_eff()
             Dim SQLite = New ModelSqliteDefect
             Working_Pro.lb_good.Text = CDbl(Val(Working_Pro.lb_good.Text)) - CDbl(Val(tbQtydefectnc.Text))
             Working_Pro.Enabled = True
@@ -180,61 +182,48 @@ Public Class defectRegister
             End If
             Me.Close()
         End If
-    End Function
-    Public Async Function CalChildPart() As Task
-        Try
-            ' ตรวจสอบ/แปลงค่า QTY อย่างปลอดภัย
-            Dim qty As Double
-            If Not Double.TryParse(tbQtydefectnc.Text, qty) OrElse qty <= 0 Then
-                MessageBox.Show("กรุณาระบุ QTY ให้ถูกต้อง", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-                Return
+    End Sub
+    Public Sub CalChildPart()
+        If tbQtydefectnc.Text < 0 Then
+            tbQtydefectnc.Text = 0
+        End If
+        If tbQtydefectnc.Text = "" Then
+            tbQtydefectnc.Text = 0
+        End If
+        dtQty = tbQtydefectnc.Text
+        Dim dtActualdate = DateTime.Now.ToString("yyyy-MM-dd H:m:s")
+        If MainFrm.chk_spec_line = "2" Then
+            pwi_id = PwiSpc
+        Else
+            pwi_id = Working_Pro.pwi_id
+        End If
+        Dim rs = insertDefectregister(dtWino, dtLineno, dtItemcd, dtItemtype, dtLotno, dtSeqno, dtType, dtCode, dtQty, "1", dtActualdate, pwi_id, dSelectcode.sDefectdetail, mainCP, source_cd_supplier, defectHome.leaderConfrime)
+        If rs Then
+            If dtType = "1" Then
+                Dim dataQty = calQtytotalncregisterNGChildPart(tbQtydefectnc.Text, actTotal, Working_Pro.lb_nc_child_part.Text, Working_Pro.lb_ng_child_part.Text)
+                Working_Pro.lb_ng_child_part.Text = dataQty
+            ElseIf dtType = "2" Then
+                Dim dataQty = calQtytotalncregisterChildPart(tbQtydefectnc.Text, actTotal, Working_Pro.lb_nc_child_part.Text, Working_Pro.lb_ng_child_part.Text)
+                Working_Pro.lb_nc_child_part.Text = dataQty
             End If
-            tbQtydefectnc.Text = qty.ToString()
-            dtQty = tbQtydefectnc.Text
-            ' วันเวลาลงทะเบียน
-            Dim dtActualdate As String = DateTime.Now.ToString("yyyy-MM-dd H:mm:ss")
-            ' กำหนด pwi_id
-            pwi_id = If(MainFrm.chk_spec_line = "2", PwiSpc, Working_Pro.pwi_id)
-            ' Insert defect
-            Dim rs = insertDefectregister(
-            dtWino, dtLineno, dtItemcd, dtItemtype, dtLotno, dtSeqno,
-            dtType, dtCode, dtQty, "1", dtActualdate, pwi_id,
-            dSelectcode.sDefectdetail, mainCP, source_cd_supplier, defectHome.leaderConfrime
-        )
-            If rs Then
-                Dim dataQty As Double
-                If dtType = "1" Then
-                    dataQty = calQtytotalncregisterNGChildPart(qty, actTotal, Working_Pro.lb_nc_child_part.Text, Working_Pro.lb_ng_child_part.Text)
-                    Working_Pro.lb_ng_child_part.Text = dataQty.ToString()
-                ElseIf dtType = "2" Then
-                    dataQty = calQtytotalncregisterChildPart(qty, actTotal, Working_Pro.lb_nc_child_part.Text, Working_Pro.lb_ng_child_part.Text)
-                    Working_Pro.lb_nc_child_part.Text = dataQty.ToString()
-                End If
-                Working_Pro.Enabled = True
-                Await Working_Pro.cal_eff() ' ถ้า cal_eff เป็น Async
-                Working_Pro.ResetRed()
-                ' โหลด defect รวมจาก SQLite
-                Dim SQLite = New ModelSqliteDefect
-                Dim rslvQ = SQLite.mSqliteGetDataQualityOverAllNG(dtLineno, dtLotno, Working_Pro.DateTimeStartofShift.Text)
-                If rslvQ <> "0" Then
-                    Try
-                        Dim dict3 = New JavaScriptSerializer().Deserialize(Of List(Of Object))(rslvQ)
-                        For Each item As Object In dict3
-                            Working_Pro.lbNG.Text = item("AllDefect").ToString()
-                        Next
-                    Catch ex As Exception
-                        MessageBox.Show("Error in parsing defect data: " & ex.Message)
-                    End Try
-                End If
+            Working_Pro.Enabled = True
+            Working_Pro.cal_eff()
+            Working_Pro.ResetRed()
+            Dim SQLite = New ModelSqliteDefect
+            Dim rslvQ = SQLite.mSqliteGetDataQualityOverAllNG(dtLineno, dtLotno, Working_Pro.DateTimeStartofShift.Text)
+            If rslvQ <> "0" Then
+                Dim dict3 As Object = New JavaScriptSerializer().Deserialize(Of List(Of Object))(rslvQ)
+                Try
+                    For Each item As Object In dict3
+                        Working_Pro.lbNG.Text = item("AllDefect").ToString()
+                    Next
+                Catch ex As Exception
 
-                Me.Close()
+                End Try
             End If
-
-        Catch ex As Exception
-            MessageBox.Show("เกิดข้อผิดพลาด: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-        End Try
-    End Function
-
+            Me.Close()
+        End If
+    End Sub
 
     Public Shared Function calQtytotalncregisterChildPart(tbQtydefectnc As Integer, actTotal As Integer, ncTotal As Integer, ngTotal As Integer)
         Dim setNc = ncTotal + tbQtydefectnc
@@ -262,12 +251,12 @@ Public Class defectRegister
             If rsDataSQLite Then
                 Return True
             Else
-                'MsgBox("insertDefectregister FAILL Please Check rsData=" & rsData)
-                MsgBox("insertDefectregister FAILL Please Check rsData=" & rsDataSQLite)
+                ''msgBox("insertDefectregister FAILL Please Check rsData=" & rsData)
+                'msgBox("insertDefectregister FAILL Please Check rsData=" & rsDataSQLite)
                 Return False
             End If
         Catch ex As Exception
-            MsgBox("insertDefectregister FAILL Please Check" & ex.Message)
+            'msgBox("insertDefectregister FAILL Please Check" & ex.Message)
             Return False
         End Try
     End Function

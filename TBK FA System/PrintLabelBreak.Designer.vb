@@ -36,9 +36,6 @@ Partial Class PrintLabelBreak
         CType(Me.picBarcode, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
-        'PrintDocument31
-        '
-        '
         'lbButton
         '
         Me.lbButton.AutoSize = True
@@ -131,6 +128,7 @@ Partial Class PrintLabelBreak
         Me.Controls.Add(Me.lbQrCode)
         Me.Controls.Add(Me.lbPartNumber)
         Me.Controls.Add(Me.lbButton)
+        Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None
         Me.Name = "PrintLabelBreak"
         Me.Text = "PrintLabelBreak"
         CType(Me.logoLabel, System.ComponentModel.ISupportInitialize).EndInit()

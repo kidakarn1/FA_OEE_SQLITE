@@ -62,9 +62,9 @@ Partial Class Show_reprint_wi
         Me.ListView_WI.ForeColor = System.Drawing.Color.White
         Me.ListView_WI.FullRowSelect = True
         Me.ListView_WI.HideSelection = False
-        Me.ListView_WI.Location = New System.Drawing.Point(24, 153)
+        Me.ListView_WI.Location = New System.Drawing.Point(32, 100)
         Me.ListView_WI.Name = "ListView_WI"
-        Me.ListView_WI.Size = New System.Drawing.Size(744, 347)
+        Me.ListView_WI.Size = New System.Drawing.Size(734, 372)
         Me.ListView_WI.TabIndex = 35
         Me.ListView_WI.UseCompatibleStateImageBehavior = False
         Me.ListView_WI.View = System.Windows.Forms.View.Details
