@@ -142,12 +142,36 @@ _สำหรับ Admin / Engineer_
 ## ⚙️ Installation
 
 ### Prerequisites
-- 🖥️ Windows 
-- 🗄️ Database: SQL SERVER / MySql
-- 🔧 Git
+- 🖥️ Windows  
+- 🗄️ Database: SQL Server(main) / MySQL, SQLite (local)  
+- 🔧 Git  
+- 📊 DB Tool (recommended): [DB Browser for SQLite](https://sqlitebrowser.org/dl/)  
 
+---
 ### Steps
 1. Clone the repository
    ```bash
    git clone https://github.com/your-username/fa-system.git
    cd fa-system
+2. Install DB Browser for SQLite
+
+3. Copy folder sqlite3 → C:\sqlite3\
+
+4. Open database C:\sqlite3\FA_local_db.db3 with DB Browser
+   
+     Configure tables according to environment
+```bash  
+🔧 Production
+        Server_API → 192.168.161.207, enable=1
+        Server_OEE → 192.168.161.78:3000, enable=1
+        db_svr_info → 192.168.161.101\PCSDBSV, db=tbkkfa01_dev
+
+🔧 Developer
+        Server_API → 192.168.161.77, enable=1
+        Server_OEE → 192.168.161.78:6100, enable=1
+        db_svr_info → 192.168.161.101\PCSDBSV, db=test_new_fa02
+
+🔧 Tester
+        Server_API → 192.168.161.79, enable=1
+        Server_OEE → 192.168.161.79:6100, enable=1
+        db_svr_info → 192.168.161.79,1433\SQLEXPRESS2019, db=test_new_fa02
